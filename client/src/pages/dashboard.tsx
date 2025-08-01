@@ -431,7 +431,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Houses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Houses</SelectItem>
+                        <SelectItem value="all">All Houses</SelectItem>
                         {houses.map(house => (
                           <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                         ))}
@@ -443,7 +443,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Services" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Services</SelectItem>
+                        <SelectItem value="all">All Services</SelectItem>
                         {serviceCodes.map(service => (
                           <SelectItem key={service.id} value={service.id}>{service.code}</SelectItem>
                         ))}
@@ -793,7 +793,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Houses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Houses</SelectItem>
+                        <SelectItem value="all">All Houses</SelectItem>
                         {houses.map(house => (
                           <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                         ))}
@@ -804,7 +804,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Status</SelectItem>
+                        <SelectItem value="all">All Status</SelectItem>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="inactive">Inactive</SelectItem>
                         <SelectItem value="graduated">Graduated</SelectItem>
