@@ -47,6 +47,9 @@ export function PayoutBatchModal({ isOpen, onClose, batch }: PayoutBatchModalPro
         checkDate: new Date(data.checkDate + 'T00:00:00.000Z'),
       };
       
+      console.log("Form data before processing:", data);
+      console.log("Processed submit data:", submitData);
+      
       if (batch) {
         return apiRequest('PUT', `/api/payout-batches/${batch.id}`, submitData);
       } else {

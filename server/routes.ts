@@ -472,11 +472,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payout-batches", async (req, res) => {
     try {
-      const batchData = insertPayoutBatchSchema.parse(req.body);
+      console.log("Received payout batch data:", req.body);
+      
+      // Process the received data to ensure proper format
+      const processedData = {
+        name: req.body.name,
+        checkDate: new Date(req.body.checkDate),
+        notes: req.body.notes || null,
+        status: req.body.status || "pending"
+      };
+      
+      console.log("Processed payout batch data:", processedData);
+      const batchData = insertPayoutBatchSchema.parse(processedData);
+      console.log("Validated payout batch data:", batchData);
       const batch = await storage.createPayoutBatch(batchData);
       res.json(batch);
     } catch (error) {
-      res.status(400).json({ message: "Invalid payout batch data" });
+      console.error("Payout batch validation error:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+      }
+      res.status(400).json({ message: "Invalid payout batch data", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
