@@ -297,6 +297,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       console.log("Updating revenue entry with ID:", id);
       console.log("Received revenue entry update data:", JSON.stringify(req.body, null, 2));
+      console.log("Raw body keys:", Object.keys(req.body));
+      console.log("Raw body values:", Object.values(req.body));
       
       // Convert date string to Date object before validation if date exists
       const processedData = {
