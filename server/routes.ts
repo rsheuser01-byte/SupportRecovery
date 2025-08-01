@@ -294,7 +294,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/expenses", async (req, res) => {
     try {
       console.log("Received expense data:", req.body);
-      const expenseData = insertExpenseSchema.parse(req.body);
+      // Convert date string to Date object before validation
+      const processedData = {
+        ...req.body,
+        date: new Date(req.body.date)
+      };
+      console.log("Processed expense data:", processedData);
+      const expenseData = insertExpenseSchema.parse(processedData);
       console.log("Parsed expense data:", expenseData);
       const expense = await storage.createExpense(expenseData);
       res.json(expense);
