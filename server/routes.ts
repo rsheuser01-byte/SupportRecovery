@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema, insertBusinessSettingsSchema 
+  insertExpenseSchema, insertBusinessSettingsSchema, insertPayoutBatchSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -457,6 +457,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(payoutPreview);
     } catch (error) {
       res.status(400).json({ message: "Invalid calculation data" });
+    }
+  });
+
+  // Payout Batches
+  app.get("/api/payout-batches", async (req, res) => {
+    try {
+      const batches = await storage.getPayoutBatches();
+      res.json(batches);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payout batches" });
+    }
+  });
+
+  app.post("/api/payout-batches", async (req, res) => {
+    try {
+      const batchData = insertPayoutBatchSchema.parse(req.body);
+      const batch = await storage.createPayoutBatch(batchData);
+      res.json(batch);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid payout batch data" });
+    }
+  });
+
+  app.put("/api/payout-batches/:id", async (req, res) => {
+    try {
+      const batchData = insertPayoutBatchSchema.partial().parse(req.body);
+      const batch = await storage.updatePayoutBatch(req.params.id, batchData);
+      if (!batch) {
+        return res.status(404).json({ message: "Payout batch not found" });
+      }
+      res.json(batch);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid payout batch data" });
+    }
+  });
+
+  app.delete("/api/payout-batches/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePayoutBatch(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Payout batch not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete payout batch" });
+    }
+  });
+
+  app.get("/api/payout-batches/:id/payouts", async (req, res) => {
+    try {
+      const payouts = await storage.getPayoutsByBatch(req.params.id);
+      res.json(payouts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch batch payouts" });
     }
   });
 

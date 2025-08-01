@@ -7,6 +7,7 @@ import {
   type RevenueEntry, type InsertRevenueEntry,
   type Expense, type InsertExpense,
   type Payout,
+  type PayoutBatch, type InsertPayoutBatch,
   type BusinessSettings, type InsertBusinessSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
@@ -66,6 +67,14 @@ export interface IStorage {
   createPayout(payout: Omit<Payout, 'id'>): Promise<Payout>;
   deletePayout(id: string): Promise<boolean>;
 
+  // Payout Batches
+  getPayoutBatches(): Promise<PayoutBatch[]>;
+  getPayoutBatch(id: string): Promise<PayoutBatch | undefined>;
+  createPayoutBatch(batch: InsertPayoutBatch): Promise<PayoutBatch>;
+  updatePayoutBatch(id: string, batch: Partial<InsertPayoutBatch>): Promise<PayoutBatch | undefined>;
+  deletePayoutBatch(id: string): Promise<boolean>;
+  getPayoutsByBatch(batchId: string): Promise<Payout[]>;
+
   // Business Settings
   getBusinessSettings(): Promise<BusinessSettings | undefined>;
   updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings>;
@@ -80,6 +89,7 @@ export class MemStorage implements IStorage {
   private revenueEntries: Map<string, RevenueEntry> = new Map();
   private expenses: Map<string, Expense> = new Map();
   private payouts: Map<string, Payout> = new Map();
+  private payoutBatches: Map<string, PayoutBatch> = new Map();
   private businessSettings: BusinessSettings | null = null;
 
   constructor() {
@@ -429,6 +439,47 @@ export class MemStorage implements IStorage {
 
   async deletePayout(id: string): Promise<boolean> {
     return this.payouts.delete(id);
+  }
+
+  // Payout Batches
+  async getPayoutBatches(): Promise<PayoutBatch[]> {
+    return Array.from(this.payoutBatches.values());
+  }
+
+  async getPayoutBatch(id: string): Promise<PayoutBatch | undefined> {
+    return this.payoutBatches.get(id);
+  }
+
+  async createPayoutBatch(batch: InsertPayoutBatch): Promise<PayoutBatch> {
+    const id = randomUUID();
+    const newBatch: PayoutBatch = {
+      id,
+      ...batch,
+      notes: batch.notes || null,
+      status: batch.status || "pending",
+      createdAt: new Date()
+    };
+    this.payoutBatches.set(id, newBatch);
+    return newBatch;
+  }
+
+  async updatePayoutBatch(id: string, batch: Partial<InsertPayoutBatch>): Promise<PayoutBatch | undefined> {
+    const existing = this.payoutBatches.get(id);
+    if (!existing) return undefined;
+    
+    const updated: PayoutBatch = { ...existing, ...batch };
+    this.payoutBatches.set(id, updated);
+    return updated;
+  }
+
+  async deletePayoutBatch(id: string): Promise<boolean> {
+    return this.payoutBatches.delete(id);
+  }
+
+  async getPayoutsByBatch(batchId: string): Promise<Payout[]> {
+    return Array.from(this.payouts.values()).filter(payout => 
+      payout.batchId === batchId
+    );
   }
 
   // Business Settings

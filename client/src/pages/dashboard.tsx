@@ -280,6 +280,31 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
+              {/* Payout Batches Quick Access */}
+              <div className="mb-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Recent Payout Batches</CardTitle>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedTab("payouts")}
+                      >
+                        Manage Batches
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-4 text-gray-500">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Create payout batches to organize payouts by check dates</p>
+                      <p className="text-xs text-gray-400 mt-1">Click "Manage Batches" to get started</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Key Metrics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
                 <Card>
