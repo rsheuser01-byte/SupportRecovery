@@ -170,7 +170,17 @@ export default function Dashboard() {
   };
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString('en-US', { 
+    // Handle timezone offset to prevent day-behind display
+    const dateObj = new Date(date);
+    if (typeof date === 'string' && !date.includes('T')) {
+      // If it's a date-only string, treat it as local date
+      return new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+    return dateObj.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
       day: 'numeric' 
@@ -416,7 +426,7 @@ export default function Dashboard() {
                                 
                                 return (
                                   <div key={checkDate} className="flex justify-between py-1">
-                                    <span className="text-gray-600">{new Date(checkDate! + 'T12:00:00').toLocaleDateString()}:</span>
+                                    <span className="text-gray-600">{formatDate(checkDate!)}:</span>
                                     <span className="font-medium">{formatCurrency(checkDateTotal)}</span>
                                   </div>
                                 );
@@ -583,7 +593,8 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
+                        <TableHead>Service Date</TableHead>
+                        <TableHead>Check Date</TableHead>
                         <TableHead>Patient</TableHead>
                         <TableHead>House</TableHead>
                         <TableHead>Service</TableHead>
@@ -601,6 +612,7 @@ export default function Dashboard() {
                         return (
                           <TableRow key={entry.id}>
                             <TableCell>{formatDate(entry.date)}</TableCell>
+                            <TableCell>{entry.checkDate ? formatDate(entry.checkDate) : '-'}</TableCell>
                             <TableCell>{patient?.name || 'Unknown'}</TableCell>
                             <TableCell>{house?.name}</TableCell>
                             <TableCell>{serviceCode?.code}</TableCell>
