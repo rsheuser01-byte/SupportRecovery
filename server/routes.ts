@@ -293,11 +293,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/expenses", async (req, res) => {
     try {
+      console.log("Received expense data:", req.body);
       const expenseData = insertExpenseSchema.parse(req.body);
+      console.log("Parsed expense data:", expenseData);
       const expense = await storage.createExpense(expenseData);
       res.json(expense);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid expense data" });
+    } catch (error: any) {
+      console.error("Expense validation error:", error);
+      res.status(400).json({ message: "Invalid expense data", error: error.message });
     }
   });
 
