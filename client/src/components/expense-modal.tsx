@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { insertExpenseSchema, type InsertExpense } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,18 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-const expenseSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Amount must be a positive number",
-  }),
-  vendor: z.string().min(1, "Vendor is required"),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().optional(),
-  status: z.string().default("paid"),
-});
 
-type ExpenseForm = z.infer<typeof expenseSchema>;
 
 interface ExpenseModalProps {
   open: boolean;
@@ -33,11 +22,10 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<ExpenseForm>({
-    resolver: zodResolver(expenseSchema),
+  const form = useForm({
     defaultValues: {
-      date: new Date().toISOString().split('T')[0],
-      amount: "",
+      date: new Date().toISOString().slice(0, 16),
+      amount: "0.00",
       vendor: "",
       category: "",
       description: "",
@@ -58,13 +46,17 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
     },
   });
 
-  const onSubmit = (data: ExpenseForm) => {
+  const onSubmit = (data: any) => {
     const submitData = {
-      ...data,
-      date: new Date(data.date).toISOString(),
-      amount: parseFloat(data.amount).toFixed(2),
+      date: new Date(data.date),
+      amount: data.amount,
+      vendor: data.vendor,
+      category: data.category,
+      description: data.description || null,
+      status: data.status || "paid",
     };
     
+    console.log("Submitting expense data:", submitData);
     createExpenseMutation.mutate(submitData);
   };
 
@@ -81,8 +73,11 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
               <Label htmlFor="date">Date</Label>
               <Input 
                 id="date"
-                type="date" 
-                {...form.register("date")}
+                type="datetime-local" 
+                {...form.register("date", {
+                  setValueAs: (value) => new Date(value)
+                })}
+                defaultValue={new Date().toISOString().slice(0, 16)}
                 className="mt-1"
               />
               {form.formState.errors.date && (
@@ -93,9 +88,8 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
               <Label htmlFor="amount">Amount</Label>
               <Input 
                 id="amount"
-                type="number" 
+                type="text" 
                 placeholder="0.00" 
-                step="0.01"
                 {...form.register("amount")}
                 className="mt-1"
               />
