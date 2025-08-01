@@ -416,7 +416,7 @@ export default function Dashboard() {
                                 
                                 return (
                                   <div key={checkDate} className="flex justify-between py-1">
-                                    <span className="text-gray-600">{new Date(checkDate!).toLocaleDateString()}:</span>
+                                    <span className="text-gray-600">{new Date(checkDate! + 'T12:00:00').toLocaleDateString()}:</span>
                                     <span className="font-medium">{formatCurrency(checkDateTotal)}</span>
                                   </div>
                                 );
@@ -483,7 +483,12 @@ export default function Dashboard() {
                             </div>
                             <div className="text-right">
                               <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
-                              <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
+                              <p className="text-sm text-gray-500">
+                                Service: {formatDate(entry.date)}
+                                {entry.checkDate && (
+                                  <span className="ml-2">• Check: {formatDate(entry.checkDate)}</span>
+                                )}
+                              </p>
                             </div>
                           </div>
                         );
