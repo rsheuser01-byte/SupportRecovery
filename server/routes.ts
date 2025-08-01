@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema, insertCheckDaySchema, insertBusinessSettingsSchema 
+  insertExpenseSchema, insertBusinessSettingsSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -255,33 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed revenue entry data:", revenueEntryData);
       const revenueEntry = await storage.createRevenueEntry(revenueEntryData);
       
-      // Find or create check day for this date
-      const entryDate = new Date(revenueEntry.date);
-      const dateStr = entryDate.toISOString().split('T')[0];
-      const existingCheckDays = await storage.getCheckDays();
-      
-      let checkDay = existingCheckDays.find(cd => {
-        const checkDateStr = new Date(cd.checkDate).toISOString().split('T')[0];
-        return checkDateStr === dateStr;
-      });
-
-      // If no check day exists for this date, create one
-      if (!checkDay) {
-        const checkDayName = `Checks - ${entryDate.toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
-        })}`;
-        
-        checkDay = await storage.createCheckDay({
-          name: checkDayName,
-          checkDate: entryDate,
-          status: "pending",
-          notes: "Auto-created for revenue entries"
-        });
-      }
-      
-      // Calculate and create payouts, linking them to the check day
+      // Calculate and create payouts
       const payoutRates = await storage.getPayoutRates();
       const relevantRates = payoutRates.filter(rate => 
         rate.houseId === revenueEntry.houseId && rate.serviceCodeId === revenueEntry.serviceCodeId
@@ -292,7 +266,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createPayout({
           revenueEntryId: revenueEntry.id,
           staffId: rate.staffId,
-          checkDayId: checkDay.id, // Link to the check day
           amount,
           percentage: rate.percentage
         });
@@ -350,7 +323,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createPayout({
           revenueEntryId: revenueEntry.id,
           staffId: rate.staffId,
-          checkDayId: null,
           amount,
           percentage: rate.percentage
         });
@@ -485,120 +457,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(payoutPreview);
     } catch (error) {
       res.status(400).json({ message: "Invalid calculation data" });
-    }
-  });
-
-  // Check Days
-  app.get("/api/check-days", async (req, res) => {
-    try {
-      const checkDays = await storage.getCheckDays();
-      res.json(checkDays);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch check days" });
-    }
-  });
-
-  app.post("/api/check-days", async (req, res) => {
-    try {
-      console.log("Received check day data:", JSON.stringify(req.body, null, 2));
-      
-      // Handle date conversion more carefully
-      let checkDate;
-      if (req.body.checkDate) {
-        if (req.body.checkDate instanceof Date) {
-          checkDate = req.body.checkDate;
-        } else {
-          checkDate = new Date(req.body.checkDate);
-        }
-        
-        // Check if date is valid
-        if (isNaN(checkDate.getTime())) {
-          throw new Error("Invalid date format");
-        }
-      }
-      
-      const processedData = {
-        ...req.body,
-        checkDate
-      };
-      
-      console.log("Processed check day data:", JSON.stringify(processedData, null, 2));
-      const checkDayData = insertCheckDaySchema.parse(processedData);
-      console.log("Parsed check day data:", JSON.stringify(checkDayData, null, 2));
-      const checkDay = await storage.createCheckDay(checkDayData);
-      res.json(checkDay);
-    } catch (error: any) {
-      console.error("Check day validation error:", error);
-      console.error("Error details:", error.issues || error.message);
-      res.status(400).json({ message: "Invalid check day data", error: error.message });
-    }
-  });
-
-  app.put("/api/check-days/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      // Convert date string to Date object before validation if date exists
-      const processedData = {
-        ...req.body,
-        ...(req.body.checkDate && { checkDate: new Date(req.body.checkDate) })
-      };
-      const checkDayData = insertCheckDaySchema.partial().parse(processedData);
-      const checkDay = await storage.updateCheckDay(id, checkDayData);
-      if (!checkDay) {
-        return res.status(404).json({ message: "Check day not found" });
-      }
-      res.json(checkDay);
-    } catch (error: any) {
-      res.status(400).json({ message: "Invalid check day data", error: error.message });
-    }
-  });
-
-  app.delete("/api/check-days/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteCheckDay(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Check day not found" });
-      }
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete check day" });
-    }
-  });
-
-  // Assign payouts to check day
-  app.post("/api/check-days/:id/assign-payouts", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { payoutIds } = req.body;
-      
-      if (!Array.isArray(payoutIds)) {
-        return res.status(400).json({ message: "payoutIds must be an array" });
-      }
-
-      // Update each payout to assign to this check day
-      const payouts = await storage.getPayouts();
-      const updatedPayouts = [];
-      
-      for (const payoutId of payoutIds) {
-        const payout = payouts.find(p => p.id === payoutId);
-        if (payout) {
-          const updatedPayout = { ...payout, checkDayId: id };
-          await storage.deletePayout(payoutId);
-          const newPayout = await storage.createPayout({
-            revenueEntryId: updatedPayout.revenueEntryId,
-            staffId: updatedPayout.staffId,
-            checkDayId: id,
-            amount: updatedPayout.amount,
-            percentage: updatedPayout.percentage
-          });
-          updatedPayouts.push(newPayout);
-        }
-      }
-
-      res.json({ success: true, updatedPayouts });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to assign payouts to check day" });
     }
   });
 

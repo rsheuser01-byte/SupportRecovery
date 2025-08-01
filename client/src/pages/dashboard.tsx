@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,9 +23,8 @@ import { ServiceCodeModal } from "../components/service-code-modal";
 import { BusinessSettingsModal } from "../components/business-settings-modal";
 import { HouseModal } from "../components/house-modal";
 import { StaffModal } from "../components/staff-modal";
-import { CheckDayModal } from "../components/check-day-modal";
 import type { 
-  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckDay 
+  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
 
 export default function Dashboard() {
@@ -42,11 +41,9 @@ export default function Dashboard() {
   const [businessSettingsModalOpen, setBusinessSettingsModalOpen] = useState(false);
   const [houseModalOpen, setHouseModalOpen] = useState(false);
   const [staffModalOpen, setStaffModalOpen] = useState(false);
-  const [checkDayModalOpen, setCheckDayModalOpen] = useState(false);
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
-  const [editingCheckDay, setEditingCheckDay] = useState<CheckDay | undefined>(undefined);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -116,10 +113,6 @@ export default function Dashboard() {
 
   const { data: payoutRates = [] } = useQuery<PayoutRate[]>({
     queryKey: ['/api/payout-rates'],
-  });
-
-  const { data: checkDays = [] } = useQuery<CheckDay[]>({
-    queryKey: ['/api/check-days'],
   });
 
   // Mutations
@@ -234,14 +227,6 @@ export default function Dashboard() {
             >
               <UserCheck className="mr-3 h-4 w-4" />
               Patients
-            </Button>
-            <Button
-              variant={selectedTab === "check-days" ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setSelectedTab("check-days")}
-            >
-              <Calculator className="mr-3 h-4 w-4" />
-              Check Days
             </Button>
             <Button
               variant={selectedTab === "reports" ? "default" : "ghost"}
@@ -1031,130 +1016,6 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Check Days Tab */}
-          <TabsContent value="check-days" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Check Days</h2>
-                  <p className="text-gray-600">Revenue entries grouped by check date with payout details</p>
-                </div>
-                <Button onClick={() => setRevenueModalOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Revenue Entry
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6 space-y-6">
-              {checkDays.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground text-center">
-                      No check days yet. Add a revenue entry to automatically create check days grouped by date.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                checkDays.map((checkDay) => {
-                  const checkDayPayouts = payouts.filter(p => p.checkDayId === checkDay.id);
-                  const checkDayRevenueIds = checkDayPayouts.map(p => p.revenueEntryId);
-                  const checkDayRevenues = revenueEntries.filter(r => checkDayRevenueIds.includes(r.id));
-                  const totalRevenue = checkDayRevenues.reduce((sum, r) => sum + parseFloat(r.amount), 0);
-                  const totalPayouts = checkDayPayouts.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-                  
-                  return (
-                    <Card key={checkDay.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="flex items-center gap-3">
-                              {checkDay.name}
-                              <Badge variant={
-                                checkDay.status === 'paid' ? 'default' :
-                                checkDay.status === 'processed' ? 'secondary' : 'outline'
-                              }>
-                                {checkDay.status || 'pending'}
-                              </Badge>
-                            </CardTitle>
-                            <CardDescription>
-                              {formatDate(checkDay.checkDate)} • 
-                              Total Revenue: {formatCurrency(totalRevenue)} • 
-                              Total Payouts: {formatCurrency(totalPayouts)}
-                            </CardDescription>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => { setEditingCheckDay(checkDay); setCheckDayModalOpen(true); }}
-                          >
-                            <Edit className="mr-1 h-3 w-3" />
-                            Manage
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {checkDayRevenues.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No revenue entries for this date.</p>
-                        ) : (
-                          <div className="space-y-4">
-                            {/* Revenue Entries */}
-                            <div>
-                              <h4 className="text-sm font-medium mb-3">Revenue Entries</h4>
-                              <div className="space-y-2">
-                                {checkDayRevenues.map((revenue) => {
-                                  const house = houses.find(h => h.id === revenue.houseId);
-                                  const service = serviceCodes.find(s => s.id === revenue.serviceCodeId);
-                                  const patient = patients.find(p => p.id === revenue.patientId);
-                                  
-                                  return (
-                                    <div key={revenue.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                      <div>
-                                        <p className="font-medium">{formatCurrency(parseFloat(revenue.amount))}</p>
-                                        <p className="text-sm text-gray-600">
-                                          {patient?.name || 'No Patient'} • {house?.name} • {service?.code}
-                                        </p>
-                                        {revenue.notes && (
-                                          <p className="text-xs text-gray-500 mt-1">{revenue.notes}</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Staff Payouts */}
-                            <div>
-                              <h4 className="text-sm font-medium mb-3">Staff Payouts</h4>
-                              <div className="space-y-2">
-                                {checkDayPayouts.map((payout) => {
-                                  const staffMember = staff.find(s => s.id === payout.staffId);
-                                  return (
-                                    <div key={payout.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                                      <div>
-                                        <p className="font-medium">{staffMember?.name}</p>
-                                        <p className="text-sm text-gray-600">{payout.percentage}% payout</p>
-                                      </div>
-                                      <div className="text-right">
-                                        <p className="font-medium">{formatCurrency(parseFloat(payout.amount))}</p>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-
-            </div>
-          </TabsContent>
-
           {/* Reports Tab */}
           <TabsContent value="reports" className="m-0">
             <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -1544,15 +1405,6 @@ export default function Dashboard() {
           if (!open) setEditingStaff(undefined);
         }}
         staff={editingStaff}
-      />
-
-      <CheckDayModal
-        isOpen={checkDayModalOpen}
-        onClose={() => {
-          setCheckDayModalOpen(false);
-          setEditingCheckDay(undefined);
-        }}
-        checkDay={editingCheckDay}
       />
     </div>
   );

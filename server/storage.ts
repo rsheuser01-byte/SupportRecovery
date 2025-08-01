@@ -6,7 +6,6 @@ import {
   type Patient, type InsertPatient,
   type RevenueEntry, type InsertRevenueEntry,
   type Expense, type InsertExpense,
-  type CheckDay, type InsertCheckDay,
   type Payout,
   type BusinessSettings, type InsertBusinessSettings
 } from "@shared/schema";
@@ -67,13 +66,6 @@ export interface IStorage {
   createPayout(payout: Omit<Payout, 'id'>): Promise<Payout>;
   deletePayout(id: string): Promise<boolean>;
 
-  // Check Days
-  getCheckDays(): Promise<CheckDay[]>;
-  getCheckDay(id: string): Promise<CheckDay | undefined>;
-  createCheckDay(checkDay: InsertCheckDay): Promise<CheckDay>;
-  updateCheckDay(id: string, checkDay: Partial<InsertCheckDay>): Promise<CheckDay | undefined>;
-  deleteCheckDay(id: string): Promise<boolean>;
-
   // Business Settings
   getBusinessSettings(): Promise<BusinessSettings | undefined>;
   updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings>;
@@ -88,7 +80,6 @@ export class MemStorage implements IStorage {
   private revenueEntries: Map<string, RevenueEntry> = new Map();
   private expenses: Map<string, Expense> = new Map();
   private payouts: Map<string, Payout> = new Map();
-  private checkDays: Map<string, CheckDay> = new Map();
   private businessSettings: BusinessSettings | null = null;
 
   constructor() {
@@ -438,42 +429,6 @@ export class MemStorage implements IStorage {
 
   async deletePayout(id: string): Promise<boolean> {
     return this.payouts.delete(id);
-  }
-
-  // Check Days
-  async getCheckDays(): Promise<CheckDay[]> {
-    return Array.from(this.checkDays.values());
-  }
-
-  async getCheckDay(id: string): Promise<CheckDay | undefined> {
-    return this.checkDays.get(id);
-  }
-
-  async createCheckDay(checkDay: InsertCheckDay): Promise<CheckDay> {
-    const id = `checkday-${Date.now()}`;
-    const newCheckDay: CheckDay = {
-      id,
-      ...checkDay,
-      createdAt: new Date(),
-    };
-    this.checkDays.set(id, newCheckDay);
-    return newCheckDay;
-  }
-
-  async updateCheckDay(id: string, checkDay: Partial<InsertCheckDay>): Promise<CheckDay | undefined> {
-    const existing = this.checkDays.get(id);
-    if (!existing) return undefined;
-    
-    const updated: CheckDay = {
-      ...existing,
-      ...checkDay,
-    };
-    this.checkDays.set(id, updated);
-    return updated;
-  }
-
-  async deleteCheckDay(id: string): Promise<boolean> {
-    return this.checkDays.delete(id);
   }
 
   // Business Settings
