@@ -171,15 +171,26 @@ export default function Dashboard() {
 
   const formatDate = (date: string | Date) => {
     // Handle timezone offset to prevent day-behind display
-    const dateObj = new Date(date);
-    if (typeof date === 'string' && !date.includes('T')) {
-      // If it's a date-only string, treat it as local date
-      return new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
+    if (typeof date === 'string') {
+      if (!date.includes('T')) {
+        // If it's a date-only string, treat it as local date
+        return new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } else if (date.includes('T00:00:00')) {
+        // If it's a datetime string at midnight, extract just the date part to avoid timezone shift
+        const datePart = date.split('T')[0];
+        return new Date(datePart + 'T12:00:00').toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      }
     }
+    // For other datetime formats, use as-is
+    const dateObj = new Date(date);
     return dateObj.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
