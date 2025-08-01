@@ -14,11 +14,13 @@ import {
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
   Settings, Home, UserCheck, Calculator
 } from "lucide-react";
-import RevenueChart from "@/components/revenue-chart";
-import RevenueEntryModal from "@/components/revenue-entry-modal";
-import ExpenseModal from "@/components/expense-modal";
-import PatientModal from "@/components/patient-modal";
-import PayoutRatesModal from "@/components/payout-rates-modal";
+import RevenueChart from "../components/revenue-chart";
+import RevenueEntryModal from "../components/revenue-entry-modal";
+import ExpenseModal from "../components/expense-modal";
+import PatientModal from "../components/patient-modal";
+import PayoutRatesModal from "../components/payout-rates-modal";
+import { ServiceCodeModal } from "@/components/service-code-modal";
+import { BusinessSettingsModal } from "@/components/business-settings-modal";
 import type { 
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
@@ -29,6 +31,9 @@ export default function Dashboard() {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
   const [payoutRatesModalOpen, setPayoutRatesModalOpen] = useState(false);
+  const [serviceCodeModalOpen, setServiceCodeModalOpen] = useState(false);
+  const [businessSettingsModalOpen, setBusinessSettingsModalOpen] = useState(false);
+  const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1002,13 +1007,17 @@ export default function Dashboard() {
                           <Users className="mr-3 h-4 w-4" />
                           Manage Staff
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start">
+                        <Button variant="ghost" className="w-full justify-start" onClick={() => setServiceCodeModalOpen(true)}>
                           <Settings className="mr-3 h-4 w-4" />
                           Service Codes
                         </Button>
                         <Button variant="ghost" className="w-full justify-start" onClick={() => setPayoutRatesModalOpen(true)}>
                           <Calculator className="mr-3 h-4 w-4" />
                           Payout Rates
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start" onClick={() => setBusinessSettingsModalOpen(true)}>
+                          <Settings className="mr-3 h-4 w-4" />
+                          Business Settings
                         </Button>
                       </div>
                     </CardContent>
@@ -1018,26 +1027,32 @@ export default function Dashboard() {
                 <div className="lg:col-span-2">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Manage Houses</CardTitle>
-                      <Button>
+                      <CardTitle>Manage Service Codes</CardTitle>
+                      <Button onClick={() => { setEditingServiceCode(undefined); setServiceCodeModalOpen(true); }}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Add House
+                        Add Service Code
                       </Button>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {houses.map((house) => (
-                          <div key={house.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        {serviceCodes.map((serviceCode) => (
+                          <div key={serviceCode.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                             <div>
-                              <h4 className="font-medium text-gray-900">{house.name}</h4>
-                              <p className="text-sm text-gray-500">{house.address}</p>
+                              <h4 className="font-medium text-gray-900">{serviceCode.code}</h4>
+                              <p className="text-sm text-gray-500">{serviceCode.description || 'No description'}</p>
                               <p className="text-sm text-gray-500">
-                                Active Patients: {patients.filter(p => p.houseId === house.id && p.status === 'active').length}
+                                Status: {serviceCode.isActive ? 'Active' : 'Inactive'}
                               </p>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <Button variant="outline" size="sm">Edit</Button>
-                              <Button variant="outline" size="sm">Deactivate</Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => { setEditingServiceCode(serviceCode); setServiceCodeModalOpen(true); }}
+                              >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Edit
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -1078,6 +1093,20 @@ export default function Dashboard() {
         serviceCodes={serviceCodes}
         staff={staff}
         payoutRates={payoutRates}
+      />
+
+      <ServiceCodeModal
+        open={serviceCodeModalOpen}
+        onOpenChange={(open) => {
+          setServiceCodeModalOpen(open);
+          if (!open) setEditingServiceCode(undefined);
+        }}
+        serviceCode={editingServiceCode}
+      />
+
+      <BusinessSettingsModal
+        open={businessSettingsModalOpen}
+        onOpenChange={setBusinessSettingsModalOpen}
       />
     </div>
   );

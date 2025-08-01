@@ -72,6 +72,14 @@ export const payouts = pgTable("payouts", {
   percentage: numeric("percentage", { precision: 5, scale: 2 }).notNull(),
 });
 
+export const businessSettings = pgTable("business_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  address: text("address"),
+  phone: text("phone"),
+  email: text("email"),
+});
+
 // Insert schemas
 export const insertHouseSchema = createInsertSchema(houses).omit({ id: true });
 export const insertServiceCodeSchema = createInsertSchema(serviceCodes).omit({ id: true });
@@ -80,6 +88,7 @@ export const insertPayoutRateSchema = createInsertSchema(payoutRates).omit({ id:
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true });
 export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
+export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
 
 // Types
 export type House = typeof houses.$inferSelect;
@@ -97,3 +106,5 @@ export type InsertRevenueEntry = z.infer<typeof insertRevenueEntrySchema>;
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Payout = typeof payouts.$inferSelect;
+export type BusinessSettings = typeof businessSettings.$inferSelect;
+export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;

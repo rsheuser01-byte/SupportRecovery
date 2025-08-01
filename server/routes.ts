@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema 
+  insertExpenseSchema, insertBusinessSettingsSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -42,6 +42,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceCodeData = insertServiceCodeSchema.parse(req.body);
       const serviceCode = await storage.createServiceCode(serviceCodeData);
+      res.json(serviceCode);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid service code data" });
+    }
+  });
+
+  app.put("/api/service-codes/:id", async (req, res) => {
+    try {
+      const serviceCodeData = insertServiceCodeSchema.partial().parse(req.body);
+      const serviceCode = await storage.updateServiceCode(req.params.id, serviceCodeData);
+      if (!serviceCode) {
+        return res.status(404).json({ message: "Service code not found" });
+      }
       res.json(serviceCode);
     } catch (error) {
       res.status(400).json({ message: "Invalid service code data" });
@@ -289,6 +302,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(payoutPreview);
     } catch (error) {
       res.status(400).json({ message: "Invalid calculation data" });
+    }
+  });
+
+  // Business Settings
+  app.get("/api/business-settings", async (req, res) => {
+    try {
+      const settings = await storage.getBusinessSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch business settings" });
+    }
+  });
+
+  app.put("/api/business-settings", async (req, res) => {
+    try {
+      const settingsData = insertBusinessSettingsSchema.parse(req.body);
+      const settings = await storage.updateBusinessSettings(settingsData);
+      res.json(settings);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid business settings data" });
     }
   });
 

@@ -6,7 +6,8 @@ import {
   type Patient, type InsertPatient,
   type RevenueEntry, type InsertRevenueEntry,
   type Expense, type InsertExpense,
-  type Payout
+  type Payout,
+  type BusinessSettings, type InsertBusinessSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -60,6 +61,10 @@ export interface IStorage {
   getPayouts(): Promise<Payout[]>;
   getPayoutsByRevenueEntry(revenueEntryId: string): Promise<Payout[]>;
   createPayout(payout: Omit<Payout, 'id'>): Promise<Payout>;
+
+  // Business Settings
+  getBusinessSettings(): Promise<BusinessSettings | undefined>;
+  updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings>;
 }
 
 export class MemStorage implements IStorage {
@@ -71,6 +76,7 @@ export class MemStorage implements IStorage {
   private revenueEntries: Map<string, RevenueEntry> = new Map();
   private expenses: Map<string, Expense> = new Map();
   private payouts: Map<string, Payout> = new Map();
+  private businessSettings: BusinessSettings | null = null;
 
   constructor() {
     this.initializeData();
@@ -151,6 +157,15 @@ export class MemStorage implements IStorage {
       { id: "rate-30", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-5", percentage: "0.00" },
     ];
     payoutRatesData.forEach(rate => this.payoutRates.set(rate.id, rate));
+
+    // Initialize business settings
+    this.businessSettings = {
+      id: "business-1",
+      name: "Healthcare Management Solutions",
+      address: "123 Healthcare Blvd, Medical City, MC 12345",
+      phone: "(555) 123-4567",
+      email: "info@healthcaremanagement.com"
+    };
   }
 
   // Houses
@@ -394,6 +409,23 @@ export class MemStorage implements IStorage {
     const newPayout: Payout = { ...payout, id };
     this.payouts.set(id, newPayout);
     return newPayout;
+  }
+
+  // Business Settings
+  async getBusinessSettings(): Promise<BusinessSettings | undefined> {
+    return this.businessSettings || undefined;
+  }
+
+  async updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings> {
+    const updated: BusinessSettings = {
+      id: this.businessSettings?.id || randomUUID(),
+      ...settings,
+      address: settings.address || null,
+      phone: settings.phone || null,
+      email: settings.email || null
+    };
+    this.businessSettings = updated;
+    return updated;
   }
 }
 
