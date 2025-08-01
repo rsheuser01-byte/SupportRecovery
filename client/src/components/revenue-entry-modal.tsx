@@ -190,7 +190,7 @@ export default function RevenueEntryModal({
 
           <div>
             <Label htmlFor="patientId">Patient (Optional)</Label>
-            <Select onValueChange={(value) => form.setValue("patientId", value)}>
+            <Select onValueChange={(value) => form.setValue("patientId", value)} value={form.watch("patientId") || "none"}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Search or select patient..." />
               </SelectTrigger>
@@ -208,7 +208,7 @@ export default function RevenueEntryModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="houseId">House</Label>
-              <Select onValueChange={(value) => form.setValue("houseId", value)}>
+              <Select onValueChange={(value) => form.setValue("houseId", value)} value={form.watch("houseId")}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select House" />
                 </SelectTrigger>
@@ -224,7 +224,7 @@ export default function RevenueEntryModal({
             </div>
             <div>
               <Label htmlFor="serviceCodeId">Service Code</Label>
-              <Select onValueChange={(value) => form.setValue("serviceCodeId", value)}>
+              <Select onValueChange={(value) => form.setValue("serviceCodeId", value)} value={form.watch("serviceCodeId")}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select Service" />
                 </SelectTrigger>
