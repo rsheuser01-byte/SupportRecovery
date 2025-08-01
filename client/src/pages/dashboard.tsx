@@ -23,8 +23,9 @@ import { ServiceCodeModal } from "../components/service-code-modal";
 import { BusinessSettingsModal } from "../components/business-settings-modal";
 import { HouseModal } from "../components/house-modal";
 import { StaffModal } from "../components/staff-modal";
+import { PayoutBatchModal } from "../components/payout-batch-modal";
 import type { 
-  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
+  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, PayoutBatch 
 } from "@shared/schema";
 
 export default function Dashboard() {
@@ -44,6 +45,8 @@ export default function Dashboard() {
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
+  const [payoutBatchModalOpen, setPayoutBatchModalOpen] = useState(false);
+  const [editingPayoutBatch, setEditingPayoutBatch] = useState<PayoutBatch | undefined>(undefined);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -113,6 +116,10 @@ export default function Dashboard() {
 
   const { data: payoutRates = [] } = useQuery<PayoutRate[]>({
     queryKey: ['/api/payout-rates'],
+  });
+
+  const { data: payoutBatches = [] } = useQuery<PayoutBatch[]>({
+    queryKey: ['/api/payout-batches'],
   });
 
   // Mutations
@@ -653,6 +660,62 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
+              {/* Payout Batches Management */}
+              <Card className="mb-6">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Payout Batches</CardTitle>
+                  <Button 
+                    onClick={() => {
+                      setEditingPayoutBatch(undefined);
+                      setPayoutBatchModalOpen(true);
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Batch
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {payoutBatches.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No payout batches created yet</p>
+                      <p className="text-sm">Create your first batch to organize payouts by check dates</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {payoutBatches.map((batch) => (
+                        <div key={batch.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{batch.name}</h4>
+                            <p className="text-sm text-gray-500">
+                              Check Date: {formatDate(batch.checkDate)} • Status: {batch.status}
+                            </p>
+                            {batch.notes && (
+                              <p className="text-xs text-gray-400 mt-1">{batch.notes}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={batch.status === 'paid' ? 'default' : 'secondary'}>
+                              {batch.status}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingPayoutBatch(batch);
+                                setPayoutBatchModalOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card className="mb-6">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Payout Rate Configuration</CardTitle>
@@ -1405,6 +1468,15 @@ export default function Dashboard() {
           if (!open) setEditingStaff(undefined);
         }}
         staff={editingStaff}
+      />
+
+      <PayoutBatchModal
+        open={payoutBatchModalOpen}
+        onOpenChange={(open) => {
+          setPayoutBatchModalOpen(open);
+          if (!open) setEditingPayoutBatch(undefined);
+        }}
+        batch={editingPayoutBatch}
       />
     </div>
   );
