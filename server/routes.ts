@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema, insertBusinessSettingsSchema 
+  insertExpenseSchema, insertCheckDaySchema, insertBusinessSettingsSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -266,6 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createPayout({
           revenueEntryId: revenueEntry.id,
           staffId: rate.staffId,
+          checkDayId: null,
           amount,
           percentage: rate.percentage
         });
@@ -323,6 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createPayout({
           revenueEntryId: revenueEntry.id,
           staffId: rate.staffId,
+          checkDayId: null,
           amount,
           percentage: rate.percentage
         });
@@ -457,6 +459,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(payoutPreview);
     } catch (error) {
       res.status(400).json({ message: "Invalid calculation data" });
+    }
+  });
+
+  // Check Days
+  app.get("/api/check-days", async (req, res) => {
+    try {
+      const checkDays = await storage.getCheckDays();
+      res.json(checkDays);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch check days" });
+    }
+  });
+
+  app.post("/api/check-days", async (req, res) => {
+    try {
+      const checkDayData = insertCheckDaySchema.parse(req.body);
+      const checkDay = await storage.createCheckDay(checkDayData);
+      res.json(checkDay);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid check day data", error: error.message });
+    }
+  });
+
+  app.put("/api/check-days/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const checkDayData = insertCheckDaySchema.partial().parse(req.body);
+      const checkDay = await storage.updateCheckDay(id, checkDayData);
+      if (!checkDay) {
+        return res.status(404).json({ message: "Check day not found" });
+      }
+      res.json(checkDay);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid check day data", error: error.message });
+    }
+  });
+
+  app.delete("/api/check-days/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCheckDay(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Check day not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete check day" });
+    }
+  });
+
+  // Assign payouts to check day
+  app.post("/api/check-days/:id/assign-payouts", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { payoutIds } = req.body;
+      
+      if (!Array.isArray(payoutIds)) {
+        return res.status(400).json({ message: "payoutIds must be an array" });
+      }
+
+      // Update each payout to assign to this check day
+      const payouts = await storage.getPayouts();
+      const updatedPayouts = [];
+      
+      for (const payoutId of payoutIds) {
+        const payout = payouts.find(p => p.id === payoutId);
+        if (payout) {
+          const updatedPayout = { ...payout, checkDayId: id };
+          await storage.deletePayout(payoutId);
+          const newPayout = await storage.createPayout({
+            revenueEntryId: updatedPayout.revenueEntryId,
+            staffId: updatedPayout.staffId,
+            checkDayId: id,
+            amount: updatedPayout.amount,
+            percentage: updatedPayout.percentage
+          });
+          updatedPayouts.push(newPayout);
+        }
+      }
+
+      res.json({ success: true, updatedPayouts });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to assign payouts to check day" });
     }
   });
 

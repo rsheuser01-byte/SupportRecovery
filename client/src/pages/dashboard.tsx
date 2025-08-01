@@ -23,8 +23,9 @@ import { ServiceCodeModal } from "../components/service-code-modal";
 import { BusinessSettingsModal } from "../components/business-settings-modal";
 import { HouseModal } from "../components/house-modal";
 import { StaffModal } from "../components/staff-modal";
+import { CheckDayModal } from "../components/check-day-modal";
 import type { 
-  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
+  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckDay 
 } from "@shared/schema";
 
 export default function Dashboard() {
@@ -41,9 +42,11 @@ export default function Dashboard() {
   const [businessSettingsModalOpen, setBusinessSettingsModalOpen] = useState(false);
   const [houseModalOpen, setHouseModalOpen] = useState(false);
   const [staffModalOpen, setStaffModalOpen] = useState(false);
+  const [checkDayModalOpen, setCheckDayModalOpen] = useState(false);
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
+  const [editingCheckDay, setEditingCheckDay] = useState<CheckDay | undefined>(undefined);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -113,6 +116,10 @@ export default function Dashboard() {
 
   const { data: payoutRates = [] } = useQuery<PayoutRate[]>({
     queryKey: ['/api/payout-rates'],
+  });
+
+  const { data: checkDays = [] } = useQuery<CheckDay[]>({
+    queryKey: ['/api/check-days'],
   });
 
   // Mutations
@@ -227,6 +234,14 @@ export default function Dashboard() {
             >
               <UserCheck className="mr-3 h-4 w-4" />
               Patients
+            </Button>
+            <Button
+              variant={selectedTab === "check-days" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("check-days")}
+            >
+              <Calculator className="mr-3 h-4 w-4" />
+              Check Days
             </Button>
             <Button
               variant={selectedTab === "reports" ? "default" : "ghost"}
@@ -1016,6 +1031,150 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* Check Days Tab */}
+          <TabsContent value="check-days" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Check Days Management</h2>
+                  <p className="text-gray-600">Create and manage check days for staff payouts</p>
+                </div>
+                <Button onClick={() => {
+                  setEditingCheckDay(undefined);
+                  setCheckDayModalOpen(true);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Check Day
+                </Button>
+              </div>
+            </header>
+
+            <div className="p-6">
+              {/* Check Days List */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Recent Check Days</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Check Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Total Payouts</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {checkDays.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            No check days created yet. Create your first check day to start tracking payouts.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        checkDays.map((checkDay) => {
+                          const checkDayPayouts = payouts.filter(p => p.checkDayId === checkDay.id);
+                          const totalAmount = checkDayPayouts.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+                          
+                          return (
+                            <TableRow key={checkDay.id}>
+                              <TableCell className="font-medium">{checkDay.name}</TableCell>
+                              <TableCell>{formatDate(checkDay.checkDate)}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  checkDay.status === 'paid' ? 'default' :
+                                  checkDay.status === 'processed' ? 'secondary' : 'outline'
+                                }>
+                                  {checkDay.status || 'pending'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{formatCurrency(totalAmount)}</TableCell>
+                              <TableCell className="max-w-xs truncate">{checkDay.notes || 'No notes'}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingCheckDay(checkDay);
+                                      setCheckDayModalOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Unassigned Payouts */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Unassigned Payouts</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    These payouts haven't been assigned to a check day yet
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Staff Member</TableHead>
+                        <TableHead>Revenue Entry</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Percentage</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payouts.filter(p => !p.checkDayId).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            All payouts have been assigned to check days.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        payouts.filter(p => !p.checkDayId).map((payout) => {
+                          const staffMember = staff.find(s => s.id === payout.staffId);
+                          const revenueEntry = revenueEntries.find(r => r.id === payout.revenueEntryId);
+                          const serviceCode = serviceCodes.find(s => s.id === revenueEntry?.serviceCodeId);
+                          
+                          return (
+                            <TableRow key={payout.id}>
+                              <TableCell className="font-medium">{staffMember?.name}</TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <div className="font-medium">{formatCurrency(parseFloat(revenueEntry?.amount || '0'))}</div>
+                                  <div className="text-gray-500">{formatDate(revenueEntry?.date || new Date())}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{serviceCode?.code}</TableCell>
+                              <TableCell>{payout.percentage}%</TableCell>
+                              <TableCell className="font-medium">{formatCurrency(parseFloat(payout.amount))}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Unassigned</Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* Reports Tab */}
           <TabsContent value="reports" className="m-0">
             <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -1405,6 +1564,15 @@ export default function Dashboard() {
           if (!open) setEditingStaff(undefined);
         }}
         staff={editingStaff}
+      />
+
+      <CheckDayModal
+        isOpen={checkDayModalOpen}
+        onClose={() => {
+          setCheckDayModalOpen(false);
+          setEditingCheckDay(undefined);
+        }}
+        checkDay={editingCheckDay}
       />
     </div>
   );

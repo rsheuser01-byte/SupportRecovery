@@ -68,8 +68,18 @@ export const payouts = pgTable("payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   revenueEntryId: varchar("revenue_entry_id").notNull().references(() => revenueEntries.id),
   staffId: varchar("staff_id").notNull().references(() => staff.id),
+  checkDayId: varchar("check_day_id").references(() => checkDays.id),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   percentage: numeric("percentage", { precision: 5, scale: 2 }).notNull(),
+});
+
+export const checkDays = pgTable("check_days", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  checkDate: timestamp("check_date").notNull(),
+  notes: text("notes"),
+  status: text("status").default("pending"), // pending, processed, paid
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const businessSettings = pgTable("business_settings", {
@@ -88,6 +98,7 @@ export const insertPayoutRateSchema = createInsertSchema(payoutRates).omit({ id:
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true });
 export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
+export const insertCheckDaySchema = createInsertSchema(checkDays).omit({ id: true, createdAt: true });
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
 
 // Types
@@ -105,6 +116,8 @@ export type RevenueEntry = typeof revenueEntries.$inferSelect;
 export type InsertRevenueEntry = z.infer<typeof insertRevenueEntrySchema>;
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type CheckDay = typeof checkDays.$inferSelect;
+export type InsertCheckDay = z.infer<typeof insertCheckDaySchema>;
 export type Payout = typeof payouts.$inferSelect;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
