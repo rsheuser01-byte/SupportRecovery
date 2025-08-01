@@ -279,20 +279,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.put("/api/revenue-entries/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const revenueEntryData = insertRevenueEntrySchema.partial().parse(req.body);
-      const revenueEntry = await storage.updateRevenueEntry(id, revenueEntryData);
-      if (!revenueEntry) {
-        return res.status(404).json({ message: "Revenue entry not found" });
-      }
-      res.json(revenueEntry);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid revenue entry data" });
-    }
-  });
-
-  app.put("/api/revenue-entries/:id", async (req, res) => {
+    console.log("=== PUT /api/revenue-entries/:id CALLED ===");
+    console.log("Request ID:", req.params.id);
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
       const { id } = req.params;
       console.log("Updating revenue entry with ID:", id);
