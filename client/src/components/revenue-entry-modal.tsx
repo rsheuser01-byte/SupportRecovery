@@ -133,12 +133,14 @@ export default function RevenueEntryModal({
   }, watchedValues);
 
   const onSubmit = (data: RevenueEntryForm) => {
+    console.log("Form data before processing:", data);
     const submitData = {
       ...data,
       date: new Date(data.date).toISOString(),
       amount: parseFloat(data.amount).toFixed(2),
-      patientId: data.patientId === "none" ? undefined : data.patientId || undefined,
+      patientId: data.patientId === "none" || !data.patientId ? null : data.patientId,
     };
+    console.log("Processed submit data:", submitData);
     
     if (isEdit) {
       updateRevenueMutation.mutate(submitData);

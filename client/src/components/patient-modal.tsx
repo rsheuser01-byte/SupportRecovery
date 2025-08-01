@@ -141,7 +141,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
 
           <div>
             <Label htmlFor="houseId">House (Optional)</Label>
-            <Select onValueChange={(value) => form.setValue("houseId", value)}>
+            <Select onValueChange={(value) => form.setValue("houseId", value)} value={form.watch("houseId") || "none"}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Select House" />
               </SelectTrigger>
@@ -176,7 +176,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
 
           <div>
             <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value) => form.setValue("status", value)} defaultValue="active">
+            <Select onValueChange={(value) => form.setValue("status", value)} value={form.watch("status") || "active"}>
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
