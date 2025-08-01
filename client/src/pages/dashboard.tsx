@@ -54,6 +54,10 @@ const availableCards: DashboardCard[] = [
   { id: 'profit-margin', title: 'Profit Margin', type: 'metric', icon: 'PieChart', color: 'indigo', visible: false, order: 5 },
   { id: 'monthly-growth', title: 'Monthly Growth', type: 'metric', icon: 'TrendingUp', color: 'emerald', visible: false, order: 6 },
   { id: 'avg-revenue-per-patient', title: 'Avg Revenue/Patient', type: 'metric', icon: 'Calculator', color: 'teal', visible: false, order: 7 },
+  { id: 'revenue-trend', title: 'Revenue Trend', type: 'chart', icon: 'BarChart3', color: 'blue', visible: true, order: 8 },
+  { id: 'revenue-by-program', title: 'Revenue by Program', type: 'chart', icon: 'PieChart', color: 'purple', visible: true, order: 9 },
+  { id: 'recent-transactions', title: 'Recent Transactions', type: 'table', icon: 'FileText', color: 'gray', visible: true, order: 10 },
+  { id: 'monthly-payouts', title: 'This Month\'s Payouts', type: 'table', icon: 'Users', color: 'orange', visible: true, order: 11 },
 ];
 
 export default function Dashboard() {
@@ -121,8 +125,11 @@ export default function Dashboard() {
     ));
   };
 
-  // Get visible cards sorted by order
+  // Get visible cards sorted by order and separated by type
   const visibleCards = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
+  const visibleMetrics = visibleCards.filter(card => card.type === 'metric');
+  const visibleCharts = visibleCards.filter(card => card.type === 'chart');
+  const visibleTables = visibleCards.filter(card => card.type === 'table');
 
   // Icon mapping
   const iconMap: Record<string, any> = {
@@ -146,6 +153,7 @@ export default function Dashboard() {
     indigo: { bg: 'bg-indigo-100', icon: 'text-indigo-600' },
     emerald: { bg: 'bg-emerald-100', icon: 'text-emerald-600' },
     teal: { bg: 'bg-teal-100', icon: 'text-teal-600' },
+    gray: { bg: 'bg-gray-100', icon: 'text-gray-600' },
   };
 
   // Metric calculation function
@@ -212,6 +220,135 @@ export default function Dashboard() {
         </CardContent>
       </Card>
     );
+  };
+
+  // Render chart card
+  const renderChartCard = (card: DashboardCard, index: number, isDragging = false) => {
+    return (
+      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{card.title}</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => removeCard(card.id)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {card.id === 'revenue-trend' && <RevenueChart data={revenueEntries} />}
+          {card.id === 'revenue-by-program' && (
+            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="text-center text-gray-500">
+                <PieChart className="h-12 w-12 mx-auto mb-2" />
+                <p>Program Distribution Chart</p>
+                <p className="text-sm">Coming Soon</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Render table card
+  const renderTableCard = (card: DashboardCard, index: number, isDragging = false) => {
+    return (
+      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{card.title}</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => removeCard(card.id)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {card.id === 'recent-transactions' && (
+            <div className="space-y-4">
+              {revenueEntries.slice(0, 5).map((entry) => {
+                const house = houses.find(h => h.id === entry.houseId);
+                const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+                const patient = patients.find(p => p.id === entry.patientId);
+                
+                return (
+                  <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                        <Plus className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {serviceCode?.description} - {house?.name}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Patient: {patient?.name || 'Unknown'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
+                      <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {revenueEntries.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No recent transactions</p>
+                </div>
+              )}
+            </div>
+          )}
+          {card.id === 'monthly-payouts' && (
+            <div className="space-y-4">
+              {staffPayouts.slice(0, 5).map((staffPayout) => (
+                <div key={staffPayout.staff.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{staffPayout.staff.name}</p>
+                      <p className="text-sm text-gray-500">{staffPayout.payouts.length} payouts</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{formatCurrency(staffPayout.totalPayout)}</p>
+                  </div>
+                </div>
+              ))}
+              {staffPayouts.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No payouts this month</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Main render function for any card type
+  const renderCard = (card: DashboardCard, index: number, isDragging = false) => {
+    switch (card.type) {
+      case 'metric':
+        return renderMetricCard(card, index, isDragging);
+      case 'chart':
+        return renderChartCard(card, index, isDragging);
+      case 'table':
+        return renderTableCard(card, index, isDragging);
+      default:
+        return renderMetricCard(card, index, isDragging);
+    }
   };
 
   // Delete mutations
@@ -487,134 +624,108 @@ export default function Dashboard() {
                 </Dialog>
               </div>
 
-              {/* Draggable Metrics Cards */}
+              {/* Draggable Dashboard */}
               <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="dashboard-cards" direction="horizontal">
+                <Droppable droppableId="dashboard-cards">
                   {(provided) => (
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8"
+                      className="space-y-6"
                     >
-                      {visibleCards.map((card, index) => (
-                        <Draggable key={card.id} draggableId={card.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="group relative"
-                            >
-                              <div
-                                {...provided.dragHandleProps}
-                                className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                              >
-                                <GripVertical className="h-4 w-4 text-gray-400" />
-                              </div>
-                              {renderMetricCard(card, index, snapshot.isDragging)}
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
+                      {/* Metrics Row */}
+                      {visibleMetrics.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                          {visibleMetrics.map((card, index) => {
+                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
+                            return (
+                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="group relative"
+                                  >
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                                    >
+                                      <GripVertical className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    {renderCard(card, globalIndex, snapshot.isDragging)}
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Charts Row */}
+                      {visibleCharts.length > 0 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {visibleCharts.map((card, index) => {
+                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
+                            return (
+                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="group relative"
+                                  >
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                                    >
+                                      <GripVertical className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    {renderCard(card, globalIndex, snapshot.isDragging)}
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Tables Row */}
+                      {visibleTables.length > 0 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          {visibleTables.map((card, index) => {
+                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
+                            const colSpan = card.id === 'recent-transactions' ? 'lg:col-span-2' : '';
+                            return (
+                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`group relative ${colSpan}`}
+                                  >
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                                    >
+                                      <GripVertical className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    {renderCard(card, globalIndex, snapshot.isDragging)}
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </div>
+                      )}
                       {provided.placeholder}
                     </div>
                   )}
                 </Droppable>
               </DragDropContext>
 
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue Trend</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RevenueChart data={revenueEntries} />
-                  </CardContent>
-                </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue by Program</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                      <div className="text-center text-gray-500">
-                        <PieChart className="h-12 w-12 mx-auto mb-2" />
-                        <p>Program Distribution Chart</p>
-                        <p className="text-sm">Coming Soon</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
 
-              {/* Recent Activity & Payout Summary */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Recent Transactions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {revenueEntries.slice(0, 5).map((entry) => {
-                        const house = houses.find(h => h.id === entry.houseId);
-                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
-                        const patient = patients.find(p => p.id === entry.patientId);
-                        
-                        return (
-                          <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                <Plus className="h-4 w-4 text-green-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {serviceCode?.description} - {house?.name}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Patient: {patient?.name || 'Unknown'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
-                              <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>This Month's Payouts</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
-                        <div key={staffMember.id} className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">{staffMember.name}</p>
-                            <p className="text-sm text-gray-500">Staff Member</p>
-                          </div>
-                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <Button 
-                        className="w-full"
-                        onClick={() => setSelectedTab("payouts")}
-                      >
-                        View Detailed Payouts
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           </TabsContent>
 
