@@ -142,7 +142,16 @@ export default function Dashboard() {
   // Calculate dashboard metrics
   const totalRevenue = revenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
   const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-  const netProfit = totalRevenue - totalExpenses;
+  
+  // Calculate George's portion (business owner's share) for profit calculation
+  const georgeStaff = staff.find(s => s.name === "George");
+  const georgeRevenue = georgeStaff ? 
+    payouts
+      .filter(p => p.staffId === georgeStaff.id)
+      .reduce((sum, payout) => sum + parseFloat(payout.amount), 0)
+    : 0;
+  
+  const netProfit = georgeRevenue - totalExpenses;
   const activePatients = patients.filter(p => p.status === 'active').length;
 
   // Calculate staff payouts for current month
@@ -272,7 +281,7 @@ export default function Dashboard() {
 
             <div className="p-6">
               {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -313,11 +322,27 @@ export default function Dashboard() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
+                        <p className="text-sm font-medium text-gray-600">Your Revenue Share</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(georgeRevenue)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          George's portion from payouts
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 rounded-full">
+                        <UserCheck className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
                         <p className="text-sm font-medium text-gray-600">Net Profit</p>
                         <p className="text-2xl font-bold text-gray-900">{formatCurrency(netProfit)}</p>
-                        <p className="text-sm text-green-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
-                          15% vs last month
+                        <p className="text-xs text-gray-500 mt-1">
+                          Your revenue - Total expenses
                         </p>
                       </div>
                       <div className="p-3 bg-blue-100 rounded-full">
