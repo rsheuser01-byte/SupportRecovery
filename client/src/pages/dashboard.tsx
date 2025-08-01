@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
   const [payoutRatesModalOpen, setPayoutRatesModalOpen] = useState(false);
   const [serviceCodeModalOpen, setServiceCodeModalOpen] = useState(false);
   const [businessSettingsModalOpen, setBusinessSettingsModalOpen] = useState(false);
@@ -828,7 +829,10 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-gray-900">Patient Management</h2>
                   <p className="text-gray-600">Manage patient profiles and program assignments</p>
                 </div>
-                <Button onClick={() => setPatientModalOpen(true)}>
+                <Button onClick={() => {
+                  setEditingPatient(undefined);
+                  setPatientModalOpen(true);
+                }}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Patient
                 </Button>
@@ -914,10 +918,24 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingPatient(patient);
+                                    setPatientModalOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingPatient(patient);
+                                    setPatientModalOpen(true);
+                                  }}
+                                >
                                   View
                                 </Button>
                               </div>
@@ -1270,8 +1288,12 @@ export default function Dashboard() {
       
       <PatientModal 
         open={patientModalOpen} 
-        onOpenChange={setPatientModalOpen}
+        onOpenChange={(open) => {
+          setPatientModalOpen(open);
+          if (!open) setEditingPatient(undefined);
+        }}
         houses={houses}
+        patient={editingPatient}
       />
 
       <PayoutRatesModal

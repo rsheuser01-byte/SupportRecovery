@@ -215,14 +215,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/patients/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const patientData = insertPatientSchema.partial().parse(req.body);
+      // Convert date string to Date object before validation if startDate exists
+      const processedData = {
+        ...req.body,
+        ...(req.body.startDate && { startDate: new Date(req.body.startDate) })
+      };
+      const patientData = insertPatientSchema.partial().parse(processedData);
       const patient = await storage.updatePatient(id, patientData);
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" });
       }
       res.json(patient);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid patient data" });
+    } catch (error: any) {
+      console.error("Patient update validation error:", error);
+      res.status(400).json({ message: "Invalid patient data", error: error.message });
     }
   });
 

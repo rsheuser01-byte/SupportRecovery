@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { House } from "@shared/schema";
+import type { House, Patient } from "@shared/schema";
 
 const patientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -26,11 +27,13 @@ interface PatientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   houses: House[];
+  patient?: Patient;
 }
 
-export default function PatientModal({ open, onOpenChange, houses }: PatientModalProps) {
+export default function PatientModal({ open, onOpenChange, houses, patient }: PatientModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isEdit = !!patient;
 
   const form = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
@@ -43,6 +46,28 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
       status: "active",
     },
   });
+
+  useEffect(() => {
+    if (patient) {
+      form.reset({
+        name: patient.name || "",
+        phone: patient.phone || "",
+        houseId: patient.houseId || "",
+        program: patient.program || "",
+        startDate: patient.startDate ? new Date(patient.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        status: patient.status || "active",
+      });
+    } else {
+      form.reset({
+        name: "",
+        phone: "",
+        houseId: "",
+        program: "",
+        startDate: new Date().toISOString().split('T')[0],
+        status: "active",
+      });
+    }
+  }, [patient, form]);
 
   const createPatientMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/patients', data),
@@ -57,6 +82,18 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
     },
   });
 
+  const updatePatientMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', `/api/patients/${patient?.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
+      toast({ title: "Patient updated successfully" });
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to update patient", variant: "destructive" });
+    },
+  });
+
   const onSubmit = (data: PatientForm) => {
     const submitData = {
       ...data,
@@ -64,14 +101,18 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
       houseId: data.houseId === "none" ? undefined : data.houseId || undefined,
     };
     
-    createPatientMutation.mutate(submitData);
+    if (isEdit) {
+      updatePatientMutation.mutate(submitData);
+    } else {
+      createPatientMutation.mutate(submitData);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Patient</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Patient" : "Add New Patient"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -151,8 +192,8 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createPatientMutation.isPending}>
-              {createPatientMutation.isPending ? "Saving..." : "Save Patient"}
+            <Button type="submit" disabled={createPatientMutation.isPending || updatePatientMutation.isPending}>
+              {createPatientMutation.isPending || updatePatientMutation.isPending ? "Saving..." : isEdit ? "Update Patient" : "Save Patient"}
             </Button>
           </div>
         </form>
