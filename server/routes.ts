@@ -474,19 +474,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/check-days", async (req, res) => {
     try {
-      console.log("Received check day data:", req.body);
-      // Convert date string to Date object before validation
+      console.log("Received check day data:", JSON.stringify(req.body, null, 2));
+      
+      // Handle date conversion more carefully
+      let checkDate;
+      if (req.body.checkDate) {
+        if (req.body.checkDate instanceof Date) {
+          checkDate = req.body.checkDate;
+        } else {
+          checkDate = new Date(req.body.checkDate);
+        }
+        
+        // Check if date is valid
+        if (isNaN(checkDate.getTime())) {
+          throw new Error("Invalid date format");
+        }
+      }
+      
       const processedData = {
         ...req.body,
-        checkDate: new Date(req.body.checkDate)
+        checkDate
       };
-      console.log("Processed check day data:", processedData);
+      
+      console.log("Processed check day data:", JSON.stringify(processedData, null, 2));
       const checkDayData = insertCheckDaySchema.parse(processedData);
-      console.log("Parsed check day data:", checkDayData);
+      console.log("Parsed check day data:", JSON.stringify(checkDayData, null, 2));
       const checkDay = await storage.createCheckDay(checkDayData);
       res.json(checkDay);
     } catch (error: any) {
       console.error("Check day validation error:", error);
+      console.error("Error details:", error.issues || error.message);
       res.status(400).json({ message: "Invalid check day data", error: error.message });
     }
   });
