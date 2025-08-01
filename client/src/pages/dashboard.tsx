@@ -375,8 +375,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 gap-6 mb-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>This Month's Payouts by Staff</CardTitle>
-                    <p className="text-sm text-gray-600">Monthly totals with detailed breakdown</p>
+                    <CardTitle>Staff Payouts by Check Date</CardTitle>
+                    <p className="text-sm text-gray-600">Payouts grouped by check dates for easy management</p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -398,21 +398,26 @@ export default function Dashboard() {
                           <div className="space-y-3">
                             <div className="text-sm">
                               <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-700">House Breakdown:</span>
+                                <span className="font-medium text-gray-700">Check Date Breakdown:</span>
                               </div>
-                              {houses.map(house => {
-                                const housePayouts = staffPayoutEntries.filter(payout => {
+                              {Array.from(new Set(
+                                staffPayoutEntries.map(payout => {
                                   const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
-                                  return revenueEntry?.houseId === house.id;
+                                  return revenueEntry?.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : null;
+                                }).filter(Boolean)
+                              )).sort().map(checkDate => {
+                                const checkDatePayouts = staffPayoutEntries.filter(payout => {
+                                  const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                                  return revenueEntry?.checkDate && new Date(revenueEntry.checkDate).toISOString().split('T')[0] === checkDate;
                                 });
-                                const houseTotal = housePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                                const checkDateTotal = checkDatePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
                                 
-                                if (houseTotal === 0) return null;
+                                if (checkDateTotal === 0) return null;
                                 
                                 return (
-                                  <div key={house.id} className="flex justify-between py-1">
-                                    <span className="text-gray-600">{house.name}:</span>
-                                    <span className="font-medium">{formatCurrency(houseTotal)}</span>
+                                  <div key={checkDate} className="flex justify-between py-1">
+                                    <span className="text-gray-600">{new Date(checkDate!).toLocaleDateString()}:</span>
+                                    <span className="font-medium">{formatCurrency(checkDateTotal)}</span>
                                   </div>
                                 );
                               })}

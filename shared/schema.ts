@@ -44,6 +44,7 @@ export const patients = pgTable("patients", {
 export const revenueEntries = pgTable("revenue_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   date: timestamp("date").notNull(),
+  checkDate: timestamp("check_date").notNull(),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   patientId: varchar("patient_id").references(() => patients.id),
   houseId: varchar("house_id").notNull().references(() => houses.id),

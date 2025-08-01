@@ -245,10 +245,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/revenue-entries", async (req, res) => {
     try {
       console.log("Received revenue entry data:", req.body);
-      // Convert date string to Date object before validation
+      // Convert date strings to Date objects before validation
       const processedData = {
         ...req.body,
-        date: new Date(req.body.date)
+        date: new Date(req.body.date),
+        checkDate: new Date(req.body.checkDate)
       };
       console.log("Processed revenue entry data:", processedData);
       const revenueEntryData = insertRevenueEntrySchema.parse(processedData);
@@ -290,10 +291,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Raw body keys:", Object.keys(req.body));
       console.log("Raw body values:", Object.values(req.body));
       
-      // Convert date string to Date object before validation if date exists
+      // Convert date strings to Date objects before validation if they exist
       const processedData = {
         ...req.body,
-        ...(req.body.date && { date: new Date(req.body.date) })
+        ...(req.body.date && { date: new Date(req.body.date) }),
+        ...(req.body.checkDate && { checkDate: new Date(req.body.checkDate) })
       };
       console.log("Processed revenue entry update data:", processedData);
       

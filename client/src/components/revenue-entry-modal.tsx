@@ -16,6 +16,7 @@ import type { House, ServiceCode, Patient, RevenueEntry } from "@shared/schema";
 
 const revenueEntrySchema = z.object({
   date: z.string().min(1, "Date is required"),
+  checkDate: z.string().min(1, "Check date is required"),
   amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
     message: "Amount must be a positive number",
   }),
@@ -53,6 +54,7 @@ export default function RevenueEntryModal({
     resolver: zodResolver(revenueEntrySchema),
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
+      checkDate: new Date().toISOString().split('T')[0],
       amount: "",
       patientId: "",
       houseId: "",
@@ -65,6 +67,7 @@ export default function RevenueEntryModal({
     if (revenueEntry) {
       form.reset({
         date: new Date(revenueEntry.date).toISOString().split('T')[0],
+        checkDate: revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         amount: revenueEntry.amount,
         patientId: revenueEntry.patientId || "",
         houseId: revenueEntry.houseId,
@@ -74,6 +77,7 @@ export default function RevenueEntryModal({
     } else {
       form.reset({
         date: new Date().toISOString().split('T')[0],
+        checkDate: new Date().toISOString().split('T')[0],
         amount: "",
         patientId: "",
         houseId: "",
@@ -137,6 +141,7 @@ export default function RevenueEntryModal({
     const submitData = {
       ...data,
       date: new Date(data.date).toISOString(),
+      checkDate: new Date(data.checkDate).toISOString(),
       amount: parseFloat(data.amount).toFixed(2),
       patientId: data.patientId === "none" || !data.patientId ? null : data.patientId,
     };
@@ -178,19 +183,32 @@ export default function RevenueEntryModal({
               )}
             </div>
             <div>
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="checkDate">Check Date</Label>
               <Input 
-                id="amount"
-                type="number" 
-                placeholder="0.00" 
-                step="0.01"
-                {...form.register("amount")}
+                id="checkDate"
+                type="date" 
+                {...form.register("checkDate")}
                 className="mt-1"
               />
-              {form.formState.errors.amount && (
-                <p className="text-sm text-red-600 mt-1">{form.formState.errors.amount.message}</p>
+              {form.formState.errors.checkDate && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.checkDate.message}</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="amount">Amount</Label>
+            <Input 
+              id="amount"
+              type="number" 
+              placeholder="0.00" 
+              step="0.01"
+              {...form.register("amount")}
+              className="mt-1"
+            />
+            {form.formState.errors.amount && (
+              <p className="text-sm text-red-600 mt-1">{form.formState.errors.amount.message}</p>
+            )}
           </div>
 
           <div>
