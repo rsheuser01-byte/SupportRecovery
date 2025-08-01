@@ -1,0 +1,241 @@
+import React, { useState } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { House, ServiceCode, Patient } from "@shared/schema";
+
+const revenueEntrySchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Amount must be a positive number",
+  }),
+  patientId: z.string().optional(),
+  houseId: z.string().min(1, "House selection is required"),
+  serviceCodeId: z.string().min(1, "Service code is required"),
+  notes: z.string().optional(),
+});
+
+type RevenueEntryForm = z.infer<typeof revenueEntrySchema>;
+
+interface RevenueEntryModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  houses: House[];
+  serviceCodes: ServiceCode[];
+  patients: Patient[];
+}
+
+export default function RevenueEntryModal({ 
+  open, 
+  onOpenChange, 
+  houses, 
+  serviceCodes, 
+  patients 
+}: RevenueEntryModalProps) {
+  const [payoutPreview, setPayoutPreview] = useState<any[]>([]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm<RevenueEntryForm>({
+    resolver: zodResolver(revenueEntrySchema),
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      amount: "",
+      patientId: "",
+      houseId: "",
+      serviceCodeId: "",
+      notes: "",
+    },
+  });
+
+  const createRevenueMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/revenue-entries', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/revenue-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
+      toast({ title: "Revenue entry created successfully" });
+      form.reset();
+      setPayoutPreview([]);
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to create revenue entry", variant: "destructive" });
+    },
+  });
+
+  const calculatePayoutsMutation = useMutation({
+    mutationFn: (data: { amount: string; houseId: string; serviceCodeId: string }) =>
+      apiRequest('POST', '/api/calculate-payouts', data),
+    onSuccess: (response) => {
+      response.json().then(setPayoutPreview);
+    },
+  });
+
+  const watchedValues = form.watch(["amount", "houseId", "serviceCodeId"]);
+
+  // Calculate payouts when relevant fields change
+  React.useEffect(() => {
+    const [amount, houseId, serviceCodeId] = watchedValues;
+    if (amount && houseId && serviceCodeId && parseFloat(amount) > 0) {
+      calculatePayoutsMutation.mutate({ amount, houseId, serviceCodeId });
+    } else {
+      setPayoutPreview([]);
+    }
+  }, watchedValues);
+
+  const onSubmit = (data: RevenueEntryForm) => {
+    const submitData = {
+      ...data,
+      date: new Date(data.date).toISOString(),
+      amount: parseFloat(data.amount).toFixed(2),
+      patientId: data.patientId || undefined,
+    };
+    
+    createRevenueMutation.mutate(submitData);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Revenue Entry</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">Date</Label>
+              <Input 
+                id="date"
+                type="date" 
+                {...form.register("date")}
+                className="mt-1"
+              />
+              {form.formState.errors.date && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.date.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="amount">Amount</Label>
+              <Input 
+                id="amount"
+                type="number" 
+                placeholder="0.00" 
+                step="0.01"
+                {...form.register("amount")}
+                className="mt-1"
+              />
+              {form.formState.errors.amount && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.amount.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="patientId">Patient (Optional)</Label>
+            <Select onValueChange={(value) => form.setValue("patientId", value)}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Search or select patient..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No patient selected</SelectItem>
+                {patients.map(patient => (
+                  <SelectItem key={patient.id} value={patient.id}>
+                    {patient.name} - {patient.phone}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="houseId">House</Label>
+              <Select onValueChange={(value) => form.setValue("houseId", value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select House" />
+                </SelectTrigger>
+                <SelectContent>
+                  {houses.map(house => (
+                    <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.houseId && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.houseId.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="serviceCodeId">Service Code</Label>
+              <Select onValueChange={(value) => form.setValue("serviceCodeId", value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceCodes.map(service => (
+                    <SelectItem key={service.id} value={service.id}>{service.code}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.serviceCodeId && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.serviceCodeId.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea 
+              id="notes"
+              rows={3} 
+              placeholder="Additional notes..."
+              {...form.register("notes")}
+              className="mt-1"
+            />
+          </div>
+
+          {/* Payout Preview */}
+          {payoutPreview.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Calculated Payouts Preview</h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                  {payoutPreview.map((payout) => (
+                    <div key={payout.staffId}>
+                      <p className="text-gray-600">{payout.staffName}</p>
+                      <p className="font-medium">{formatCurrency(parseFloat(payout.amount))}</p>
+                      <p className="text-xs text-gray-500">{payout.percentage}%</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createRevenueMutation.isPending}>
+              {createRevenueMutation.isPending ? "Saving..." : "Save Entry"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

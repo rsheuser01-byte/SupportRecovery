@@ -1,0 +1,1084 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { 
+  DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
+  Search, Edit, Trash2, FileText, BarChart3, PieChart, 
+  Settings, Home, UserCheck, Calculator
+} from "lucide-react";
+import RevenueChart from "@/components/revenue-chart";
+import RevenueEntryModal from "@/components/revenue-entry-modal";
+import ExpenseModal from "@/components/expense-modal";
+import PatientModal from "@/components/patient-modal";
+import PayoutRatesModal from "@/components/payout-rates-modal";
+import type { 
+  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
+} from "@shared/schema";
+
+export default function Dashboard() {
+  const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [revenueModalOpen, setRevenueModalOpen] = useState(false);
+  const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [patientModalOpen, setPatientModalOpen] = useState(false);
+  const [payoutRatesModalOpen, setPayoutRatesModalOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Queries
+  const { data: houses = [] } = useQuery<House[]>({
+    queryKey: ['/api/houses'],
+  });
+
+  const { data: serviceCodes = [] } = useQuery<ServiceCode[]>({
+    queryKey: ['/api/service-codes'],
+  });
+
+  const { data: staff = [] } = useQuery<Staff[]>({
+    queryKey: ['/api/staff'],
+  });
+
+  const { data: patients = [] } = useQuery<Patient[]>({
+    queryKey: ['/api/patients'],
+  });
+
+  const { data: revenueEntries = [] } = useQuery<RevenueEntry[]>({
+    queryKey: ['/api/revenue-entries'],
+  });
+
+  const { data: expenses = [] } = useQuery<Expense[]>({
+    queryKey: ['/api/expenses'],
+  });
+
+  const { data: payouts = [] } = useQuery<Payout[]>({
+    queryKey: ['/api/payouts'],
+  });
+
+  const { data: payoutRates = [] } = useQuery<PayoutRate[]>({
+    queryKey: ['/api/payout-rates'],
+  });
+
+  // Mutations
+  const deleteRevenueMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/revenue-entries/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/revenue-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
+      toast({ title: "Revenue entry deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete revenue entry", variant: "destructive" });
+    },
+  });
+
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/expenses/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+      toast({ title: "Expense deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete expense", variant: "destructive" });
+    },
+  });
+
+  // Calculate dashboard metrics
+  const totalRevenue = revenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+  const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+  const netProfit = totalRevenue - totalExpenses;
+  const activePatients = patients.filter(p => p.status === 'active').length;
+
+  // Calculate staff payouts for current month
+  const staffPayouts = staff.map(staffMember => {
+    const staffPayoutEntries = payouts.filter(p => p.staffId === staffMember.id);
+    const totalPayout = staffPayoutEntries.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+    return {
+      staff: staffMember,
+      totalPayout,
+      payouts: staffPayoutEntries
+    };
+  });
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6 border-b border-gray-200">
+          <h1 className="text-xl font-bold text-gray-900">HealthCare Dashboard</h1>
+          <p className="text-sm text-gray-500">Mental Health Services</p>
+        </div>
+        
+        <nav className="flex-1 p-4">
+          <div className="space-y-2">
+            <Button
+              variant={selectedTab === "dashboard" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("dashboard")}
+            >
+              <BarChart3 className="mr-3 h-4 w-4" />
+              Dashboard
+            </Button>
+            <Button
+              variant={selectedTab === "revenue" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("revenue")}
+            >
+              <DollarSign className="mr-3 h-4 w-4" />
+              Revenue Entry
+            </Button>
+            <Button
+              variant={selectedTab === "payouts" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("payouts")}
+            >
+              <Users className="mr-3 h-4 w-4" />
+              Staff Payouts
+            </Button>
+            <Button
+              variant={selectedTab === "expenses" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("expenses")}
+            >
+              <Receipt className="mr-3 h-4 w-4" />
+              Expenses
+            </Button>
+            <Button
+              variant={selectedTab === "patients" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("patients")}
+            >
+              <UserCheck className="mr-3 h-4 w-4" />
+              Patients
+            </Button>
+            <Button
+              variant={selectedTab === "reports" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("reports")}
+            >
+              <FileText className="mr-3 h-4 w-4" />
+              Reports
+            </Button>
+            <Button
+              variant={selectedTab === "settings" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("settings")}
+            >
+              <Settings className="mr-3 h-4 w-4" />
+              Settings
+            </Button>
+          </div>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                  <p className="text-gray-600">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Select defaultValue="this-month">
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="this-month">This Month</SelectItem>
+                      <SelectItem value="last-month">Last Month</SelectItem>
+                      <SelectItem value="this-quarter">This Quarter</SelectItem>
+                      <SelectItem value="this-year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Report
+                  </Button>
+                </div>
+              </div>
+            </header>
+
+            <div className="p-6">
+              {/* Key Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          12% vs last month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-100 rounded-full">
+                        <DollarSign className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          3% vs last month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-red-100 rounded-full">
+                        <Receipt className="h-6 w-6 text-red-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Net Profit</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(netProfit)}</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          15% vs last month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-100 rounded-full">
+                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Active Patients</p>
+                        <p className="text-2xl font-bold text-gray-900">{activePatients}</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          8 new this month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 rounded-full">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Charts Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RevenueChart data={revenueEntries} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue by Program</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                      <div className="text-center text-gray-500">
+                        <PieChart className="h-12 w-12 mx-auto mb-2" />
+                        <p>Program Distribution Chart</p>
+                        <p className="text-sm">Coming Soon</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Activity & Payout Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Recent Transactions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {revenueEntries.slice(0, 5).map((entry) => {
+                        const house = houses.find(h => h.id === entry.houseId);
+                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+                        const patient = patients.find(p => p.id === entry.patientId);
+                        
+                        return (
+                          <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <Plus className="h-4 w-4 text-green-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {serviceCode?.description} - {house?.name}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Patient: {patient?.name || 'Unknown'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
+                              <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>This Month's Payouts</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
+                        <div key={staffMember.id} className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">{staffMember.name}</p>
+                            <p className="text-sm text-gray-500">Staff Member</p>
+                          </div>
+                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Button 
+                        className="w-full"
+                        onClick={() => setSelectedTab("payouts")}
+                      >
+                        View Detailed Payouts
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Revenue Tab */}
+          <TabsContent value="revenue" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Revenue Entry</h2>
+                  <p className="text-gray-600">Add new service entries and track revenue</p>
+                </div>
+                <Button onClick={() => setRevenueModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Entry
+                </Button>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Filter Revenue Entries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Date Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                        <SelectItem value="last-month">Last Month</SelectItem>
+                        <SelectItem value="this-quarter">This Quarter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Houses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Houses</SelectItem>
+                        {houses.map(house => (
+                          <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Services" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Services</SelectItem>
+                        {serviceCodes.map(service => (
+                          <SelectItem key={service.id} value={service.id}>{service.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Button variant="secondary">
+                      <Search className="mr-2 h-4 w-4" />
+                      Filter
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Entries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Patient</TableHead>
+                        <TableHead>House</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {revenueEntries.map((entry) => {
+                        const house = houses.find(h => h.id === entry.houseId);
+                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+                        const patient = patients.find(p => p.id === entry.patientId);
+                        
+                        return (
+                          <TableRow key={entry.id}>
+                            <TableCell>{formatDate(entry.date)}</TableCell>
+                            <TableCell>{patient?.name || 'Unknown'}</TableCell>
+                            <TableCell>{house?.name}</TableCell>
+                            <TableCell>{serviceCode?.code}</TableCell>
+                            <TableCell className="font-medium">{formatCurrency(parseFloat(entry.amount))}</TableCell>
+                            <TableCell>
+                              <Badge variant={entry.status === 'paid' ? 'default' : 'secondary'}>
+                                {entry.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => deleteRevenueMutation.mutate(entry.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Payouts Tab */}
+          <TabsContent value="payouts" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Staff Payouts</h2>
+                  <p className="text-gray-600">Manage payout calculations and distributions</p>
+                </div>
+                <div className="flex space-x-3">
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Payouts
+                  </Button>
+                  <Button onClick={() => setPayoutRatesModalOpen(true)}>
+                    <Calculator className="mr-2 h-4 w-4" />
+                    Manage Rates
+                  </Button>
+                </div>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <Card className="mb-6">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Payout Rate Configuration</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setPayoutRatesModalOpen(true)}>
+                    <Edit className="mr-1 h-4 w-4" />
+                    Edit Rates
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>House</TableHead>
+                          <TableHead>Service Code</TableHead>
+                          <TableHead className="text-center">Dr. Kelsey</TableHead>
+                          <TableHead className="text-center">Bardstown</TableHead>
+                          <TableHead className="text-center">George</TableHead>
+                          <TableHead className="text-center">Maria</TableHead>
+                          <TableHead className="text-center">Shelton</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {houses.map(house =>
+                          serviceCodes.map(service => {
+                            const houseRates = payoutRates.filter(
+                              rate => rate.houseId === house.id && rate.serviceCodeId === service.id
+                            );
+                            
+                            if (houseRates.length === 0) return null;
+                            
+                            return (
+                              <TableRow key={`${house.id}-${service.id}`}>
+                                <TableCell className="font-medium">{house.name}</TableCell>
+                                <TableCell>{service.code}</TableCell>
+                                {staff.map(staffMember => {
+                                  const rate = houseRates.find(r => r.staffId === staffMember.id);
+                                  return (
+                                    <TableCell key={staffMember.id} className="text-center">
+                                      {rate ? `${parseFloat(rate.percentage).toFixed(2)}%` : '0.00%'}
+                                    </TableCell>
+                                  );
+                                })}
+                              </TableRow>
+                            );
+                          })
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })} Payout Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {staffPayouts.map(({ staff: staffMember, totalPayout, payouts: staffPayoutEntries }) => (
+                      <div key={staffMember.id} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
+                          <span className="text-lg font-bold text-gray-900">{formatCurrency(totalPayout)}</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          {houses.map(house => {
+                            const housePayouts = staffPayoutEntries.filter(payout => {
+                              const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                              return revenueEntry?.houseId === house.id;
+                            });
+                            const houseTotal = housePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                            
+                            if (houseTotal === 0) return null;
+                            
+                            return (
+                              <div key={house.id} className="flex justify-between">
+                                <span className="text-gray-600">{house.name}:</span>
+                                <span className="font-medium">{formatCurrency(houseTotal)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Expenses Tab */}
+          <TabsContent value="expenses" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Expense Tracking</h2>
+                  <p className="text-gray-600">Manage business expenses and operational costs</p>
+                </div>
+                <Button onClick={() => setExpenseModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Expense
+                </Button>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-red-100 rounded-full mr-4">
+                        <Receipt className="h-6 w-6 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">This Month</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-orange-100 rounded-full mr-4">
+                        <Home className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Facility Costs</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(expenses.filter(e => e.category === 'Facility').reduce((sum, e) => sum + parseFloat(e.amount), 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-blue-100 rounded-full mr-4">
+                        <Users className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Staffing</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(expenses.filter(e => e.category === 'Staffing').reduce((sum, e) => sum + parseFloat(e.amount), 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-green-100 rounded-full mr-4">
+                        <PieChart className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Other</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(expenses.filter(e => !['Facility', 'Staffing'].includes(e.category)).reduce((sum, e) => sum + parseFloat(e.amount), 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Expense Entries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {expenses.map((expense) => (
+                        <TableRow key={expense.id}>
+                          <TableCell>{formatDate(expense.date)}</TableCell>
+                          <TableCell>{expense.vendor}</TableCell>
+                          <TableCell>{expense.category}</TableCell>
+                          <TableCell>{expense.description}</TableCell>
+                          <TableCell className="font-medium">{formatCurrency(parseFloat(expense.amount))}</TableCell>
+                          <TableCell>
+                            <Badge variant={expense.status === 'paid' ? 'default' : 'secondary'}>
+                              {expense.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => deleteExpenseMutation.mutate(expense.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Patients Tab */}
+          <TabsContent value="patients" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Patient Management</h2>
+                  <p className="text-gray-600">Manage patient profiles and program assignments</p>
+                </div>
+                <Button onClick={() => setPatientModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Patient
+                </Button>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <Card className="mb-6">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input placeholder="Search by name, ID, or phone..." className="pl-10" />
+                      </div>
+                    </div>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Houses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Houses</SelectItem>
+                        {houses.map(house => (
+                          <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="graduated">Graduated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Patient Directory</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Patient</TableHead>
+                        <TableHead>House</TableHead>
+                        <TableHead>Program</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {patients.map((patient) => {
+                        const house = houses.find(h => h.id === patient.houseId);
+                        
+                        return (
+                          <TableRow key={patient.id}>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                                  <UserCheck className="h-5 w-5 text-gray-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{patient.name}</p>
+                                  <p className="text-sm text-gray-500">{patient.phone}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{house?.name}</TableCell>
+                            <TableCell>{patient.program}</TableCell>
+                            <TableCell>{patient.startDate ? formatDate(patient.startDate) : 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
+                                {patient.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  View
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
+                  <p className="text-gray-600">Generate comprehensive reports and analyze trends</p>
+                </div>
+                <Button>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export All Reports
+                </Button>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="p-3 bg-blue-100 rounded-lg mr-4">
+                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Revenue Report</h3>
+                        <p className="text-sm text-gray-600">Monthly revenue breakdown</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full">Generate Monthly</Button>
+                      <Button variant="outline" className="w-full">Generate Quarterly</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="p-3 bg-green-100 rounded-lg mr-4">
+                        <Users className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Staff Payout Report</h3>
+                        <p className="text-sm text-gray-600">Detailed payout calculations</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full">Generate Current</Button>
+                      <Button variant="outline" className="w-full">Historical View</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="p-3 bg-purple-100 rounded-lg mr-4">
+                        <PieChart className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Program Analytics</h3>
+                        <p className="text-sm text-gray-600">Program performance metrics</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full">Generate Report</Button>
+                      <Button variant="outline" className="w-full">Compare Programs</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Reports</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-blue-100 rounded mr-3">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">Revenue Report - Current Month</p>
+                          <p className="text-sm text-gray-500">Generated today</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge variant="outline">PDF</Badge>
+                        <Button variant="ghost" size="sm">Download</Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+                  <p className="text-gray-600">Configure system settings and manage data</p>
+                </div>
+              </div>
+            </header>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Settings Menu</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <Button variant="default" className="w-full justify-start">
+                          <Home className="mr-3 h-4 w-4" />
+                          Manage Houses
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start">
+                          <Users className="mr-3 h-4 w-4" />
+                          Manage Staff
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start">
+                          <Settings className="mr-3 h-4 w-4" />
+                          Service Codes
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start" onClick={() => setPayoutRatesModalOpen(true)}>
+                          <Calculator className="mr-3 h-4 w-4" />
+                          Payout Rates
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle>Manage Houses</CardTitle>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add House
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {houses.map((house) => (
+                          <div key={house.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{house.name}</h4>
+                              <p className="text-sm text-gray-500">{house.address}</p>
+                              <p className="text-sm text-gray-500">
+                                Active Patients: {patients.filter(p => p.houseId === house.id && p.status === 'active').length}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <Button variant="outline" size="sm">Edit</Button>
+                              <Button variant="outline" size="sm">Deactivate</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      {/* Modals */}
+      <RevenueEntryModal 
+        open={revenueModalOpen} 
+        onOpenChange={setRevenueModalOpen}
+        houses={houses}
+        serviceCodes={serviceCodes}
+        patients={patients}
+      />
+      
+      <ExpenseModal 
+        open={expenseModalOpen} 
+        onOpenChange={setExpenseModalOpen}
+      />
+      
+      <PatientModal 
+        open={patientModalOpen} 
+        onOpenChange={setPatientModalOpen}
+        houses={houses}
+      />
+
+      <PayoutRatesModal
+        open={payoutRatesModalOpen}
+        onOpenChange={setPayoutRatesModalOpen}
+        houses={houses}
+        serviceCodes={serviceCodes}
+        staff={staff}
+        payoutRates={payoutRates}
+      />
+    </div>
+  );
+}
