@@ -196,7 +196,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/patients", async (req, res) => {
     try {
       console.log("Received patient data:", req.body);
-      const patientData = insertPatientSchema.parse(req.body);
+      // Convert date string to Date object before validation if startDate exists
+      const processedData = {
+        ...req.body,
+        ...(req.body.startDate && { startDate: new Date(req.body.startDate) })
+      };
+      console.log("Processed patient data:", processedData);
+      const patientData = insertPatientSchema.parse(processedData);
       console.log("Parsed patient data:", patientData);
       const patient = await storage.createPatient(patientData);
       res.json(patient);
