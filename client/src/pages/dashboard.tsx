@@ -14,6 +14,8 @@ import {
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
   Settings, Home, UserCheck, Calculator
 } from "lucide-react";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import RevenueChart from "../components/revenue-chart";
 import RevenueEntryModal from "../components/revenue-entry-modal";
 import ExpenseModal from "../components/expense-modal";
@@ -196,6 +198,158 @@ export default function Dashboard() {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  // Report generation functions
+  const generateRevenueReport = (period: 'monthly' | 'quarterly') => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    const periodTitle = period === 'monthly' ? 'Monthly' : 'Quarterly';
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text(`${periodTitle} Revenue Report`, 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 40);
+    
+    // Summary
+    doc.setFontSize(14);
+    doc.text('Revenue Summary', 20, 60);
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ${formatCurrency(totalRevenue)}`, 20, 70);
+    doc.text(`Total Expenses: ${formatCurrency(totalExpenses)}`, 20, 80);
+    doc.text(`Net Profit (George's Share): ${formatCurrency(netProfit)}`, 20, 90);
+    
+    // Revenue entries table
+    const revenueTableData = revenueEntries.map(entry => {
+      const house = houses.find(h => h.id === entry.houseId);
+      const service = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+      const patient = patients.find(p => p.id === entry.patientId);
+      return [
+        formatDate(entry.date),
+        patient?.name || 'Unknown',
+        house?.name || 'N/A',
+        service?.code || 'N/A',
+        formatCurrency(parseFloat(entry.amount)),
+        entry.status
+      ];
+    });
+    
+    autoTable(doc, {
+      head: [['Service Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
+      body: revenueTableData,
+      startY: 100,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+    
+    doc.save(`${periodTitle.toLowerCase()}-revenue-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: `${periodTitle} revenue report downloaded successfully` });
+  };
+
+  const generatePayoutReport = (type: 'current' | 'historical') => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    const reportTitle = type === 'current' ? 'Current Staff Payout Report' : 'Historical Payout Report';
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text(reportTitle, 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 40);
+    
+    // Staff payout summary
+    let yPosition = 60;
+    doc.setFontSize(14);
+    doc.text('Staff Payout Summary', 20, yPosition);
+    yPosition += 20;
+    
+    staffPayouts.forEach(({ staff: staffMember, totalPayout }) => {
+      doc.setFontSize(10);
+      doc.text(`${staffMember.name}: ${formatCurrency(totalPayout)}`, 20, yPosition);
+      yPosition += 10;
+    });
+    
+    // Detailed payout table
+    const payoutTableData = payouts.map(payout => {
+      const staffMember = staff.find(s => s.id === payout.staffId);
+      const revenueEntry = revenueEntries.find(re => re.id === payout.revenueEntryId);
+      const house = houses.find(h => h.id === revenueEntry?.houseId);
+      const service = serviceCodes.find(sc => sc.id === revenueEntry?.serviceCodeId);
+      
+      return [
+        staffMember?.name || 'Unknown',
+        house?.name || 'N/A',
+        service?.code || 'N/A',
+        revenueEntry ? formatDate(revenueEntry.date) : 'N/A',
+        formatCurrency(parseFloat(payout.amount)),
+        revenueEntry ? formatCurrency(parseFloat(revenueEntry.amount)) : 'N/A'
+      ];
+    });
+    
+    autoTable(doc, {
+      head: [['Staff', 'House', 'Service', 'Date', 'Payout', 'Revenue']],
+      body: payoutTableData,
+      startY: yPosition + 10,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [92, 184, 92] }
+    });
+    
+    doc.save(`${type}-payout-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: `${type} payout report downloaded successfully` });
+  };
+
+  const generateProgramAnalytics = (type: 'performance' | 'comparison') => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    const reportTitle = type === 'performance' ? 'Program Performance Analytics' : 'Program Comparison Report';
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text(reportTitle, 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 40);
+    
+    // Program analytics
+    const uniquePrograms = Array.from(new Set(patients.map(p => p.program))).filter(Boolean);
+    const programStats = uniquePrograms.map(program => {
+      const programPatients = patients.filter(p => p.program === program);
+      const activeCount = programPatients.filter(p => p.status === 'active').length;
+      const programRevenue = revenueEntries
+        .filter(entry => {
+          const patient = patients.find(p => p.id === entry.patientId);
+          return patient?.program === program;
+        })
+        .reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+      
+      return [
+        program,
+        programPatients.length.toString(),
+        activeCount.toString(),
+        formatCurrency(programRevenue),
+        programPatients.length > 0 ? formatCurrency(programRevenue / programPatients.length) : '$0.00'
+      ];
+    });
+    
+    autoTable(doc, {
+      head: [['Program', 'Total Patients', 'Active Patients', 'Total Revenue', 'Avg Revenue/Patient']],
+      body: programStats,
+      startY: 60,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [155, 89, 182] }
+    });
+    
+    doc.save(`${type}-program-analytics-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: `Program analytics report downloaded successfully` });
+  };
+
+  const generateAllReports = () => {
+    // Generate all reports in sequence
+    setTimeout(() => generateRevenueReport('monthly'), 100);
+    setTimeout(() => generatePayoutReport('current'), 200);
+    setTimeout(() => generateProgramAnalytics('performance'), 300);
+    
+    toast({ title: "All reports generated and downloaded successfully" });
   };
 
   return (
@@ -1057,7 +1211,7 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
                   <p className="text-gray-600">Generate comprehensive reports and analyze trends</p>
                 </div>
-                <Button>
+                <Button onClick={generateAllReports}>
                   <Download className="mr-2 h-4 w-4" />
                   Export All Reports
                 </Button>
@@ -1078,8 +1232,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full">Generate Monthly</Button>
-                      <Button variant="outline" className="w-full">Generate Quarterly</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('monthly')}>Generate Monthly</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('quarterly')}>Generate Quarterly</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1096,8 +1250,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full">Generate Current</Button>
-                      <Button variant="outline" className="w-full">Historical View</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('current')}>Generate Current</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('historical')}>Historical View</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1114,8 +1268,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full">Generate Report</Button>
-                      <Button variant="outline" className="w-full">Compare Programs</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('performance')}>Generate Report</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('comparison')}>Compare Programs</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1139,7 +1293,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex items-center space-x-3">
                         <Badge variant="outline">PDF</Badge>
-                        <Button variant="ghost" size="sm">Download</Button>
+                        <Button variant="ghost" size="sm" onClick={() => generateRevenueReport('monthly')}>Download</Button>
                       </div>
                     </div>
                   </div>
