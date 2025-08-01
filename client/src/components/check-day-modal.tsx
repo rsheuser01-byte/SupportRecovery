@@ -41,7 +41,7 @@ export function CheckDayModal({ isOpen, onClose, checkDay }: CheckDayModalProps)
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/check-days", "POST", data),
+    mutationFn: (data: any) => apiRequest("POST", "/api/check-days", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/check-days"] });
       toast({
@@ -62,7 +62,7 @@ export function CheckDayModal({ isOpen, onClose, checkDay }: CheckDayModalProps)
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => 
-      apiRequest(`/api/check-days/${checkDay?.id}`, "PUT", data),
+      apiRequest("PUT", `/api/check-days/${checkDay?.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/check-days"] });
       toast({
