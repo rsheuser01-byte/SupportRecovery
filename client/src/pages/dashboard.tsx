@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator
+  Settings, Home, UserCheck, Calculator, X, GripVertical
 } from "lucide-react";
 import RevenueChart from "../components/revenue-chart";
 import RevenueEntryModal from "../components/revenue-entry-modal";
@@ -26,6 +29,32 @@ import { StaffModal } from "../components/staff-modal";
 import type { 
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
+
+// Dashboard card types and interfaces
+interface DashboardCard {
+  id: string;
+  title: string;
+  type: string;
+  icon: string;
+  color: string;
+  visible: boolean;
+  order: number;
+}
+
+const defaultCards: DashboardCard[] = [
+  { id: 'total-revenue', title: 'Total Revenue', type: 'metric', icon: 'DollarSign', color: 'green', visible: true, order: 0 },
+  { id: 'total-expenses', title: 'Total Expenses', type: 'metric', icon: 'Receipt', color: 'red', visible: true, order: 1 },
+  { id: 'george-revenue', title: 'Your Revenue Share', type: 'metric', icon: 'UserCheck', color: 'purple', visible: true, order: 2 },
+  { id: 'net-profit', title: 'Net Profit', type: 'metric', icon: 'BarChart3', color: 'blue', visible: true, order: 3 },
+  { id: 'active-patients', title: 'Active Patients', type: 'metric', icon: 'Users', color: 'orange', visible: true, order: 4 },
+];
+
+const availableCards: DashboardCard[] = [
+  ...defaultCards,
+  { id: 'profit-margin', title: 'Profit Margin', type: 'metric', icon: 'PieChart', color: 'indigo', visible: false, order: 5 },
+  { id: 'monthly-growth', title: 'Monthly Growth', type: 'metric', icon: 'TrendingUp', color: 'emerald', visible: false, order: 6 },
+  { id: 'avg-revenue-per-patient', title: 'Avg Revenue/Patient', type: 'metric', icon: 'Calculator', color: 'teal', visible: false, order: 7 },
+];
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -45,8 +74,145 @@ export default function Dashboard() {
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   
+  // Dashboard customization state
+  const [dashboardCards, setDashboardCards] = useState<DashboardCard[]>(() => {
+    const saved = localStorage.getItem('dashboard-cards');
+    return saved ? JSON.parse(saved) : defaultCards;
+  });
+  const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Save dashboard configuration to localStorage
+  useEffect(() => {
+    localStorage.setItem('dashboard-cards', JSON.stringify(dashboardCards));
+  }, [dashboardCards]);
+
+  // Handle drag and drop reordering
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const visibleCards = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
+    const [reorderedCard] = visibleCards.splice(result.source.index, 1);
+    visibleCards.splice(result.destination.index, 0, reorderedCard);
+
+    // Update order for all cards
+    const updatedCards = dashboardCards.map(card => {
+      if (!card.visible) return card;
+      const newIndex = visibleCards.findIndex(c => c.id === card.id);
+      return { ...card, order: newIndex };
+    });
+
+    setDashboardCards(updatedCards);
+  };
+
+  // Toggle card visibility
+  const toggleCardVisibility = (cardId: string) => {
+    setDashboardCards(prev => prev.map(card => 
+      card.id === cardId ? { ...card, visible: !card.visible } : card
+    ));
+  };
+
+  // Remove card from dashboard
+  const removeCard = (cardId: string) => {
+    setDashboardCards(prev => prev.map(card => 
+      card.id === cardId ? { ...card, visible: false } : card
+    ));
+  };
+
+  // Get visible cards sorted by order
+  const visibleCards = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
+
+  // Icon mapping
+  const iconMap: Record<string, any> = {
+    DollarSign,
+    Receipt,
+    UserCheck,
+    BarChart3,
+    Users,
+    PieChart,
+    TrendingUp,
+    Calculator,
+  };
+
+  // Color mapping
+  const colorMap: Record<string, { bg: string, icon: string }> = {
+    green: { bg: 'bg-green-100', icon: 'text-green-600' },
+    red: { bg: 'bg-red-100', icon: 'text-red-600' },
+    purple: { bg: 'bg-purple-100', icon: 'text-purple-600' },
+    blue: { bg: 'bg-blue-100', icon: 'text-blue-600' },
+    orange: { bg: 'bg-orange-100', icon: 'text-orange-600' },
+    indigo: { bg: 'bg-indigo-100', icon: 'text-indigo-600' },
+    emerald: { bg: 'bg-emerald-100', icon: 'text-emerald-600' },
+    teal: { bg: 'bg-teal-100', icon: 'text-teal-600' },
+  };
+
+  // Metric calculation function
+  const getMetricValue = (cardId: string) => {
+    switch (cardId) {
+      case 'total-revenue':
+        return { value: formatCurrency(totalRevenue), change: '12% vs last month', trend: 'up' };
+      case 'total-expenses':
+        return { value: formatCurrency(totalExpenses), change: '3% vs last month', trend: 'up' };
+      case 'george-revenue':
+        return { value: formatCurrency(georgeRevenue), change: 'George\'s portion from payouts', trend: 'neutral' };
+      case 'net-profit':
+        return { value: formatCurrency(netProfit), change: 'Your revenue - Total expenses', trend: netProfit >= 0 ? 'up' : 'down' };
+      case 'active-patients':
+        return { value: activePatients.toString(), change: '2 new this week', trend: 'up' };
+      case 'profit-margin':
+        const margin = georgeRevenue > 0 ? ((netProfit / georgeRevenue) * 100).toFixed(1) : '0';
+        return { value: `${margin}%`, change: 'Profit margin', trend: parseFloat(margin) >= 0 ? 'up' : 'down' };
+      case 'monthly-growth':
+        return { value: '8.5%', change: 'Revenue growth', trend: 'up' };
+      case 'avg-revenue-per-patient':
+        const avgRevenue = activePatients > 0 ? totalRevenue / activePatients : 0;
+        return { value: formatCurrency(avgRevenue), change: 'Per active patient', trend: 'neutral' };
+      default:
+        return { value: '$0', change: 'No data', trend: 'neutral' };
+    }
+  };
+
+  // Render metric card
+  const renderMetricCard = (card: DashboardCard, index: number, isDragging = false) => {
+    const IconComponent = iconMap[card.icon];
+    const colors = colorMap[card.color];
+    const metric = getMetricValue(card.id);
+
+    return (
+      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">{card.title}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => removeCard(card.id)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
+              <p className={`text-xs mt-1 ${
+                metric.trend === 'up' ? 'text-green-600' : 
+                metric.trend === 'down' ? 'text-red-600' : 'text-gray-500'
+              }`}>
+                {metric.trend === 'up' && <TrendingUp className="inline mr-1 h-3 w-3" />}
+                {metric.change}
+              </p>
+            </div>
+            <div className={`p-3 ${colors.bg} rounded-full`}>
+              <IconComponent className={`h-6 w-6 ${colors.icon}`} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   // Delete mutations
   const deleteServiceCodeMutation = useMutation({
@@ -280,96 +446,80 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
-              {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
-                        <p className="text-sm text-green-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
-                          12% vs last month
-                        </p>
-                      </div>
-                      <div className="p-3 bg-green-100 rounded-full">
-                        <DollarSign className="h-6 w-6 text-green-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
-                        <p className="text-sm text-red-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
-                          3% vs last month
-                        </p>
-                      </div>
-                      <div className="p-3 bg-red-100 rounded-full">
-                        <Receipt className="h-6 w-6 text-red-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Your Revenue Share</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(georgeRevenue)}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          George's portion from payouts
-                        </p>
-                      </div>
-                      <div className="p-3 bg-purple-100 rounded-full">
-                        <UserCheck className="h-6 w-6 text-purple-600" />
+              {/* Dashboard Header with Customize Button */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Key Metrics</h3>
+                <Dialog open={customizeModalOpen} onOpenChange={setCustomizeModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Customize Dashboard
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Customize Dashboard</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">Choose which metrics to display on your dashboard:</p>
+                      <div className="space-y-3">
+                        {availableCards.map((card) => {
+                          const isVisible = dashboardCards.find(c => c.id === card.id)?.visible || false;
+                          return (
+                            <div key={card.id} className="flex items-center space-x-3">
+                              <Checkbox
+                                id={card.id}
+                                checked={isVisible}
+                                onCheckedChange={() => toggleCardVisibility(card.id)}
+                              />
+                              <label
+                                htmlFor={card.id}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {card.title}
+                              </label>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Net Profit</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(netProfit)}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Your revenue - Total expenses
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-100 rounded-full">
-                        <BarChart3 className="h-6 w-6 text-blue-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Active Patients</p>
-                        <p className="text-2xl font-bold text-gray-900">{activePatients}</p>
-                        <p className="text-sm text-green-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
-                          8 new this month
-                        </p>
-                      </div>
-                      <div className="p-3 bg-purple-100 rounded-full">
-                        <Users className="h-6 w-6 text-purple-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </DialogContent>
+                </Dialog>
               </div>
+
+              {/* Draggable Metrics Cards */}
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="dashboard-cards" direction="horizontal">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8"
+                    >
+                      {visibleCards.map((card, index) => (
+                        <Draggable key={card.id} draggableId={card.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="group relative"
+                            >
+                              <div
+                                {...provided.dragHandleProps}
+                                className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                              >
+                                <GripVertical className="h-4 w-4 text-gray-400" />
+                              </div>
+                              {renderMetricCard(card, index, snapshot.isDragging)}
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
 
               {/* Charts Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
