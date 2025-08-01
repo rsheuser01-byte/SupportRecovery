@@ -255,7 +255,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed revenue entry data:", revenueEntryData);
       const revenueEntry = await storage.createRevenueEntry(revenueEntryData);
       
-      // Calculate and create payouts
+      // Find or create check day for this date
+      const entryDate = new Date(revenueEntry.date);
+      const dateStr = entryDate.toISOString().split('T')[0];
+      const existingCheckDays = await storage.getCheckDays();
+      
+      let checkDay = existingCheckDays.find(cd => {
+        const checkDateStr = new Date(cd.checkDate).toISOString().split('T')[0];
+        return checkDateStr === dateStr;
+      });
+
+      // If no check day exists for this date, create one
+      if (!checkDay) {
+        const checkDayName = `Checks - ${entryDate.toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        })}`;
+        
+        checkDay = await storage.createCheckDay({
+          name: checkDayName,
+          checkDate: entryDate,
+          status: "pending",
+          notes: "Auto-created for revenue entries"
+        });
+      }
+      
+      // Calculate and create payouts, linking them to the check day
       const payoutRates = await storage.getPayoutRates();
       const relevantRates = payoutRates.filter(rate => 
         rate.houseId === revenueEntry.houseId && rate.serviceCodeId === revenueEntry.serviceCodeId
@@ -266,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createPayout({
           revenueEntryId: revenueEntry.id,
           staffId: rate.staffId,
-          checkDayId: null,
+          checkDayId: checkDay.id, // Link to the check day
           amount,
           percentage: rate.percentage
         });
