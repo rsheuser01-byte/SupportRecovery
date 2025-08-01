@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, X, GripVertical
+  Settings, Home, UserCheck, Calculator
 } from "lucide-react";
 import RevenueChart from "../components/revenue-chart";
 import RevenueEntryModal from "../components/revenue-entry-modal";
@@ -29,36 +26,6 @@ import { StaffModal } from "../components/staff-modal";
 import type { 
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
-
-// Dashboard card types and interfaces
-interface DashboardCard {
-  id: string;
-  title: string;
-  type: string;
-  icon: string;
-  color: string;
-  visible: boolean;
-  order: number;
-}
-
-const defaultCards: DashboardCard[] = [
-  { id: 'total-revenue', title: 'Total Revenue', type: 'metric', icon: 'DollarSign', color: 'green', visible: true, order: 0 },
-  { id: 'total-expenses', title: 'Total Expenses', type: 'metric', icon: 'Receipt', color: 'red', visible: true, order: 1 },
-  { id: 'george-revenue', title: 'Your Revenue Share', type: 'metric', icon: 'UserCheck', color: 'purple', visible: true, order: 2 },
-  { id: 'net-profit', title: 'Net Profit', type: 'metric', icon: 'BarChart3', color: 'blue', visible: true, order: 3 },
-  { id: 'active-patients', title: 'Active Patients', type: 'metric', icon: 'Users', color: 'orange', visible: true, order: 4 },
-];
-
-const availableCards: DashboardCard[] = [
-  ...defaultCards,
-  { id: 'profit-margin', title: 'Profit Margin', type: 'metric', icon: 'PieChart', color: 'indigo', visible: false, order: 5 },
-  { id: 'monthly-growth', title: 'Monthly Growth', type: 'metric', icon: 'TrendingUp', color: 'emerald', visible: false, order: 6 },
-  { id: 'avg-revenue-per-patient', title: 'Avg Revenue/Patient', type: 'metric', icon: 'Calculator', color: 'teal', visible: false, order: 7 },
-  { id: 'revenue-trend', title: 'Revenue Trend', type: 'chart', icon: 'BarChart3', color: 'blue', visible: true, order: 8 },
-  { id: 'revenue-by-program', title: 'Revenue by Program', type: 'chart', icon: 'PieChart', color: 'purple', visible: true, order: 9 },
-  { id: 'recent-transactions', title: 'Recent Transactions', type: 'table', icon: 'FileText', color: 'gray', visible: true, order: 10 },
-  { id: 'monthly-payouts', title: 'This Month\'s Payouts', type: 'table', icon: 'Users', color: 'orange', visible: true, order: 11 },
-];
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -78,278 +45,8 @@ export default function Dashboard() {
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   
-  // Dashboard customization state
-  const [dashboardCards, setDashboardCards] = useState<DashboardCard[]>(() => {
-    const saved = localStorage.getItem('dashboard-cards');
-    return saved ? JSON.parse(saved) : defaultCards;
-  });
-  const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Save dashboard configuration to localStorage
-  useEffect(() => {
-    localStorage.setItem('dashboard-cards', JSON.stringify(dashboardCards));
-  }, [dashboardCards]);
-
-  // Handle drag and drop reordering
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const visibleCardsList = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
-    const [reorderedCard] = visibleCardsList.splice(result.source.index, 1);
-    visibleCardsList.splice(result.destination.index, 0, reorderedCard);
-
-    // Update order for all cards
-    const updatedCards = dashboardCards.map(card => {
-      if (!card.visible) return card;
-      const newIndex = visibleCardsList.findIndex(c => c.id === card.id);
-      return { ...card, order: newIndex };
-    });
-
-    setDashboardCards(updatedCards);
-  };
-
-  // Toggle card visibility
-  const toggleCardVisibility = (cardId: string) => {
-    setDashboardCards(prev => prev.map(card => 
-      card.id === cardId ? { ...card, visible: !card.visible } : card
-    ));
-  };
-
-  // Remove card from dashboard
-  const removeCard = (cardId: string) => {
-    setDashboardCards(prev => prev.map(card => 
-      card.id === cardId ? { ...card, visible: false } : card
-    ));
-  };
-
-  // Get visible cards sorted by order and separated by type
-  const visibleCards = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
-  const visibleMetrics = visibleCards.filter(card => card.type === 'metric');
-  const visibleCharts = visibleCards.filter(card => card.type === 'chart');
-  const visibleTables = visibleCards.filter(card => card.type === 'table');
-
-  // Icon mapping
-  const iconMap: Record<string, any> = {
-    DollarSign,
-    Receipt,
-    UserCheck,
-    BarChart3,
-    Users,
-    PieChart,
-    TrendingUp,
-    Calculator,
-  };
-
-  // Color mapping
-  const colorMap: Record<string, { bg: string, icon: string }> = {
-    green: { bg: 'bg-green-100', icon: 'text-green-600' },
-    red: { bg: 'bg-red-100', icon: 'text-red-600' },
-    purple: { bg: 'bg-purple-100', icon: 'text-purple-600' },
-    blue: { bg: 'bg-blue-100', icon: 'text-blue-600' },
-    orange: { bg: 'bg-orange-100', icon: 'text-orange-600' },
-    indigo: { bg: 'bg-indigo-100', icon: 'text-indigo-600' },
-    emerald: { bg: 'bg-emerald-100', icon: 'text-emerald-600' },
-    teal: { bg: 'bg-teal-100', icon: 'text-teal-600' },
-    gray: { bg: 'bg-gray-100', icon: 'text-gray-600' },
-  };
-
-  // Metric calculation function
-  const getMetricValue = (cardId: string) => {
-    switch (cardId) {
-      case 'total-revenue':
-        return { value: formatCurrency(totalRevenue), change: '12% vs last month', trend: 'up' };
-      case 'total-expenses':
-        return { value: formatCurrency(totalExpenses), change: '3% vs last month', trend: 'up' };
-      case 'george-revenue':
-        return { value: formatCurrency(georgeRevenue), change: 'George\'s portion from payouts', trend: 'neutral' };
-      case 'net-profit':
-        return { value: formatCurrency(netProfit), change: 'Your revenue - Total expenses', trend: netProfit >= 0 ? 'up' : 'down' };
-      case 'active-patients':
-        return { value: activePatients.toString(), change: '2 new this week', trend: 'up' };
-      case 'profit-margin':
-        const margin = georgeRevenue > 0 ? ((netProfit / georgeRevenue) * 100).toFixed(1) : '0';
-        return { value: `${margin}%`, change: 'Profit margin', trend: parseFloat(margin) >= 0 ? 'up' : 'down' };
-      case 'monthly-growth':
-        return { value: '8.5%', change: 'Revenue growth', trend: 'up' };
-      case 'avg-revenue-per-patient':
-        const avgRevenue = activePatients > 0 ? totalRevenue / activePatients : 0;
-        return { value: formatCurrency(avgRevenue), change: 'Per active patient', trend: 'neutral' };
-      default:
-        return { value: '$0', change: 'No data', trend: 'neutral' };
-    }
-  };
-
-  // Render metric card
-  const renderMetricCard = (card: DashboardCard, index: number, isDragging = false) => {
-    const IconComponent = iconMap[card.icon];
-    const colors = colorMap[card.color];
-    const metric = getMetricValue(card.id);
-
-    return (
-      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeCard(card.id)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
-              <p className={`text-xs mt-1 ${
-                metric.trend === 'up' ? 'text-green-600' : 
-                metric.trend === 'down' ? 'text-red-600' : 'text-gray-500'
-              }`}>
-                {metric.trend === 'up' && <TrendingUp className="inline mr-1 h-3 w-3" />}
-                {metric.change}
-              </p>
-            </div>
-            <div className={`p-3 ${colors.bg} rounded-full`}>
-              <IconComponent className={`h-6 w-6 ${colors.icon}`} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Render chart card
-  const renderChartCard = (card: DashboardCard, index: number, isDragging = false) => {
-    return (
-      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{card.title}</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => removeCard(card.id)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {card.id === 'revenue-trend' && <RevenueChart data={revenueEntries} />}
-          {card.id === 'revenue-by-program' && (
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-              <div className="text-center text-gray-500">
-                <PieChart className="h-12 w-12 mx-auto mb-2" />
-                <p>Program Distribution Chart</p>
-                <p className="text-sm">Coming Soon</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Render table card
-  const renderTableCard = (card: DashboardCard, index: number, isDragging = false) => {
-    return (
-      <Card key={card.id} className={`${isDragging ? 'opacity-75 shadow-lg' : ''}`}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{card.title}</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => removeCard(card.id)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {card.id === 'recent-transactions' && (
-            <div className="space-y-4">
-              {revenueEntries.slice(0, 5).map((entry) => {
-                const house = houses.find(h => h.id === entry.houseId);
-                const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
-                const patient = patients.find(p => p.id === entry.patientId);
-                
-                return (
-                  <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                        <Plus className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {serviceCode?.description} - {house?.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Patient: {patient?.name || 'Unknown'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
-                      <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
-                    </div>
-                  </div>
-                );
-              })}
-              {revenueEntries.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No recent transactions</p>
-                </div>
-              )}
-            </div>
-          )}
-          {card.id === 'monthly-payouts' && (
-            <div className="space-y-4">
-              {staffPayouts.slice(0, 5).map((staffPayout) => (
-                <div key={staffPayout.staff.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{staffPayout.staff.name}</p>
-                      <p className="text-sm text-gray-500">{staffPayout.payouts.length} payouts</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">{formatCurrency(staffPayout.totalPayout)}</p>
-                  </div>
-                </div>
-              ))}
-              {staffPayouts.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No payouts this month</p>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Main render function for any card type
-  const renderCard = (card: DashboardCard, index: number, isDragging = false) => {
-    switch (card.type) {
-      case 'metric':
-        return renderMetricCard(card, index, isDragging);
-      case 'chart':
-        return renderChartCard(card, index, isDragging);
-      case 'table':
-        return renderTableCard(card, index, isDragging);
-      default:
-        return renderMetricCard(card, index, isDragging);
-    }
-  };
 
   // Delete mutations
   const deleteServiceCodeMutation = useMutation({
@@ -583,98 +280,191 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
-              {/* Dashboard Header with Customize Button */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Key Metrics</h3>
-                <Dialog open={customizeModalOpen} onOpenChange={setCustomizeModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Customize Dashboard
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Customize Dashboard</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <p className="text-sm text-gray-600">Choose which metrics to display on your dashboard:</p>
-                      <div className="space-y-3">
-                        {availableCards.map((card) => {
-                          const isVisible = dashboardCards.find(c => c.id === card.id)?.visible || false;
-                          return (
-                            <div key={card.id} className="flex items-center space-x-3">
-                              <Checkbox
-                                id={card.id}
-                                checked={isVisible}
-                                onCheckedChange={() => toggleCardVisibility(card.id)}
-                              />
-                              <label
-                                htmlFor={card.id}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {card.title}
-                              </label>
-                            </div>
-                          );
-                        })}
+              {/* Key Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          12% vs last month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-100 rounded-full">
+                        <DollarSign className="h-6 w-6 text-green-600" />
                       </div>
                     </div>
-                  </DialogContent>
-                </Dialog>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          3% vs last month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-red-100 rounded-full">
+                        <Receipt className="h-6 w-6 text-red-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Your Revenue Share</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(georgeRevenue)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          George's portion from payouts
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 rounded-full">
+                        <UserCheck className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Net Profit</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(netProfit)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Your revenue - Total expenses
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-100 rounded-full">
+                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Active Patients</p>
+                        <p className="text-2xl font-bold text-gray-900">{activePatients}</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                          8 new this month
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 rounded-full">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* Draggable Dashboard */}
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="dashboard-cards">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-6"
-                    >
-                      {/* Group cards by type and render them in appropriate layouts */}
-                      {visibleCards.map((card, index) => (
-                        <Draggable key={card.id} draggableId={card.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="group relative"
-                            >
-                              {/* Drag handle */}
-                              <div
-                                {...provided.dragHandleProps}
-                                className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white rounded p-1 shadow-lg border"
-                              >
-                                <GripVertical className="h-4 w-4 text-gray-600" />
+              {/* Charts Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RevenueChart data={revenueEntries} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue by Program</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                      <div className="text-center text-gray-500">
+                        <PieChart className="h-12 w-12 mx-auto mb-2" />
+                        <p>Program Distribution Chart</p>
+                        <p className="text-sm">Coming Soon</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Activity & Payout Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Recent Transactions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {revenueEntries.slice(0, 5).map((entry) => {
+                        const house = houses.find(h => h.id === entry.houseId);
+                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+                        const patient = patients.find(p => p.id === entry.patientId);
+                        
+                        return (
+                          <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <Plus className="h-4 w-4 text-green-600" />
                               </div>
-                              
-                              {/* Render card with proper styling */}
-                              <div className={`${snapshot.isDragging ? 'shadow-2xl scale-105' : ''} transition-transform`}>
-                                {renderCard(card, index, snapshot.isDragging)}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {serviceCode?.description} - {house?.name}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Patient: {patient?.name || 'Unknown'}
+                                </p>
                               </div>
                             </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
+                              <p className="text-sm text-gray-500">{formatDate(entry.date)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-              
-              {/* Group metrics in a row layout when not dragging */}
-              <style jsx>{`
-                .dashboard-card-metric {
-                  width: 300px;
-                  flex-shrink: 0;
-                }
-              `}</style>
+                  </CardContent>
+                </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle>This Month's Payouts</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
+                        <div key={staffMember.id} className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">{staffMember.name}</p>
+                            <p className="text-sm text-gray-500">Staff Member</p>
+                          </div>
+                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
+                        </div>
+                      ))}
+                    </div>
 
-
-
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Button 
+                        className="w-full"
+                        onClick={() => setSelectedTab("payouts")}
+                      >
+                        View Detailed Payouts
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
