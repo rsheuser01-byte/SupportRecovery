@@ -97,14 +97,14 @@ export default function Dashboard() {
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
-    const visibleCards = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
-    const [reorderedCard] = visibleCards.splice(result.source.index, 1);
-    visibleCards.splice(result.destination.index, 0, reorderedCard);
+    const visibleCardsList = dashboardCards.filter(card => card.visible).sort((a, b) => a.order - b.order);
+    const [reorderedCard] = visibleCardsList.splice(result.source.index, 1);
+    visibleCardsList.splice(result.destination.index, 0, reorderedCard);
 
     // Update order for all cards
     const updatedCards = dashboardCards.map(card => {
       if (!card.visible) return card;
-      const newIndex = visibleCards.findIndex(c => c.id === card.id);
+      const newIndex = visibleCardsList.findIndex(c => c.id === card.id);
       return { ...card, order: newIndex };
     });
 
@@ -633,95 +633,44 @@ export default function Dashboard() {
                       ref={provided.innerRef}
                       className="space-y-6"
                     >
-                      {/* Metrics Row */}
-                      {visibleMetrics.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                          {visibleMetrics.map((card, index) => {
-                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
-                            return (
-                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className="group relative"
-                                  >
-                                    <div
-                                      {...provided.dragHandleProps}
-                                      className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                                    >
-                                      <GripVertical className="h-4 w-4 text-gray-400" />
-                                    </div>
-                                    {renderCard(card, globalIndex, snapshot.isDragging)}
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Charts Row */}
-                      {visibleCharts.length > 0 && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {visibleCharts.map((card, index) => {
-                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
-                            return (
-                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className="group relative"
-                                  >
-                                    <div
-                                      {...provided.dragHandleProps}
-                                      className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                                    >
-                                      <GripVertical className="h-4 w-4 text-gray-400" />
-                                    </div>
-                                    {renderCard(card, globalIndex, snapshot.isDragging)}
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Tables Row */}
-                      {visibleTables.length > 0 && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          {visibleTables.map((card, index) => {
-                            const globalIndex = visibleCards.findIndex(c => c.id === card.id);
-                            const colSpan = card.id === 'recent-transactions' ? 'lg:col-span-2' : '';
-                            return (
-                              <Draggable key={card.id} draggableId={card.id} index={globalIndex}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className={`group relative ${colSpan}`}
-                                  >
-                                    <div
-                                      {...provided.dragHandleProps}
-                                      className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                                    >
-                                      <GripVertical className="h-4 w-4 text-gray-400" />
-                                    </div>
-                                    {renderCard(card, globalIndex, snapshot.isDragging)}
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                        </div>
-                      )}
+                      {/* Group cards by type and render them in appropriate layouts */}
+                      {visibleCards.map((card, index) => (
+                        <Draggable key={card.id} draggableId={card.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="group relative"
+                            >
+                              {/* Drag handle */}
+                              <div
+                                {...provided.dragHandleProps}
+                                className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white rounded p-1 shadow-lg border"
+                              >
+                                <GripVertical className="h-4 w-4 text-gray-600" />
+                              </div>
+                              
+                              {/* Render card with proper styling */}
+                              <div className={`${snapshot.isDragging ? 'shadow-2xl scale-105' : ''} transition-transform`}>
+                                {renderCard(card, index, snapshot.isDragging)}
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
                       {provided.placeholder}
                     </div>
                   )}
                 </Droppable>
               </DragDropContext>
+              
+              {/* Group metrics in a row layout when not dragging */}
+              <style jsx>{`
+                .dashboard-card-metric {
+                  width: 300px;
+                  flex-shrink: 0;
+                }
+              `}</style>
 
 
 
