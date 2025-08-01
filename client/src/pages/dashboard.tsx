@@ -384,29 +384,54 @@ export default function Dashboard() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Revenue by Program</CardTitle>
+                    <CardTitle>This Month's Payouts</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                      <div className="text-center text-gray-500">
-                        <PieChart className="h-12 w-12 mx-auto mb-2" />
-                        <p>Program Distribution Chart</p>
-                        <p className="text-sm">Coming Soon</p>
-                      </div>
+                    <div className="space-y-4">
+                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
+                        <div key={staffMember.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                              <Users className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{staffMember.name}</p>
+                              <p className="text-sm text-gray-500">Staff Member</p>
+                            </div>
+                          </div>
+                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
+                        </div>
+                      ))}
+                      {staffPayouts.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No payouts calculated yet</p>
+                          <p className="text-sm">Add revenue entries to generate payouts</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Button 
+                        className="w-full"
+                        onClick={() => setSelectedTab("payouts")}
+                      >
+                        View Detailed Payouts
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Recent Activity & Payout Summary */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2">
+              {/* Recent Activity */}
+              <div className="grid grid-cols-1 gap-6">
+                <Card>
                   <CardHeader>
                     <CardTitle>Recent Transactions</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {revenueEntries.slice(0, 5).map((entry) => {
+                      {revenueEntries.slice(0, 8).map((entry) => {
                         const house = houses.find(h => h.id === entry.houseId);
                         const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
                         const patient = patients.find(p => p.id === entry.patientId);
@@ -433,34 +458,13 @@ export default function Dashboard() {
                           </div>
                         );
                       })}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>This Month's Payouts</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
-                        <div key={staffMember.id} className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">{staffMember.name}</p>
-                            <p className="text-sm text-gray-500">Staff Member</p>
-                          </div>
-                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
+                      {revenueEntries.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Plus className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No revenue entries yet</p>
+                          <p className="text-sm">Add your first revenue entry to get started</p>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <Button 
-                        className="w-full"
-                        onClick={() => setSelectedTab("payouts")}
-                      >
-                        View Detailed Payouts
-                      </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
