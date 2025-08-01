@@ -19,21 +19,28 @@ import RevenueEntryModal from "../components/revenue-entry-modal";
 import ExpenseModal from "../components/expense-modal";
 import PatientModal from "../components/patient-modal";
 import PayoutRatesModal from "../components/payout-rates-modal";
-import { ServiceCodeModal } from "@/components/service-code-modal";
-import { BusinessSettingsModal } from "@/components/business-settings-modal";
+import { ServiceCodeModal } from "../components/service-code-modal";
+import { BusinessSettingsModal } from "../components/business-settings-modal";
+import { HouseModal } from "../components/house-modal";
+import { StaffModal } from "../components/staff-modal";
 import type { 
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [settingsSubTab, setSettingsSubTab] = useState("service-codes");
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
   const [payoutRatesModalOpen, setPayoutRatesModalOpen] = useState(false);
   const [serviceCodeModalOpen, setServiceCodeModalOpen] = useState(false);
   const [businessSettingsModalOpen, setBusinessSettingsModalOpen] = useState(false);
+  const [houseModalOpen, setHouseModalOpen] = useState(false);
+  const [staffModalOpen, setStaffModalOpen] = useState(false);
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
+  const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
+  const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -999,15 +1006,27 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        <Button variant="default" className="w-full justify-start">
+                        <Button 
+                          variant={settingsSubTab === "houses" ? "default" : "ghost"} 
+                          className="w-full justify-start"
+                          onClick={() => setSettingsSubTab("houses")}
+                        >
                           <Home className="mr-3 h-4 w-4" />
                           Manage Houses
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start">
+                        <Button 
+                          variant={settingsSubTab === "staff" ? "default" : "ghost"} 
+                          className="w-full justify-start"
+                          onClick={() => setSettingsSubTab("staff")}
+                        >
                           <Users className="mr-3 h-4 w-4" />
                           Manage Staff
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start" onClick={() => setServiceCodeModalOpen(true)}>
+                        <Button 
+                          variant={settingsSubTab === "service-codes" ? "default" : "ghost"} 
+                          className="w-full justify-start" 
+                          onClick={() => setSettingsSubTab("service-codes")}
+                        >
                           <Settings className="mr-3 h-4 w-4" />
                           Service Codes
                         </Button>
@@ -1025,40 +1044,121 @@ export default function Dashboard() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Manage Service Codes</CardTitle>
-                      <Button onClick={() => { setEditingServiceCode(undefined); setServiceCodeModalOpen(true); }}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Service Code
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {serviceCodes.map((serviceCode) => (
-                          <div key={serviceCode.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div>
-                              <h4 className="font-medium text-gray-900">{serviceCode.code}</h4>
-                              <p className="text-sm text-gray-500">{serviceCode.description || 'No description'}</p>
-                              <p className="text-sm text-gray-500">
-                                Status: {serviceCode.isActive ? 'Active' : 'Inactive'}
-                              </p>
+                  {settingsSubTab === "service-codes" && (
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Manage Service Codes</CardTitle>
+                        <Button onClick={() => { setEditingServiceCode(undefined); setServiceCodeModalOpen(true); }}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Service Code
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {serviceCodes.map((serviceCode) => (
+                            <div key={serviceCode.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                              <div>
+                                <h4 className="font-medium text-gray-900">{serviceCode.code}</h4>
+                                <p className="text-sm text-gray-500">{serviceCode.description || 'No description'}</p>
+                                <p className="text-sm text-gray-500">
+                                  Status: {serviceCode.isActive ? 'Active' : 'Inactive'}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => { setEditingServiceCode(serviceCode); setServiceCodeModalOpen(true); }}
+                                >
+                                  <Edit className="mr-1 h-3 w-3" />
+                                  Edit
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-3">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => { setEditingServiceCode(serviceCode); setServiceCodeModalOpen(true); }}
-                              >
-                                <Edit className="mr-1 h-3 w-3" />
-                                Edit
-                              </Button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {settingsSubTab === "houses" && (
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Manage Houses</CardTitle>
+                        <Button onClick={() => { setEditingHouse(undefined); setHouseModalOpen(true); }}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add House
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {houses.map((house) => (
+                            <div key={house.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                              <div>
+                                <h4 className="font-medium text-gray-900">{house.name}</h4>
+                                <p className="text-sm text-gray-500">{house.address || 'No address'}</p>
+                                <p className="text-sm text-gray-500">
+                                  Active Patients: {patients.filter(p => p.houseId === house.id && p.status === 'active').length}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Status: {house.isActive ? 'Active' : 'Inactive'}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => { setEditingHouse(house); setHouseModalOpen(true); }}
+                                >
+                                  <Edit className="mr-1 h-3 w-3" />
+                                  Edit
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {settingsSubTab === "staff" && (
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Manage Staff</CardTitle>
+                        <Button onClick={() => { setEditingStaff(undefined); setStaffModalOpen(true); }}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Staff Member
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {staff.map((staffMember) => (
+                            <div key={staffMember.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                              <div>
+                                <h4 className="font-medium text-gray-900">{staffMember.name}</h4>
+                                <p className="text-sm text-gray-500">
+                                  Status: {staffMember.isActive ? 'Active' : 'Inactive'}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Payout Rates: {payoutRates.filter(r => r.staffId === staffMember.id).length} configured
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => { setEditingStaff(staffMember); setStaffModalOpen(true); }}
+                                >
+                                  <Edit className="mr-1 h-3 w-3" />
+                                  Edit
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>
@@ -1107,6 +1207,24 @@ export default function Dashboard() {
       <BusinessSettingsModal
         open={businessSettingsModalOpen}
         onOpenChange={setBusinessSettingsModalOpen}
+      />
+
+      <HouseModal
+        open={houseModalOpen}
+        onOpenChange={(open) => {
+          setHouseModalOpen(open);
+          if (!open) setEditingHouse(undefined);
+        }}
+        house={editingHouse}
+      />
+
+      <StaffModal
+        open={staffModalOpen}
+        onOpenChange={(open) => {
+          setStaffModalOpen(open);
+          if (!open) setEditingStaff(undefined);
+        }}
+        staff={editingStaff}
       />
     </div>
   );

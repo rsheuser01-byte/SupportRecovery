@@ -28,6 +28,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/houses/:id", async (req, res) => {
+    try {
+      const houseData = insertHouseSchema.partial().parse(req.body);
+      const house = await storage.updateHouse(req.params.id, houseData);
+      if (!house) {
+        return res.status(404).json({ message: "House not found" });
+      }
+      res.json(house);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid house data" });
+    }
+  });
+
   // Service Codes
   app.get("/api/service-codes", async (req, res) => {
     try {
@@ -75,6 +88,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const staffData = insertStaffSchema.parse(req.body);
       const staff = await storage.createStaff(staffData);
+      res.json(staff);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid staff data" });
+    }
+  });
+
+  app.put("/api/staff/:id", async (req, res) => {
+    try {
+      const staffData = insertStaffSchema.partial().parse(req.body);
+      const staff = await storage.updateStaff(req.params.id, staffData);
+      if (!staff) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
       res.json(staff);
     } catch (error) {
       res.status(400).json({ message: "Invalid staff data" });
