@@ -371,42 +371,67 @@ export default function Dashboard() {
                 </Card>
               </div>
 
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Payouts Row */}
+              <div className="grid grid-cols-1 gap-6 mb-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Revenue Trend</CardTitle>
+                    <CardTitle>This Month's Payouts by Staff</CardTitle>
+                    <p className="text-sm text-gray-600">Monthly totals with detailed breakdown</p>
                   </CardHeader>
                   <CardContent>
-                    <RevenueChart data={revenueEntries} />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>This Month's Payouts</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {staffPayouts.map(({ staff: staffMember, totalPayout }) => (
-                        <div key={staffMember.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                              <Users className="h-4 w-4 text-blue-600" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {staffPayouts.map(({ staff: staffMember, totalPayout, payouts: staffPayoutEntries }) => (
+                        <div key={staffMember.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <Users className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
+                                <p className="text-sm text-gray-500">Staff Member</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{staffMember.name}</p>
-                              <p className="text-sm text-gray-500">Staff Member</p>
-                            </div>
+                            <span className="text-lg font-bold text-gray-900">{formatCurrency(totalPayout)}</span>
                           </div>
-                          <p className="font-medium text-gray-900">{formatCurrency(totalPayout)}</p>
+                          
+                          <div className="space-y-3">
+                            <div className="text-sm">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="font-medium text-gray-700">House Breakdown:</span>
+                              </div>
+                              {houses.map(house => {
+                                const housePayouts = staffPayoutEntries.filter(payout => {
+                                  const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                                  return revenueEntry?.houseId === house.id;
+                                });
+                                const houseTotal = housePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                                
+                                if (houseTotal === 0) return null;
+                                
+                                return (
+                                  <div key={house.id} className="flex justify-between py-1">
+                                    <span className="text-gray-600">{house.name}:</span>
+                                    <span className="font-medium">{formatCurrency(houseTotal)}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {staffPayoutEntries.length > 0 && (
+                              <div className="pt-3 border-t border-gray-200">
+                                <p className="text-xs text-gray-500">{staffPayoutEntries.length} payout entries</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
+                      
                       {staffPayouts.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No payouts calculated yet</p>
-                          <p className="text-sm">Add revenue entries to generate payouts</p>
+                        <div className="col-span-full text-center py-12 text-gray-500">
+                          <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                          <p className="text-lg font-medium">No payouts calculated yet</p>
+                          <p className="text-sm">Add revenue entries to generate staff payouts</p>
                         </div>
                       )}
                     </div>
@@ -416,7 +441,7 @@ export default function Dashboard() {
                         className="w-full"
                         onClick={() => setSelectedTab("payouts")}
                       >
-                        View Detailed Payouts
+                        View Complete Payout Details
                       </Button>
                     </div>
                   </CardContent>
