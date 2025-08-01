@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [settingsSubTab, setSettingsSubTab] = useState("service-codes");
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
+  const [editingRevenueEntry, setEditingRevenueEntry] = useState<RevenueEntry | undefined>(undefined);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
@@ -449,7 +450,10 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-gray-900">Revenue Entry</h2>
                   <p className="text-gray-600">Add new service entries and track revenue</p>
                 </div>
-                <Button onClick={() => setRevenueModalOpen(true)}>
+                <Button onClick={() => {
+                  setEditingRevenueEntry(undefined);
+                  setRevenueModalOpen(true);
+                }}>
                   <Plus className="mr-2 h-4 w-4" />
                   New Entry
                 </Button>
@@ -543,7 +547,14 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingRevenueEntry(entry);
+                                    setRevenueModalOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button 
@@ -1271,10 +1282,14 @@ export default function Dashboard() {
       {/* Modals */}
       <RevenueEntryModal 
         open={revenueModalOpen} 
-        onOpenChange={setRevenueModalOpen}
+        onOpenChange={(open) => {
+          setRevenueModalOpen(open);
+          if (!open) setEditingRevenueEntry(undefined);
+        }}
         houses={houses}
         serviceCodes={serviceCodes}
         patients={patients}
+        revenueEntry={editingRevenueEntry}
       />
       
       <ExpenseModal 

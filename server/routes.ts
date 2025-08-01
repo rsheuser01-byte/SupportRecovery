@@ -292,6 +292,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/revenue-entries/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log("Updating revenue entry with ID:", id);
+      console.log("Received revenue entry update data:", req.body);
+      
+      // Convert date string to Date object before validation if date exists
+      const processedData = {
+        ...req.body,
+        ...(req.body.date && { date: new Date(req.body.date) })
+      };
+      console.log("Processed revenue entry update data:", processedData);
+      
+      const revenueEntryData = insertRevenueEntrySchema.partial().parse(processedData);
+      console.log("Parsed revenue entry update data:", revenueEntryData);
+      
+      const revenueEntry = await storage.updateRevenueEntry(id, revenueEntryData);
+      if (!revenueEntry) {
+        return res.status(404).json({ message: "Revenue entry not found" });
+      }
+      
+      // Delete existing payouts for this revenue entry
+      const existingPayouts = await storage.getPayouts();
+      const revenuePayouts = existingPayouts.filter(p => p.revenueEntryId === id);
+      for (const payout of revenuePayouts) {
+        await storage.deletePayout(payout.id);
+      }
+      
+      // Calculate and create new payouts
+      const payoutRates = await storage.getPayoutRates();
+      const relevantRates = payoutRates.filter(rate => 
+        rate.houseId === revenueEntry.houseId && rate.serviceCodeId === revenueEntry.serviceCodeId
+      );
+
+      for (const rate of relevantRates) {
+        const amount = (parseFloat(revenueEntry.amount) * parseFloat(rate.percentage) / 100).toFixed(2);
+        await storage.createPayout({
+          revenueEntryId: revenueEntry.id,
+          staffId: rate.staffId,
+          amount,
+          percentage: rate.percentage
+        });
+      }
+
+      res.json(revenueEntry);
+    } catch (error: any) {
+      console.error("Revenue entry update validation error:", error);
+      res.status(400).json({ message: "Invalid revenue entry data", error: error.message });
+    }
+  });
+
   app.delete("/api/revenue-entries/:id", async (req, res) => {
     try {
       const { id } = req.params;

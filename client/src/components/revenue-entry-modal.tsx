@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { House, ServiceCode, Patient } from "@shared/schema";
+import type { House, ServiceCode, Patient, RevenueEntry } from "@shared/schema";
 
 const revenueEntrySchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -33,6 +33,7 @@ interface RevenueEntryModalProps {
   houses: House[];
   serviceCodes: ServiceCode[];
   patients: Patient[];
+  revenueEntry?: RevenueEntry;
 }
 
 export default function RevenueEntryModal({ 
@@ -40,11 +41,13 @@ export default function RevenueEntryModal({
   onOpenChange, 
   houses, 
   serviceCodes, 
-  patients 
+  patients,
+  revenueEntry
 }: RevenueEntryModalProps) {
   const [payoutPreview, setPayoutPreview] = useState<any[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isEdit = !!revenueEntry;
 
   const form = useForm<RevenueEntryForm>({
     resolver: zodResolver(revenueEntrySchema),
@@ -58,6 +61,29 @@ export default function RevenueEntryModal({
     },
   });
 
+  useEffect(() => {
+    if (revenueEntry) {
+      form.reset({
+        date: new Date(revenueEntry.date).toISOString().split('T')[0],
+        amount: revenueEntry.amount,
+        patientId: revenueEntry.patientId || "",
+        houseId: revenueEntry.houseId,
+        serviceCodeId: revenueEntry.serviceCodeId,
+        notes: revenueEntry.notes || "",
+      });
+    } else {
+      form.reset({
+        date: new Date().toISOString().split('T')[0],
+        amount: "",
+        patientId: "",
+        houseId: "",
+        serviceCodeId: "",
+        notes: "",
+      });
+      setPayoutPreview([]);
+    }
+  }, [revenueEntry, form]);
+
   const createRevenueMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/revenue-entries', data),
     onSuccess: () => {
@@ -70,6 +96,19 @@ export default function RevenueEntryModal({
     },
     onError: () => {
       toast({ title: "Failed to create revenue entry", variant: "destructive" });
+    },
+  });
+
+  const updateRevenueMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', `/api/revenue-entries/${revenueEntry?.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/revenue-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
+      toast({ title: "Revenue entry updated successfully" });
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to update revenue entry", variant: "destructive" });
     },
   });
 
@@ -101,7 +140,11 @@ export default function RevenueEntryModal({
       patientId: data.patientId === "none" ? undefined : data.patientId || undefined,
     };
     
-    createRevenueMutation.mutate(submitData);
+    if (isEdit) {
+      updateRevenueMutation.mutate(submitData);
+    } else {
+      createRevenueMutation.mutate(submitData);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -112,7 +155,7 @@ export default function RevenueEntryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Revenue Entry</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Revenue Entry" : "Add New Revenue Entry"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -230,8 +273,8 @@ export default function RevenueEntryModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createRevenueMutation.isPending}>
-              {createRevenueMutation.isPending ? "Saving..." : "Save Entry"}
+            <Button type="submit" disabled={createRevenueMutation.isPending || updateRevenueMutation.isPending}>
+              {createRevenueMutation.isPending || updateRevenueMutation.isPending ? "Saving..." : isEdit ? "Update Entry" : "Save Entry"}
             </Button>
           </div>
         </form>

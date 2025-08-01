@@ -64,6 +64,7 @@ export interface IStorage {
   getPayouts(): Promise<Payout[]>;
   getPayoutsByRevenueEntry(revenueEntryId: string): Promise<Payout[]>;
   createPayout(payout: Omit<Payout, 'id'>): Promise<Payout>;
+  deletePayout(id: string): Promise<boolean>;
 
   // Business Settings
   getBusinessSettings(): Promise<BusinessSettings | undefined>;
@@ -424,6 +425,10 @@ export class MemStorage implements IStorage {
     const newPayout: Payout = { ...payout, id };
     this.payouts.set(id, newPayout);
     return newPayout;
+  }
+
+  async deletePayout(id: string): Promise<boolean> {
+    return this.payouts.delete(id);
   }
 
   // Business Settings
