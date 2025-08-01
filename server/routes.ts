@@ -339,7 +339,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(revenueEntry);
     } catch (error: any) {
       console.error("Revenue entry update validation error:", error);
-      res.status(400).json({ message: "Invalid revenue entry data", error: error.message });
+      console.error("Error details:", error.issues || error.errors || error);
+      res.status(400).json({ message: "Invalid revenue entry data", error: error.message, details: error.issues || error.errors });
     }
   });
 
