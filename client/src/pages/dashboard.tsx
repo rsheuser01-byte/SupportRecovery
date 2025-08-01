@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [settingsSubTab, setSettingsSubTab] = useState("service-codes");
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
   const [payoutRatesModalOpen, setPayoutRatesModalOpen] = useState(false);
   const [serviceCodeModalOpen, setServiceCodeModalOpen] = useState(false);
@@ -684,7 +685,10 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold text-gray-900">Expense Tracking</h2>
                   <p className="text-gray-600">Manage business expenses and operational costs</p>
                 </div>
-                <Button onClick={() => setExpenseModalOpen(true)}>
+                <Button onClick={() => {
+                  setEditingExpense(undefined);
+                  setExpenseModalOpen(true);
+                }}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Expense
                 </Button>
@@ -788,7 +792,14 @@ export default function Dashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingExpense(expense);
+                                  setExpenseModalOpen(true);
+                                }}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -1250,7 +1261,11 @@ export default function Dashboard() {
       
       <ExpenseModal 
         open={expenseModalOpen} 
-        onOpenChange={setExpenseModalOpen}
+        onOpenChange={(open) => {
+          setExpenseModalOpen(open);
+          if (!open) setEditingExpense(undefined);
+        }}
+        expense={editingExpense}
       />
       
       <PatientModal 

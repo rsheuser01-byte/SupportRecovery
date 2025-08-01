@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertExpenseSchema, type InsertExpense } from "@shared/schema";
+import { insertExpenseSchema, type InsertExpense, type Expense } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,16 +12,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-
-
 interface ExpenseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  expense?: Expense;
 }
 
-export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) {
+export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isEdit = !!expense;
 
   const form = useForm({
     defaultValues: {
@@ -32,6 +33,28 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
       status: "paid",
     },
   });
+
+  useEffect(() => {
+    if (expense) {
+      form.reset({
+        date: new Date(expense.date).toISOString().slice(0, 16),
+        amount: expense.amount,
+        vendor: expense.vendor,
+        category: expense.category,
+        description: expense.description || "",
+        status: expense.status || "paid",
+      });
+    } else {
+      form.reset({
+        date: new Date().toISOString().slice(0, 16),
+        amount: "0.00",
+        vendor: "",
+        category: "",
+        description: "",
+        status: "paid",
+      });
+    }
+  }, [expense, form]);
 
   const createExpenseMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/expenses', data),
@@ -46,6 +69,18 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
     },
   });
 
+  const updateExpenseMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', `/api/expenses/${expense?.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+      toast({ title: "Expense updated successfully" });
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to update expense", variant: "destructive" });
+    },
+  });
+
   const onSubmit = (data: any) => {
     const submitData = {
       date: new Date(data.date),
@@ -57,14 +92,18 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
     };
     
     console.log("Submitting expense data:", submitData);
-    createExpenseMutation.mutate(submitData);
+    if (isEdit) {
+      updateExpenseMutation.mutate(submitData);
+    } else {
+      createExpenseMutation.mutate(submitData);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Expense" : "Add New Expense"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -161,8 +200,8 @@ export default function ExpenseModal({ open, onOpenChange }: ExpenseModalProps) 
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createExpenseMutation.isPending}>
-              {createExpenseMutation.isPending ? "Saving..." : "Save Expense"}
+            <Button type="submit" disabled={createExpenseMutation.isPending || updateExpenseMutation.isPending}>
+              {createExpenseMutation.isPending || updateExpenseMutation.isPending ? "Saving..." : isEdit ? "Update Expense" : "Save Expense"}
             </Button>
           </div>
         </form>

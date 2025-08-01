@@ -312,6 +312,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/expenses/:id", async (req, res) => {
     try {
+      // Convert date string to Date object before validation
+      const processedData = {
+        ...req.body,
+        date: new Date(req.body.date)
+      };
+      const expenseData = insertExpenseSchema.parse(processedData);
+      const expense = await storage.updateExpense(req.params.id, expenseData);
+      res.json(expense);
+    } catch (error: any) {
+      console.error("Expense update validation error:", error);
+      res.status(400).json({ message: "Invalid expense data", error: error.message });
+    }
+  });
+
+  app.put("/api/expenses/:id", async (req, res) => {
+    try {
       const { id } = req.params;
       const expenseData = insertExpenseSchema.partial().parse(req.body);
       const expense = await storage.updateExpense(id, expenseData);
