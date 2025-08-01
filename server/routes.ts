@@ -244,7 +244,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/revenue-entries", async (req, res) => {
     try {
-      const revenueEntryData = insertRevenueEntrySchema.parse(req.body);
+      console.log("Received revenue entry data:", req.body);
+      // Convert date string to Date object before validation
+      const processedData = {
+        ...req.body,
+        date: new Date(req.body.date)
+      };
+      console.log("Processed revenue entry data:", processedData);
+      const revenueEntryData = insertRevenueEntrySchema.parse(processedData);
+      console.log("Parsed revenue entry data:", revenueEntryData);
       const revenueEntry = await storage.createRevenueEntry(revenueEntryData);
       
       // Calculate and create payouts
@@ -264,8 +272,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(revenueEntry);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid revenue entry data" });
+    } catch (error: any) {
+      console.error("Revenue entry validation error:", error);
+      res.status(400).json({ message: "Invalid revenue entry data", error: error.message });
     }
   });
 
