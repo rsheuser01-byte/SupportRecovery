@@ -474,10 +474,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/check-days", async (req, res) => {
     try {
-      const checkDayData = insertCheckDaySchema.parse(req.body);
+      console.log("Received check day data:", req.body);
+      // Convert date string to Date object before validation
+      const processedData = {
+        ...req.body,
+        checkDate: new Date(req.body.checkDate)
+      };
+      console.log("Processed check day data:", processedData);
+      const checkDayData = insertCheckDaySchema.parse(processedData);
+      console.log("Parsed check day data:", checkDayData);
       const checkDay = await storage.createCheckDay(checkDayData);
       res.json(checkDay);
     } catch (error: any) {
+      console.error("Check day validation error:", error);
       res.status(400).json({ message: "Invalid check day data", error: error.message });
     }
   });
@@ -485,7 +494,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/check-days/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const checkDayData = insertCheckDaySchema.partial().parse(req.body);
+      // Convert date string to Date object before validation if date exists
+      const processedData = {
+        ...req.body,
+        ...(req.body.checkDate && { checkDate: new Date(req.body.checkDate) })
+      };
+      const checkDayData = insertCheckDaySchema.partial().parse(processedData);
       const checkDay = await storage.updateCheckDay(id, checkDayData);
       if (!checkDay) {
         return res.status(404).json({ message: "Check day not found" });
