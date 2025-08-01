@@ -1471,10 +1471,10 @@ export default function Dashboard() {
       />
 
       <PayoutBatchModal
-        open={payoutBatchModalOpen}
-        onOpenChange={(open) => {
-          setPayoutBatchModalOpen(open);
-          if (!open) setEditingPayoutBatch(undefined);
+        isOpen={payoutBatchModalOpen}
+        onClose={() => {
+          setPayoutBatchModalOpen(false);
+          setEditingPayoutBatch(undefined);
         }}
         batch={editingPayoutBatch}
       />
