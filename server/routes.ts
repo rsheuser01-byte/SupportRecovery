@@ -195,11 +195,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/patients", async (req, res) => {
     try {
+      console.log("Received patient data:", req.body);
       const patientData = insertPatientSchema.parse(req.body);
+      console.log("Parsed patient data:", patientData);
       const patient = await storage.createPatient(patientData);
       res.json(patient);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid patient data" });
+    } catch (error: any) {
+      console.error("Patient validation error:", error);
+      res.status(400).json({ message: "Invalid patient data", error: error.message });
     }
   });
 
