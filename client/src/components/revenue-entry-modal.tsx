@@ -98,7 +98,7 @@ export default function RevenueEntryModal({
       ...data,
       date: new Date(data.date).toISOString(),
       amount: parseFloat(data.amount).toFixed(2),
-      patientId: data.patientId || undefined,
+      patientId: data.patientId === "none" ? undefined : data.patientId || undefined,
     };
     
     createRevenueMutation.mutate(submitData);
@@ -152,7 +152,7 @@ export default function RevenueEntryModal({
                 <SelectValue placeholder="Search or select patient..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No patient selected</SelectItem>
+                <SelectItem value="none">No patient selected</SelectItem>
                 {patients.map(patient => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.name} - {patient.phone}

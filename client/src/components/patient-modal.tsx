@@ -61,7 +61,7 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
     const submitData = {
       ...data,
       startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
-      houseId: data.houseId || undefined,
+      houseId: data.houseId === "none" ? undefined : data.houseId || undefined,
     };
     
     createPatientMutation.mutate(submitData);
@@ -105,7 +105,7 @@ export default function PatientModal({ open, onOpenChange, houses }: PatientModa
                 <SelectValue placeholder="Select House" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No house assigned</SelectItem>
+                <SelectItem value="none">No house assigned</SelectItem>
                 {houses.map(house => (
                   <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                 ))}
