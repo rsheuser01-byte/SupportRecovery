@@ -64,22 +64,12 @@ export const expenses = pgTable("expenses", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const payoutBatches = pgTable("payout_batches", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  checkDate: timestamp("check_date").notNull(),
-  notes: text("notes"),
-  status: text("status").default("pending"), // pending, paid, processed
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
-
 export const payouts = pgTable("payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   revenueEntryId: varchar("revenue_entry_id").notNull().references(() => revenueEntries.id),
   staffId: varchar("staff_id").notNull().references(() => staff.id),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   percentage: numeric("percentage", { precision: 5, scale: 2 }).notNull(),
-  batchId: varchar("batch_id").references(() => payoutBatches.id),
 });
 
 export const businessSettings = pgTable("business_settings", {
@@ -99,7 +89,6 @@ export const insertPatientSchema = createInsertSchema(patients).omit({ id: true 
 export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
-export const insertPayoutBatchSchema = createInsertSchema(payoutBatches).omit({ id: true, createdAt: true });
 
 // Types
 export type House = typeof houses.$inferSelect;
@@ -117,7 +106,5 @@ export type InsertRevenueEntry = z.infer<typeof insertRevenueEntrySchema>;
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Payout = typeof payouts.$inferSelect;
-export type PayoutBatch = typeof payoutBatches.$inferSelect;
-export type InsertPayoutBatch = z.infer<typeof insertPayoutBatchSchema>;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
