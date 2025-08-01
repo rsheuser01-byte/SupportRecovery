@@ -41,6 +41,40 @@ export default function Dashboard() {
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
+  
+  // Delete mutations
+  const deleteServiceCodeMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/service-codes/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/service-codes"] });
+      toast({ title: "Service code deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete service code", variant: "destructive" });
+    },
+  });
+
+  const deleteHouseMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/houses/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/houses"] });
+      toast({ title: "House deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete house", variant: "destructive" });
+    },
+  });
+
+  const deleteStaffMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/staff/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      toast({ title: "Staff member deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete staff member", variant: "destructive" });
+    },
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1073,6 +1107,19 @@ export default function Dashboard() {
                                   <Edit className="mr-1 h-3 w-3" />
                                   Edit
                                 </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (confirm(`Are you sure you want to delete service code "${serviceCode.code}"?`)) {
+                                      deleteServiceCodeMutation.mutate(serviceCode.id);
+                                    }
+                                  }}
+                                  disabled={deleteServiceCodeMutation.isPending}
+                                >
+                                  <Trash2 className="mr-1 h-3 w-3" />
+                                  Delete
+                                </Button>
                               </div>
                             </div>
                           ))}
@@ -1113,6 +1160,19 @@ export default function Dashboard() {
                                   <Edit className="mr-1 h-3 w-3" />
                                   Edit
                                 </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (confirm(`Are you sure you want to delete house "${house.name}"?`)) {
+                                      deleteHouseMutation.mutate(house.id);
+                                    }
+                                  }}
+                                  disabled={deleteHouseMutation.isPending}
+                                >
+                                  <Trash2 className="mr-1 h-3 w-3" />
+                                  Delete
+                                </Button>
                               </div>
                             </div>
                           ))}
@@ -1151,6 +1211,19 @@ export default function Dashboard() {
                                 >
                                   <Edit className="mr-1 h-3 w-3" />
                                   Edit
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (confirm(`Are you sure you want to delete staff member "${staffMember.name}"?`)) {
+                                      deleteStaffMutation.mutate(staffMember.id);
+                                    }
+                                  }}
+                                  disabled={deleteStaffMutation.isPending}
+                                >
+                                  <Trash2 className="mr-1 h-3 w-3" />
+                                  Delete
                                 </Button>
                               </div>
                             </div>

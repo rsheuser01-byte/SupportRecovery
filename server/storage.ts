@@ -17,18 +17,21 @@ export interface IStorage {
   getHouse(id: string): Promise<House | undefined>;
   createHouse(house: InsertHouse): Promise<House>;
   updateHouse(id: string, house: Partial<InsertHouse>): Promise<House | undefined>;
+  deleteHouse(id: string): Promise<boolean>;
 
   // Service Codes
   getServiceCodes(): Promise<ServiceCode[]>;
   getServiceCode(id: string): Promise<ServiceCode | undefined>;
   createServiceCode(serviceCode: InsertServiceCode): Promise<ServiceCode>;
   updateServiceCode(id: string, serviceCode: Partial<InsertServiceCode>): Promise<ServiceCode | undefined>;
+  deleteServiceCode(id: string): Promise<boolean>;
 
   // Staff
   getStaff(): Promise<Staff[]>;
   getStaffMember(id: string): Promise<Staff | undefined>;
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(id: string, staff: Partial<InsertStaff>): Promise<Staff | undefined>;
+  deleteStaff(id: string): Promise<boolean>;
 
   // Payout Rates
   getPayoutRates(): Promise<PayoutRate[]>;
@@ -197,6 +200,10 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async deleteHouse(id: string): Promise<boolean> {
+    return this.houses.delete(id);
+  }
+
   // Service Codes
   async getServiceCodes(): Promise<ServiceCode[]> {
     return Array.from(this.serviceCodes.values()).filter(sc => sc.isActive);
@@ -226,6 +233,10 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async deleteServiceCode(id: string): Promise<boolean> {
+    return this.serviceCodes.delete(id);
+  }
+
   // Staff
   async getStaff(): Promise<Staff[]> {
     return Array.from(this.staff.values()).filter(s => s.isActive);
@@ -252,6 +263,10 @@ export class MemStorage implements IStorage {
     const updated = { ...existing, ...staff };
     this.staff.set(id, updated);
     return updated;
+  }
+
+  async deleteStaff(id: string): Promise<boolean> {
+    return this.staff.delete(id);
   }
 
   // Payout Rates

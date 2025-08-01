@@ -41,6 +41,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/houses/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteHouse(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "House not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete house" });
+    }
+  });
+
   // Service Codes
   app.get("/api/service-codes", async (req, res) => {
     try {
@@ -74,6 +86,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/service-codes/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteServiceCode(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Service code not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete service code" });
+    }
+  });
+
   // Staff
   app.get("/api/staff", async (req, res) => {
     try {
@@ -104,6 +128,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(staff);
     } catch (error) {
       res.status(400).json({ message: "Invalid staff data" });
+    }
+  });
+
+  app.delete("/api/staff/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteStaff(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete staff member" });
     }
   });
 
