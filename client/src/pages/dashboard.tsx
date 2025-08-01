@@ -45,6 +45,9 @@ export default function Dashboard() {
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   // Delete mutations
   const deleteServiceCodeMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/service-codes/${id}`),
@@ -78,8 +81,6 @@ export default function Dashboard() {
       toast({ title: "Failed to delete staff member", variant: "destructive" });
     },
   });
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Queries
   const { data: houses = [] } = useQuery<House[]>({
