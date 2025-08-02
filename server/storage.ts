@@ -7,9 +7,13 @@ import {
   type RevenueEntry, type InsertRevenueEntry,
   type Expense, type InsertExpense,
   type Payout,
-  type BusinessSettings, type InsertBusinessSettings
+  type BusinessSettings, type InsertBusinessSettings,
+  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq, desc, and, like } from "drizzle-orm";
 
 export interface IStorage {
   // Houses
@@ -449,4 +453,314 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DbStorage implements IStorage {
+  private db;
+
+  constructor() {
+    const sql = neon(process.env.DATABASE_URL!);
+    this.db = drizzle(sql);
+    this.initializeData();
+  }
+
+  private async initializeData() {
+    try {
+      // Check if houses exist, if not, initialize default data
+      const existingHouses = await this.db.select().from(houses);
+      if (existingHouses.length === 0) {
+        // Initialize houses
+        await this.db.insert(houses).values([
+          { id: "house-1", name: "Greater Faith", address: "123 Recovery St, City, State 12345", isActive: true },
+          { id: "house-2", name: "Story Lighthouse", address: "456 Hope Ave, City, State 12345", isActive: true },
+          { id: "house-3", name: "Youth Program", address: "789 Future Blvd, City, State 12345", isActive: true },
+          { id: "house-4", name: "Outpatient", address: "321 Care Center Dr, City, State 12345", isActive: true },
+        ]);
+
+        // Initialize service codes
+        await this.db.insert(serviceCodes).values([
+          { id: "service-1", code: "peer support", description: "Peer Support Services", isActive: true },
+          { id: "service-2", code: "group", description: "Group Therapy", isActive: true },
+          { id: "service-3", code: "T2023", description: "T2023 Sessions", isActive: true },
+          { id: "service-4", code: "evening group", description: "Evening Group Sessions", isActive: true },
+          { id: "service-5", code: "morning group", description: "Morning Group Sessions", isActive: true },
+        ]);
+
+        // Initialize staff
+        await this.db.insert(staff).values([
+          { id: "staff-1", name: "Dr. Kelsey", isActive: true },
+          { id: "staff-2", name: "Bardstown Billing", isActive: true },
+          { id: "staff-3", name: "George", isActive: true },
+          { id: "staff-4", name: "Maria", isActive: true },
+          { id: "staff-5", name: "Shelton", isActive: true },
+        ]);
+
+        // Initialize payout rates
+        await this.db.insert(payoutRates).values([
+          // Greater Faith rates
+          { id: "rate-1", houseId: "house-1", serviceCodeId: "service-1", staffId: "staff-1", percentage: "15.00" },
+          { id: "rate-2", houseId: "house-1", serviceCodeId: "service-1", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-3", houseId: "house-1", serviceCodeId: "service-1", staffId: "staff-3", percentage: "39.50" },
+          { id: "rate-4", houseId: "house-1", serviceCodeId: "service-1", staffId: "staff-4", percentage: "39.50" },
+          { id: "rate-5", houseId: "house-1", serviceCodeId: "service-1", staffId: "staff-5", percentage: "0.00" },
+          { id: "rate-6", houseId: "house-1", serviceCodeId: "service-2", staffId: "staff-1", percentage: "15.00" },
+          { id: "rate-7", houseId: "house-1", serviceCodeId: "service-2", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-8", houseId: "house-1", serviceCodeId: "service-2", staffId: "staff-3", percentage: "39.50" },
+          { id: "rate-9", houseId: "house-1", serviceCodeId: "service-2", staffId: "staff-4", percentage: "39.50" },
+          { id: "rate-10", houseId: "house-1", serviceCodeId: "service-2", staffId: "staff-5", percentage: "0.00" },
+          
+          // Story Lighthouse rates
+          { id: "rate-11", houseId: "house-2", serviceCodeId: "service-1", staffId: "staff-1", percentage: "15.00" },
+          { id: "rate-12", houseId: "house-2", serviceCodeId: "service-1", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-13", houseId: "house-2", serviceCodeId: "service-1", staffId: "staff-3", percentage: "44.00" },
+          { id: "rate-14", houseId: "house-2", serviceCodeId: "service-1", staffId: "staff-4", percentage: "0.00" },
+          { id: "rate-15", houseId: "house-2", serviceCodeId: "service-1", staffId: "staff-5", percentage: "35.00" },
+          { id: "rate-16", houseId: "house-2", serviceCodeId: "service-3", staffId: "staff-1", percentage: "15.00" },
+          { id: "rate-17", houseId: "house-2", serviceCodeId: "service-3", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-18", houseId: "house-2", serviceCodeId: "service-3", staffId: "staff-3", percentage: "31.60" },
+          { id: "rate-19", houseId: "house-2", serviceCodeId: "service-3", staffId: "staff-4", percentage: "0.00" },
+          { id: "rate-20", houseId: "house-2", serviceCodeId: "service-3", staffId: "staff-5", percentage: "47.40" },
+          
+          // Youth Program rates
+          { id: "rate-21", houseId: "house-3", serviceCodeId: "service-1", staffId: "staff-1", percentage: "34.00" },
+          { id: "rate-22", houseId: "house-3", serviceCodeId: "service-1", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-23", houseId: "house-3", serviceCodeId: "service-1", staffId: "staff-3", percentage: "60.00" },
+          { id: "rate-24", houseId: "house-3", serviceCodeId: "service-1", staffId: "staff-4", percentage: "0.00" },
+          { id: "rate-25", houseId: "house-3", serviceCodeId: "service-1", staffId: "staff-5", percentage: "0.00" },
+          
+          // Outpatient rates
+          { id: "rate-26", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-1", percentage: "15.00" },
+          { id: "rate-27", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-2", percentage: "6.00" },
+          { id: "rate-28", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-3", percentage: "79.00" },
+          { id: "rate-29", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-4", percentage: "0.00" },
+          { id: "rate-30", houseId: "house-4", serviceCodeId: "service-1", staffId: "staff-5", percentage: "0.00" },
+        ]);
+
+        // Initialize business settings
+        await this.db.insert(businessSettings).values({
+          id: "business-1",
+          name: "Healthcare Management Solutions",
+          address: "123 Healthcare Blvd, Medical City, MC 12345",
+          phone: "(555) 123-4567",
+          email: "info@healthcaremanagement.com"
+        });
+      }
+    } catch (error) {
+      console.error("Error initializing data:", error);
+    }
+  }
+
+  // Houses
+  async getHouses(): Promise<House[]> {
+    return await this.db.select().from(houses).where(eq(houses.isActive, true));
+  }
+
+  async getHouse(id: string): Promise<House | undefined> {
+    const result = await this.db.select().from(houses).where(eq(houses.id, id));
+    return result[0];
+  }
+
+  async createHouse(house: InsertHouse): Promise<House> {
+    const result = await this.db.insert(houses).values(house).returning();
+    return result[0];
+  }
+
+  async updateHouse(id: string, house: Partial<InsertHouse>): Promise<House | undefined> {
+    const result = await this.db.update(houses).set(house).where(eq(houses.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteHouse(id: string): Promise<boolean> {
+    const result = await this.db.update(houses).set({ isActive: false }).where(eq(houses.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Service Codes
+  async getServiceCodes(): Promise<ServiceCode[]> {
+    return await this.db.select().from(serviceCodes).where(eq(serviceCodes.isActive, true));
+  }
+
+  async getServiceCode(id: string): Promise<ServiceCode | undefined> {
+    const result = await this.db.select().from(serviceCodes).where(eq(serviceCodes.id, id));
+    return result[0];
+  }
+
+  async createServiceCode(serviceCode: InsertServiceCode): Promise<ServiceCode> {
+    const result = await this.db.insert(serviceCodes).values(serviceCode).returning();
+    return result[0];
+  }
+
+  async updateServiceCode(id: string, serviceCode: Partial<InsertServiceCode>): Promise<ServiceCode | undefined> {
+    const result = await this.db.update(serviceCodes).set(serviceCode).where(eq(serviceCodes.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteServiceCode(id: string): Promise<boolean> {
+    const result = await this.db.update(serviceCodes).set({ isActive: false }).where(eq(serviceCodes.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Staff
+  async getStaff(): Promise<Staff[]> {
+    return await this.db.select().from(staff).where(eq(staff.isActive, true));
+  }
+
+  async getStaffMember(id: string): Promise<Staff | undefined> {
+    const result = await this.db.select().from(staff).where(eq(staff.id, id));
+    return result[0];
+  }
+
+  async createStaff(staffData: InsertStaff): Promise<Staff> {
+    const result = await this.db.insert(staff).values(staffData).returning();
+    return result[0];
+  }
+
+  async updateStaff(id: string, staffData: Partial<InsertStaff>): Promise<Staff | undefined> {
+    const result = await this.db.update(staff).set(staffData).where(eq(staff.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteStaff(id: string): Promise<boolean> {
+    const result = await this.db.update(staff).set({ isActive: false }).where(eq(staff.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Payout Rates
+  async getPayoutRates(): Promise<PayoutRate[]> {
+    return await this.db.select().from(payoutRates);
+  }
+
+  async getPayoutRate(houseId: string, serviceCodeId: string, staffId: string): Promise<PayoutRate | undefined> {
+    const result = await this.db.select().from(payoutRates)
+      .where(and(
+        eq(payoutRates.houseId, houseId),
+        eq(payoutRates.serviceCodeId, serviceCodeId),
+        eq(payoutRates.staffId, staffId)
+      ));
+    return result[0];
+  }
+
+  async createPayoutRate(payoutRate: InsertPayoutRate): Promise<PayoutRate> {
+    const result = await this.db.insert(payoutRates).values(payoutRate).returning();
+    return result[0];
+  }
+
+  async updatePayoutRate(id: string, payoutRate: Partial<InsertPayoutRate>): Promise<PayoutRate | undefined> {
+    const result = await this.db.update(payoutRates).set(payoutRate).where(eq(payoutRates.id, id)).returning();
+    return result[0];
+  }
+
+  // Patients
+  async getPatients(): Promise<Patient[]> {
+    return await this.db.select().from(patients).orderBy(desc(patients.startDate));
+  }
+
+  async getPatient(id: string): Promise<Patient | undefined> {
+    const result = await this.db.select().from(patients).where(eq(patients.id, id));
+    return result[0];
+  }
+
+  async searchPatients(query: string): Promise<Patient[]> {
+    return await this.db.select().from(patients)
+      .where(like(patients.name, `%${query}%`))
+      .orderBy(desc(patients.startDate));
+  }
+
+  async createPatient(patient: InsertPatient): Promise<Patient> {
+    const result = await this.db.insert(patients).values(patient).returning();
+    return result[0];
+  }
+
+  async updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient | undefined> {
+    const result = await this.db.update(patients).set(patient).where(eq(patients.id, id)).returning();
+    return result[0];
+  }
+
+  // Revenue Entries
+  async getRevenueEntries(): Promise<RevenueEntry[]> {
+    return await this.db.select().from(revenueEntries).orderBy(desc(revenueEntries.date));
+  }
+
+  async getRevenueEntry(id: string): Promise<RevenueEntry | undefined> {
+    const result = await this.db.select().from(revenueEntries).where(eq(revenueEntries.id, id));
+    return result[0];
+  }
+
+  async createRevenueEntry(revenueEntry: InsertRevenueEntry): Promise<RevenueEntry> {
+    const result = await this.db.insert(revenueEntries).values(revenueEntry).returning();
+    return result[0];
+  }
+
+  async updateRevenueEntry(id: string, revenueEntry: Partial<InsertRevenueEntry>): Promise<RevenueEntry | undefined> {
+    const result = await this.db.update(revenueEntries).set(revenueEntry).where(eq(revenueEntries.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteRevenueEntry(id: string): Promise<boolean> {
+    const result = await this.db.delete(revenueEntries).where(eq(revenueEntries.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Expenses
+  async getExpenses(): Promise<Expense[]> {
+    return await this.db.select().from(expenses).orderBy(desc(expenses.date));
+  }
+
+  async getExpense(id: string): Promise<Expense | undefined> {
+    const result = await this.db.select().from(expenses).where(eq(expenses.id, id));
+    return result[0];
+  }
+
+  async createExpense(expense: InsertExpense): Promise<Expense> {
+    const result = await this.db.insert(expenses).values(expense).returning();
+    return result[0];
+  }
+
+  async updateExpense(id: string, expense: Partial<InsertExpense>): Promise<Expense | undefined> {
+    const result = await this.db.update(expenses).set(expense).where(eq(expenses.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteExpense(id: string): Promise<boolean> {
+    const result = await this.db.delete(expenses).where(eq(expenses.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Payouts
+  async getPayouts(): Promise<Payout[]> {
+    return await this.db.select().from(payouts);
+  }
+
+  async getPayoutsByRevenueEntry(revenueEntryId: string): Promise<Payout[]> {
+    return await this.db.select().from(payouts).where(eq(payouts.revenueEntryId, revenueEntryId));
+  }
+
+  async createPayout(payout: Omit<Payout, 'id'>): Promise<Payout> {
+    const result = await this.db.insert(payouts).values(payout).returning();
+    return result[0];
+  }
+
+  async deletePayout(id: string): Promise<boolean> {
+    const result = await this.db.delete(payouts).where(eq(payouts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Business Settings
+  async getBusinessSettings(): Promise<BusinessSettings | undefined> {
+    const result = await this.db.select().from(businessSettings);
+    return result[0];
+  }
+
+  async updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings> {
+    const existing = await this.getBusinessSettings();
+    if (existing) {
+      const result = await this.db.update(businessSettings).set(settings).where(eq(businessSettings.id, existing.id)).returning();
+      return result[0];
+    } else {
+      const result = await this.db.insert(businessSettings).values(settings).returning();
+      return result[0];
+    }
+  }
+}
+
+// Use database storage instead of memory storage
+export const storage = new DbStorage();

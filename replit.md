@@ -31,7 +31,8 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Schema**: Strongly typed schema definitions with foreign key relationships
 - **Migrations**: Drizzle Kit for database schema management
-- **Connection**: Neon Database serverless PostgreSQL
+- **Connection**: PostgreSQL with persistent data storage
+- **Storage**: DbStorage class implements full database persistence for all entities
 
 ### Data Models
 - **Houses**: Healthcare facilities with name and address
