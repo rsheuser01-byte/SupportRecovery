@@ -236,7 +236,7 @@ export default function RevenueEntryModal({
                   const house = houses.find(h => h.id === patient.houseId);
                   return (
                     <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name} - {house?.name || 'No House'} - {patient.phone || 'No Phone'}
+                      {patient.name} - {house?.name || 'No House'}
                     </SelectItem>
                   );
                 })}
