@@ -124,7 +124,20 @@ export default function RevenueEntryModal({
     },
   });
 
-  const watchedValues = form.watch(["amount", "houseId", "serviceCodeId"]);
+  const watchedValues = form.watch(["amount", "houseId", "serviceCodeId", "patientId"]);
+
+  // Auto-select house when patient is selected
+  React.useEffect(() => {
+    const [amount, houseId, serviceCodeId, patientId] = watchedValues;
+    
+    // Auto-set house based on selected patient
+    if (patientId && patientId !== "none") {
+      const selectedPatient = patients.find(p => p.id === patientId);
+      if (selectedPatient && selectedPatient.houseId && selectedPatient.houseId !== houseId) {
+        form.setValue("houseId", selectedPatient.houseId);
+      }
+    }
+  }, [watchedValues[3], patients, form]); // Only watch patientId changes
 
   // Calculate payouts when relevant fields change
   React.useEffect(() => {
@@ -134,7 +147,7 @@ export default function RevenueEntryModal({
     } else {
       setPayoutPreview([]);
     }
-  }, watchedValues);
+  }, [watchedValues[0], watchedValues[1], watchedValues[2]]); // Watch amount, houseId, serviceCodeId
 
   const onSubmit = (data: RevenueEntryForm) => {
     console.log("Form data before processing:", data);
@@ -212,18 +225,21 @@ export default function RevenueEntryModal({
           </div>
 
           <div>
-            <Label htmlFor="patientId">Patient (Optional)</Label>
+            <Label htmlFor="patientId">Patient (Optional) - House will auto-select</Label>
             <Select onValueChange={(value) => form.setValue("patientId", value)} value={form.watch("patientId") || "none"}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Search or select patient..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No patient selected</SelectItem>
-                {patients.map(patient => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name} - {patient.phone}
-                  </SelectItem>
-                ))}
+                {patients.map(patient => {
+                  const house = houses.find(h => h.id === patient.houseId);
+                  return (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.name} - {house?.name || 'No House'} - {patient.phone || 'No Phone'}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
