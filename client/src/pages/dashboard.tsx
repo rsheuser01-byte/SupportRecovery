@@ -415,6 +415,111 @@ export default function Dashboard() {
     toast({ title: "Daily revenue report downloaded successfully" });
   };
 
+  // Dashboard export function
+  const exportDashboardReport = () => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    const latestCheckDate = getLatestCheckDate();
+    
+    // Determine report title based on filter
+    let reportTitle = 'Dashboard Report';
+    let filterDescription = '';
+    
+    switch (dashboardDateFilter) {
+      case 'this-month':
+        reportTitle = 'This Month Dashboard Report';
+        filterDescription = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        break;
+      case 'last-month':
+        const lastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+        reportTitle = 'Last Month Dashboard Report';
+        filterDescription = lastMonth.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        break;
+      case 'this-quarter':
+        const quarter = Math.floor(new Date().getMonth() / 3) + 1;
+        reportTitle = `Q${quarter} ${new Date().getFullYear()} Dashboard Report`;
+        filterDescription = `Quarter ${quarter}, ${new Date().getFullYear()}`;
+        break;
+      case 'last-check':
+        reportTitle = 'Last Check Dashboard Report';
+        filterDescription = latestCheckDate ? formatDate(latestCheckDate) : 'No check date found';
+        break;
+      default:
+        reportTitle = 'Complete Dashboard Report';
+        filterDescription = 'All Time';
+    }
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text(reportTitle, 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 40);
+    doc.text(`Period: ${filterDescription}`, 20, 50);
+    
+    // Summary metrics
+    doc.setFontSize(14);
+    doc.text('Financial Summary', 20, 70);
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ${formatCurrency(totalRevenue)}`, 20, 80);
+    doc.text(`Total Expenses: ${formatCurrency(totalExpenses)}`, 20, 90);
+    doc.text(`Net Profit (George's Share): ${formatCurrency(netProfit)}`, 20, 100);
+    doc.text(`Active Patients: ${activePatients}`, 20, 110);
+    
+    // Revenue entries table
+    if (dashboardRevenue.length > 0) {
+      const revenueTableData = dashboardRevenue.map(entry => {
+        const house = houses.find(h => h.id === entry.houseId);
+        const service = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+        const patient = patients.find(p => p.id === entry.patientId);
+        return [
+          formatDate(entry.date),
+          entry.checkDate ? formatDate(entry.checkDate) : '-',
+          patient?.name || 'Unknown',
+          house?.name || 'N/A',
+          service?.code || 'N/A',
+          formatCurrency(parseFloat(entry.amount)),
+          entry.status
+        ];
+      });
+      
+      autoTable(doc, {
+        head: [['Service Date', 'Check Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
+        body: revenueTableData,
+        startY: 130,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [79, 70, 229] }
+      });
+    }
+    
+    // Expenses table
+    if (dashboardExpenses.length > 0) {
+      const finalY = dashboardRevenue.length > 0 ? (doc as any).lastAutoTable.finalY + 20 : 130;
+      
+      doc.setFontSize(14);
+      doc.text('Expenses', 20, finalY);
+      
+      const expenseTableData = dashboardExpenses.map(expense => [
+        formatDate(expense.date),
+        expense.vendor || 'N/A',
+        expense.category || 'N/A',
+        expense.description || '-',
+        formatCurrency(parseFloat(expense.amount))
+      ]);
+      
+      autoTable(doc, {
+        head: [['Date', 'Vendor', 'Category', 'Description', 'Amount']],
+        body: expenseTableData,
+        startY: finalY + 10,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [220, 38, 127] }
+      });
+    }
+    
+    const fileName = `dashboard-report-${dashboardDateFilter}-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    toast({ title: "Dashboard report exported successfully" });
+  };
+
   // Report generation functions
   const generateRevenueReport = (period: 'monthly' | 'quarterly') => {
     const doc = new jsPDF();
@@ -756,7 +861,10 @@ export default function Dashboard() {
                         <SelectItem value="last-check">Last Check</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift">
+                    <Button 
+                      className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift"
+                      onClick={exportDashboardReport}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Export Report
                     </Button>
