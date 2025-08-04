@@ -59,6 +59,9 @@ export default function Dashboard() {
     houseId: 'all',
     serviceCodeId: 'all'
   });
+
+  // Dashboard date filter
+  const [dashboardDateFilter, setDashboardDateFilter] = useState('all');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -161,15 +164,79 @@ export default function Dashboard() {
     },
   });
 
-  // Calculate dashboard metrics
-  const totalRevenue = revenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+  // Get latest check date for "Last Check" filter option
+  const getLatestCheckDate = () => {
+    const datesWithCheck = revenueEntries
+      .filter(entry => entry.checkDate)
+      .map(entry => new Date(entry.checkDate!))
+      .sort((a, b) => b.getTime() - a.getTime());
+    
+    return datesWithCheck.length > 0 ? datesWithCheck[0] : null;
+  };
+
+  // Filter dashboard data based on date filter
+  const getDashboardFilteredData = () => {
+    if (dashboardDateFilter === 'all') {
+      return { filteredRevenueEntries: revenueEntries, filteredExpenses: expenses };
+    }
+
+    const now = new Date();
+    const latestCheckDate = getLatestCheckDate();
+
+    const filterByDateRange = (date: string | Date) => {
+      const entryDate = new Date(date);
+      
+      switch (dashboardDateFilter) {
+        case 'this-month':
+          return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+        case 'last-month':
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          return entryDate.getMonth() === lastMonth.getMonth() && entryDate.getFullYear() === lastMonth.getFullYear();
+        case 'this-quarter':
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          const entryQuarter = Math.floor(entryDate.getMonth() / 3);
+          return entryQuarter === currentQuarter && entryDate.getFullYear() === now.getFullYear();
+        case 'last-check':
+          if (!latestCheckDate) return false;
+          // This case is handled separately in the filter function below
+          return false;
+        default:
+          return true;
+      }
+    };
+
+    const filteredRevenueEntries = revenueEntries.filter(entry => {
+      if (dashboardDateFilter === 'last-check' && latestCheckDate) {
+        return entry.checkDate && new Date(entry.checkDate).toDateString() === latestCheckDate.toDateString();
+      }
+      return filterByDateRange(entry.date);
+    });
+
+    const filteredExpenses = expenses.filter(expense => filterByDateRange(expense.date));
+
+    return { filteredRevenueEntries, filteredExpenses };
+  };
+
+  const { filteredRevenueEntries: dashboardRevenue, filteredExpenses: dashboardExpenses } = getDashboardFilteredData();
+
+  // Calculate dashboard metrics using filtered data
+  const totalRevenue = dashboardRevenue.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+  const totalExpenses = dashboardExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
   
-  // Calculate George's portion (business owner's share) for profit calculation
+  // Calculate George's portion (business owner's share) for profit calculation using filtered data
   const georgeStaff = staff.find(s => s.name === "George");
   const georgeRevenue = georgeStaff ? 
     payouts
-      .filter(p => p.staffId === georgeStaff.id)
+      .filter(p => {
+        if (p.staffId !== georgeStaff.id) return false;
+        // Filter by the same date logic as dashboard data
+        if (dashboardDateFilter === 'all') return true;
+        
+        const payoutRevenueEntry = revenueEntries.find(re => re.id === p.revenueEntryId);
+        if (!payoutRevenueEntry) return false;
+        
+        return dashboardRevenue.some(dre => dre.id === payoutRevenueEntry.id);
+      })
       .reduce((sum, payout) => sum + parseFloat(payout.amount), 0)
     : 0;
   
@@ -240,7 +307,7 @@ export default function Dashboard() {
     const matchesSearch = patientSearchTerm === "" || 
       patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
       patient.id.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
-      patient.phone.toLowerCase().includes(patientSearchTerm.toLowerCase());
+      (patient.phone && patient.phone.toLowerCase().includes(patientSearchTerm.toLowerCase()));
     
     const matchesHouse = selectedHouseFilter === "all" || patient.houseId === selectedHouseFilter;
     const matchesStatus = selectedStatusFilter === "all" || patient.status === selectedStatusFilter;
@@ -666,18 +733,27 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div className="animate-slide-up">
                     <h2 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
-                    <p className="text-blue-100 opacity-90 text-lg">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
+                    <p className="text-blue-100 opacity-90 text-lg">
+                      {dashboardDateFilter === 'last-check' && getLatestCheckDate() 
+                        ? `Last Check Date: ${formatDate(getLatestCheckDate()!)}` 
+                        : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                      }
+                    </p>
                   </div>
                   <div className="flex items-center space-x-3 animate-bounce-subtle">
-                    <Select defaultValue="this-month">
-                      <SelectTrigger className="w-40 bg-white/10 border-white/20 text-white">
+                    <Select 
+                      value={dashboardDateFilter} 
+                      onValueChange={setDashboardDateFilter}
+                    >
+                      <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
                         <SelectItem value="this-month">This Month</SelectItem>
                         <SelectItem value="last-month">Last Month</SelectItem>
                         <SelectItem value="this-quarter">This Quarter</SelectItem>
-                        <SelectItem value="this-year">This Year</SelectItem>
+                        <SelectItem value="last-check">Last Check</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift">
