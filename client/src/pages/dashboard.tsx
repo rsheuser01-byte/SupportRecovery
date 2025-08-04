@@ -489,19 +489,26 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-fade-in">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Support Recovery LLC</h1>
-          <p className="text-sm text-gray-500">Addition Treatment, Behavioral & Mental Health Services</p>
+      <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
+        <div className="p-6 gradient-header relative overflow-hidden">
+          <div className="relative z-10">
+            <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
+            <p className="text-sm text-blue-100 opacity-90">Addition Treatment, Behavioral & Mental Health Services</p>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
         </div>
         
         <nav className="flex-1 p-4">
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Button
               variant={selectedTab === "dashboard" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "dashboard" 
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "dashboard" ? "active" : ""}`}
               onClick={() => setSelectedTab("dashboard")}
             >
               <BarChart3 className="mr-3 h-4 w-4" />
@@ -509,7 +516,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "revenue" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "revenue" 
+                  ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "revenue" ? "active" : ""}`}
               onClick={() => setSelectedTab("revenue")}
             >
               <DollarSign className="mr-3 h-4 w-4" />
@@ -517,7 +528,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "payouts" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "payouts" 
+                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "payouts" ? "active" : ""}`}
               onClick={() => setSelectedTab("payouts")}
             >
               <Users className="mr-3 h-4 w-4" />
@@ -525,7 +540,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "expenses" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "expenses" 
+                  ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "expenses" ? "active" : ""}`}
               onClick={() => setSelectedTab("expenses")}
             >
               <Receipt className="mr-3 h-4 w-4" />
@@ -533,7 +552,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "patients" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "patients" 
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "patients" ? "active" : ""}`}
               onClick={() => setSelectedTab("patients")}
             >
               <UserCheck className="mr-3 h-4 w-4" />
@@ -541,7 +564,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "reports" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "reports" 
+                  ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "reports" ? "active" : ""}`}
               onClick={() => setSelectedTab("reports")}
             >
               <FileText className="mr-3 h-4 w-4" />
@@ -549,7 +576,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "check-dates" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "check-dates" 
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "check-dates" ? "active" : ""}`}
               onClick={() => setSelectedTab("check-dates")}
             >
               <Calendar className="mr-3 h-4 w-4" />
@@ -557,7 +588,11 @@ export default function Dashboard() {
             </Button>
             <Button
               variant={selectedTab === "settings" ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "settings" 
+                  ? "bg-gradient-to-r from-gray-600 to-slate-700 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "settings" ? "active" : ""}`}
               onClick={() => setSelectedTab("settings")}
             >
               <Settings className="mr-3 h-4 w-4" />
@@ -571,118 +606,123 @@ export default function Dashboard() {
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
-                  <p className="text-gray-600">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Select defaultValue="this-month">
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="this-month">This Month</SelectItem>
-                      <SelectItem value="last-month">Last Month</SelectItem>
-                      <SelectItem value="this-quarter">This Quarter</SelectItem>
-                      <SelectItem value="this-year">This Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Report
-                  </Button>
+            <header className="gradient-header relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-8">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
+                    <p className="text-blue-100 opacity-90 text-lg">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
+                  </div>
+                  <div className="flex items-center space-x-3 animate-bounce-subtle">
+                    <Select defaultValue="this-month">
+                      <SelectTrigger className="w-40 bg-white/10 border-white/20 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                        <SelectItem value="last-month">Last Month</SelectItem>
+                        <SelectItem value="this-quarter">This Quarter</SelectItem>
+                        <SelectItem value="this-year">This Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift">
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Report
+                    </Button>
+                  </div>
                 </div>
               </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
             </header>
 
-            <div className="p-6">
+            <div className="p-6 bg-gradient-to-br from-transparent via-slate-50/30 to-transparent">
               {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-                <Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 animate-slide-up">
+                <Card className="stat-card hover-lift border-0 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
-                        <p className="text-sm text-green-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                        <p className="text-sm font-medium text-gray-600 mb-2">Total Revenue</p>
+                        <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalRevenue)}</p>
+                        <p className="text-sm text-green-600 mt-2 flex items-center">
+                          <TrendingUp className="mr-1 h-3 w-3" />
                           12% vs last month
                         </p>
                       </div>
-                      <div className="p-3 bg-green-100 rounded-full">
-                        <DollarSign className="h-6 w-6 text-green-600" />
+                      <div className="p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <DollarSign className="h-8 w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="stat-card hover-lift border-0 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
-                        <p className="text-sm text-red-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
+                        <p className="text-sm font-medium text-gray-600 mb-2">Total Expenses</p>
+                        <p className="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{formatCurrency(totalExpenses)}</p>
+                        <p className="text-sm text-red-600 mt-2 flex items-center">
+                          <TrendingUp className="mr-1 h-3 w-3" />
                           3% vs last month
                         </p>
                       </div>
-                      <div className="p-3 bg-red-100 rounded-full">
-                        <Receipt className="h-6 w-6 text-red-600" />
+                      <div className="p-4 gradient-danger rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Receipt className="h-8 w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="stat-card hover-lift border-0 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Your Revenue Share</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(georgeRevenue)}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          George's portion from payouts
+                        <p className="text-sm font-medium text-gray-600 mb-2">Net Profit</p>
+                        <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{formatCurrency(netProfit)}</p>
+                        <p className="text-sm text-blue-600 mt-2 flex items-center">
+                          <Calculator className="mr-1 h-3 w-3" />
+                          George's share
                         </p>
                       </div>
-                      <div className="p-3 bg-purple-100 rounded-full">
-                        <UserCheck className="h-6 w-6 text-purple-600" />
+                      <div className="p-4 gradient-primary rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Calculator className="h-8 w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="stat-card hover-lift border-0 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Net Profit</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(netProfit)}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Your revenue - Total expenses
+                        <p className="text-sm font-medium text-gray-600 mb-2">Active Patients</p>
+                        <p className="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">{activePatients}</p>
+                        <p className="text-sm text-cyan-600 mt-2 flex items-center">
+                          <Users className="mr-1 h-3 w-3" />
+                          Currently enrolled
                         </p>
                       </div>
-                      <div className="p-3 bg-blue-100 rounded-full">
-                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      <div className="p-4 gradient-info rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <UserCheck className="h-8 w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="stat-card hover-lift border-0 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Active Patients</p>
-                        <p className="text-2xl font-bold text-gray-900">{activePatients}</p>
-                        <p className="text-sm text-green-600 mt-1">
-                          <TrendingUp className="inline mr-1 h-3 w-3" />
-                          8 new this month
+                        <p className="text-sm font-medium text-gray-600 mb-2">Total Staff</p>
+                        <p className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">{staff.length}</p>
+                        <p className="text-sm text-orange-600 mt-2 flex items-center">
+                          <Users className="mr-1 h-3 w-3" />
+                          Team members
                         </p>
                       </div>
-                      <div className="p-3 bg-purple-100 rounded-full">
-                        <Users className="h-6 w-6 text-purple-600" />
+                      <div className="p-4 gradient-warning rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Users className="h-8 w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
@@ -691,25 +731,28 @@ export default function Dashboard() {
 
               {/* Payouts Row */}
               <div className="grid grid-cols-1 gap-6 mb-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Staff Payouts by Check Date</CardTitle>
+                <Card className="card-enhanced hover-lift border-0 shadow-xl">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center">
+                      <Users className="mr-3 h-6 w-6 text-blue-600" />
+                      Staff Payouts by Check Date
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="bg-gradient-to-br from-slate-50/50 to-blue-50/30 rounded-b-lg">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {staffPayouts.map(({ staff: staffMember, totalPayout, payouts: staffPayoutEntries }) => (
-                        <div key={staffMember.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-4">
+                        <div key={staffMember.id} className="glass-card hover-lift rounded-xl p-6 transition-all duration-300 border-0 shadow-lg">
+                          <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center">
-                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                <Users className="h-5 w-5 text-blue-600" />
+                              <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+                                <Users className="h-6 w-6 text-white" />
                               </div>
                               <div>
-                                <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
-                                <p className="text-sm text-gray-500">{staffMember.role || 'Staff Member'}</p>
+                                <h4 className="font-bold text-gray-900 text-lg">{staffMember.name}</h4>
+                                <p className="text-sm text-blue-600 font-medium">{staffMember.role || 'Staff Member'}</p>
                               </div>
                             </div>
-                            <span className="text-lg font-bold text-gray-900">{formatCurrency(totalPayout)}</span>
+                            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalPayout)}</span>
                           </div>
                           
                           <div className="space-y-3">
@@ -771,11 +814,14 @@ export default function Dashboard() {
 
               {/* Recent Activity */}
               <div className="grid grid-cols-1 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Transactions</CardTitle>
+                <Card className="card-enhanced hover-lift border-0 shadow-xl">
+                  <CardHeader className="gradient-header text-white rounded-t-lg">
+                    <CardTitle className="text-2xl font-bold flex items-center">
+                      <DollarSign className="mr-3 h-6 w-6" />
+                      Recent Transactions
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="bg-gradient-to-br from-white to-slate-50 rounded-b-lg">
                     <div className="space-y-4">
                       {revenueEntries.slice(0, 8).map((entry) => {
                         const house = houses.find(h => h.id === entry.houseId);
@@ -783,26 +829,26 @@ export default function Dashboard() {
                         const patient = patients.find(p => p.id === entry.patientId);
                         
                         return (
-                          <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                          <div key={entry.id} className="table-row-hover flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-200">
                             <div className="flex items-center">
-                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                <Plus className="h-4 w-4 text-green-600" />
+                              <div className="w-10 h-10 gradient-success rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+                                <Plus className="h-5 w-5 text-white" />
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">
+                                <p className="font-semibold text-gray-900 text-lg">
                                   {serviceCode?.description} - {house?.name}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-blue-600 font-medium">
                                   Patient: {patient?.name || 'Unknown'}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium text-gray-900">{formatCurrency(parseFloat(entry.amount))}</p>
+                              <p className="font-bold text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(parseFloat(entry.amount))}</p>
                               <p className="text-sm text-gray-500">
                                 Service: {formatDate(entry.date)}
                                 {entry.checkDate && (
-                                  <span className="ml-2">• Check: {formatDate(entry.checkDate)}</span>
+                                  <span className="ml-2 text-blue-600">• Check: {formatDate(entry.checkDate)}</span>
                                 )}
                               </p>
                             </div>
