@@ -432,7 +432,7 @@ export default function Dashboard() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">HealthCare Dashboard</h1>
+          <h1 className="text-xl font-bold text-gray-900">Support Recovery LLC</h1>
           <p className="text-sm text-gray-500">Mental Health Services</p>
         </div>
         
@@ -497,7 +497,6 @@ export default function Dashboard() {
           </div>
         </nav>
       </aside>
-
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
@@ -1716,7 +1715,6 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </main>
-
       {/* Modals */}
       <RevenueEntryModal 
         open={revenueModalOpen} 
@@ -1729,7 +1727,6 @@ export default function Dashboard() {
         patients={patients}
         revenueEntry={editingRevenueEntry}
       />
-      
       <ExpenseModal 
         open={expenseModalOpen} 
         onOpenChange={(open) => {
@@ -1738,7 +1735,6 @@ export default function Dashboard() {
         }}
         expense={editingExpense}
       />
-      
       <PatientModal 
         open={patientModalOpen} 
         onOpenChange={(open) => {
@@ -1748,7 +1744,6 @@ export default function Dashboard() {
         houses={houses}
         patient={editingPatient}
       />
-
       <PayoutRatesModal
         open={payoutRatesModalOpen}
         onOpenChange={setPayoutRatesModalOpen}
@@ -1757,7 +1752,6 @@ export default function Dashboard() {
         staff={staff}
         payoutRates={payoutRates}
       />
-
       <ServiceCodeModal
         open={serviceCodeModalOpen}
         onOpenChange={(open) => {
@@ -1766,12 +1760,10 @@ export default function Dashboard() {
         }}
         serviceCode={editingServiceCode}
       />
-
       <BusinessSettingsModal
         open={businessSettingsModalOpen}
         onOpenChange={setBusinessSettingsModalOpen}
       />
-
       <HouseModal
         open={houseModalOpen}
         onOpenChange={(open) => {
@@ -1780,7 +1772,6 @@ export default function Dashboard() {
         }}
         house={editingHouse}
       />
-
       <StaffModal
         open={staffModalOpen}
         onOpenChange={(open) => {
