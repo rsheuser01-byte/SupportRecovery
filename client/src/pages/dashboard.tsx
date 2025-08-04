@@ -614,7 +614,7 @@ export default function Dashboard() {
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-fade-in">
       {/* Sidebar */}
       <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
-        <div className="p-6 gradient-header relative overflow-hidden">
+        <div className="p-6 gradient-header relative overflow-hidden ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[34px] pb-[34px]">
           <div className="relative z-10">
             <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
             <p className="text-sm text-blue-100 opacity-90">Addition Treatment, Behavioral & Mental Health Services</p>
