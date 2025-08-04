@@ -166,12 +166,12 @@ export default function Dashboard() {
 
   // Get latest check date for "Last Check" filter option
   const getLatestCheckDate = () => {
-    const datesWithCheck = revenueEntries
+    const checkDates = revenueEntries
       .filter(entry => entry.checkDate)
-      .map(entry => new Date(entry.checkDate!))
-      .sort((a, b) => b.getTime() - a.getTime());
+      .map(entry => entry.checkDate!)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     
-    return datesWithCheck.length > 0 ? datesWithCheck[0] : null;
+    return checkDates.length > 0 ? new Date(checkDates[0]) : null;
   };
 
   // Memoize the latest check date to avoid recalculation
