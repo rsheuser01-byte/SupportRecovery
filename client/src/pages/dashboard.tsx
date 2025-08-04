@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator
+  Settings, Home, UserCheck, Calculator, Calendar
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -47,6 +47,8 @@ export default function Dashboard() {
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCheckDate, setSelectedCheckDate] = useState<string | null>(null);
+  const [selectedStaffForCheckDate, setSelectedStaffForCheckDate] = useState<string | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -487,6 +489,14 @@ export default function Dashboard() {
               Reports
             </Button>
             <Button
+              variant={selectedTab === "check-dates" ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => setSelectedTab("check-dates")}
+            >
+              <Calendar className="mr-3 h-4 w-4" />
+              Check Dates
+            </Button>
+            <Button
               variant={selectedTab === "settings" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setSelectedTab("settings")}
@@ -653,7 +663,7 @@ export default function Dashboard() {
                                   const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
                                   return revenueEntry?.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : null;
                                 }).filter(Boolean)
-                              )).sort().map(checkDate => {
+                              )).sort().reverse().slice(0, 5).map(checkDate => {
                                 const checkDatePayouts = staffPayoutEntries.filter(payout => {
                                   const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
                                   return revenueEntry?.checkDate && new Date(revenueEntry.checkDate).toISOString().split('T')[0] === checkDate;
@@ -1491,6 +1501,276 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Check Dates Tab */}
+          <TabsContent value="check-dates" className="m-0">
+            <header className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Check Date Analysis</h2>
+                  <p className="text-gray-600">Comprehensive check date breakdowns and historical analysis</p>
+                </div>
+              </div>
+            </header>
+
+            <div className="p-6">
+              {/* Check Date Selection */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Check Dates</CardTitle>
+                    <p className="text-sm text-gray-600">Select a check date to view detailed breakdown</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {Array.from(new Set(
+                        revenueEntries
+                          .map(entry => entry.checkDate ? new Date(entry.checkDate).toISOString().split('T')[0] : null)
+                          .filter(Boolean)
+                      )).sort().reverse().map(checkDate => {
+                        const checkDateTotal = revenueEntries
+                          .filter(entry => entry.checkDate && new Date(entry.checkDate).toISOString().split('T')[0] === checkDate)
+                          .reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+                        
+                        return (
+                          <Button
+                            key={checkDate}
+                            variant={selectedCheckDate === checkDate ? "default" : "ghost"}
+                            className="w-full justify-between"
+                            onClick={() => setSelectedCheckDate(checkDate)}
+                          >
+                            <span>{formatDate(checkDate!)}</span>
+                            <span className="font-medium">{formatCurrency(checkDateTotal)}</span>
+                          </Button>
+                        );
+                      })}
+                      {revenueEntries.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No check dates found</p>
+                          <p className="text-sm">Add revenue entries to see check dates</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Staff Filter</CardTitle>
+                    <p className="text-sm text-gray-600">View payouts for specific staff member</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Button
+                        variant={selectedStaffForCheckDate === null ? "default" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => setSelectedStaffForCheckDate(null)}
+                      >
+                        All Staff Members
+                      </Button>
+                      {staff.map(staffMember => (
+                        <Button
+                          key={staffMember.id}
+                          variant={selectedStaffForCheckDate === staffMember.id ? "default" : "ghost"}
+                          className="w-full justify-start"
+                          onClick={() => setSelectedStaffForCheckDate(staffMember.id)}
+                        >
+                          <span>{staffMember.name}</span>
+                          <span className="text-sm text-gray-500 ml-2">({staffMember.role || 'Staff Member'})</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Total Check Dates</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {Array.from(new Set(
+                            revenueEntries
+                              .map(entry => entry.checkDate ? new Date(entry.checkDate).toISOString().split('T')[0] : null)
+                              .filter(Boolean)
+                          )).length}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Revenue</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Payouts</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(payouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Selected Check Date Details */}
+              {selectedCheckDate && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Revenue Entries for {formatDate(selectedCheckDate)}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Service Date</TableHead>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>House</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Amount</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {revenueEntries
+                            .filter(entry => entry.checkDate && new Date(entry.checkDate).toISOString().split('T')[0] === selectedCheckDate)
+                            .map(entry => {
+                              const house = houses.find(h => h.id === entry.houseId);
+                              const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
+                              const patient = patients.find(p => p.id === entry.patientId);
+                              
+                              return (
+                                <TableRow key={entry.id}>
+                                  <TableCell>{formatDate(entry.date)}</TableCell>
+                                  <TableCell>{patient?.name || 'Unknown'}</TableCell>
+                                  <TableCell>{house?.name}</TableCell>
+                                  <TableCell>{serviceCode?.code}</TableCell>
+                                  <TableCell className="font-medium">{formatCurrency(parseFloat(entry.amount))}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Staff Payouts for {formatDate(selectedCheckDate)}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {staff
+                          .filter(staffMember => !selectedStaffForCheckDate || staffMember.id === selectedStaffForCheckDate)
+                          .map(staffMember => {
+                            const checkDatePayouts = payouts.filter(payout => {
+                              const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                              return payout.staffId === staffMember.id && 
+                                     revenueEntry?.checkDate && 
+                                     new Date(revenueEntry.checkDate).toISOString().split('T')[0] === selectedCheckDate;
+                            });
+                            
+                            const staffTotal = checkDatePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                            
+                            if (staffTotal === 0) return null;
+                            
+                            return (
+                              <div key={staffMember.id} className="bg-gray-50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
+                                    <p className="text-sm text-gray-500">{staffMember.role || 'Staff Member'}</p>
+                                  </div>
+                                  <span className="text-lg font-bold text-gray-900">{formatCurrency(staffTotal)}</span>
+                                </div>
+                                <div className="space-y-1 text-sm">
+                                  {checkDatePayouts.map(payout => {
+                                    const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                                    const house = houses.find(h => h.id === revenueEntry?.houseId);
+                                    const serviceCode = serviceCodes.find(sc => sc.id === revenueEntry?.serviceCodeId);
+                                    
+                                    return (
+                                      <div key={payout.id} className="flex justify-between">
+                                        <span className="text-gray-600">{house?.name} - {serviceCode?.code}:</span>
+                                        <span className="font-medium">{formatCurrency(parseFloat(payout.amount))}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Historical Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Historical Check Date Summary</CardTitle>
+                  <p className="text-sm text-gray-600">Complete overview of all check dates and totals</p>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Check Date</TableHead>
+                        <TableHead>Revenue Entries</TableHead>
+                        <TableHead>Total Revenue</TableHead>
+                        <TableHead>Total Payouts</TableHead>
+                        <TableHead>George's Share</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.from(new Set(
+                        revenueEntries
+                          .map(entry => entry.checkDate ? new Date(entry.checkDate).toISOString().split('T')[0] : null)
+                          .filter(Boolean)
+                      )).sort().reverse().map(checkDate => {
+                        const checkDateEntries = revenueEntries.filter(entry => 
+                          entry.checkDate && new Date(entry.checkDate).toISOString().split('T')[0] === checkDate
+                        );
+                        const checkDateRevenue = checkDateEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+                        const checkDatePayouts = payouts.filter(payout => {
+                          const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+                          return revenueEntry?.checkDate && new Date(revenueEntry.checkDate).toISOString().split('T')[0] === checkDate;
+                        });
+                        const totalPayouts = checkDatePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                        const georgeStaff = staff.find(s => s.name === "George");
+                        const georgePayouts = checkDatePayouts
+                          .filter(payout => payout.staffId === georgeStaff?.id)
+                          .reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+                        
+                        return (
+                          <TableRow key={checkDate}>
+                            <TableCell className="font-medium">{formatDate(checkDate!)}</TableCell>
+                            <TableCell>{checkDateEntries.length}</TableCell>
+                            <TableCell>{formatCurrency(checkDateRevenue)}</TableCell>
+                            <TableCell>{formatCurrency(totalPayouts)}</TableCell>
+                            <TableCell>{formatCurrency(georgePayouts)}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setSelectedCheckDate(checkDate)}
+                              >
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </div>
