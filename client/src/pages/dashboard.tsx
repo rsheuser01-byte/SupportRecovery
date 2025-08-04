@@ -171,7 +171,7 @@ export default function Dashboard() {
       .map(entry => entry.checkDate!)
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     
-    return checkDates.length > 0 ? new Date(checkDates[0]) : null;
+    return checkDates.length > 0 ? checkDates[0] : null;
   };
 
   // Memoize the latest check date to avoid recalculation
@@ -217,7 +217,7 @@ export default function Dashboard() {
 
     const filteredRevenueEntries = revenueEntries.filter(entry => {
       if (dashboardDateFilter === 'last-check' && latestCheckDate) {
-        return entry.checkDate && new Date(entry.checkDate).toDateString() === latestCheckDate.toDateString();
+        return entry.checkDate && entry.checkDate === latestCheckDate;
       }
       return filterByDateRange(entry.date);
     });
