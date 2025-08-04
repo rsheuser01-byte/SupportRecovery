@@ -673,7 +673,6 @@ export default function Dashboard() {
                             
                             {staffPayoutEntries.length > 0 && (
                               <div className="pt-3 border-t border-gray-200">
-                                <p className="text-xs text-gray-500">{staffPayoutEntries.length} payout entries</p>
                               </div>
                             )}
                           </div>
