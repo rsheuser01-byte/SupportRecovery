@@ -1332,11 +1332,11 @@ export default function Dashboard() {
                         <TableRow>
                           <TableHead>House</TableHead>
                           <TableHead>Service Code</TableHead>
-                          <TableHead className="text-center">Dr. Kelsey</TableHead>
-                          <TableHead className="text-center">Bardstown</TableHead>
-                          <TableHead className="text-center">George</TableHead>
-                          <TableHead className="text-center">Maria</TableHead>
-                          <TableHead className="text-center">Shelton</TableHead>
+                          {staff.map(staffMember => (
+                            <TableHead key={staffMember.id} className="text-center">
+                              {staffMember.name}
+                            </TableHead>
+                          ))}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
