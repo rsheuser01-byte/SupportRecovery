@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -174,6 +174,9 @@ export default function Dashboard() {
     return datesWithCheck.length > 0 ? datesWithCheck[0] : null;
   };
 
+  // Memoize the latest check date to avoid recalculation
+  const latestCheckDate = useMemo(() => getLatestCheckDate(), [revenueEntries]);
+
   // Filter dashboard data based on date filter
   const getDashboardFilteredData = () => {
     if (dashboardDateFilter === 'all') {
@@ -181,7 +184,6 @@ export default function Dashboard() {
     }
 
     const now = new Date();
-    const latestCheckDate = getLatestCheckDate();
 
     const filterByDateRange = (date: string | Date) => {
       const entryDate = new Date(date);
@@ -419,7 +421,6 @@ export default function Dashboard() {
   const exportDashboardReport = () => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
-    const latestCheckDate = getLatestCheckDate();
     
     // Determine report title based on filter
     let reportTitle = 'Dashboard Report';
@@ -839,8 +840,8 @@ export default function Dashboard() {
                   <div className="animate-slide-up">
                     <h2 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
                     <p className="text-blue-100 opacity-90 text-lg">
-                      {dashboardDateFilter === 'last-check' && getLatestCheckDate() 
-                        ? `Last Check Date: ${formatDate(getLatestCheckDate()!)}` 
+                      {dashboardDateFilter === 'last-check' && latestCheckDate 
+                        ? `Last Check Date: ${formatDate(latestCheckDate)}` 
                         : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                       }
                     </p>
