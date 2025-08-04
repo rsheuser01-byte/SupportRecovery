@@ -175,15 +175,7 @@ export default function Dashboard() {
   };
 
   // Memoize the latest check date to avoid recalculation
-  const latestCheckDate = useMemo(() => {
-    const result = getLatestCheckDate();
-    console.log('Latest check date calculation:', {
-      revenueEntriesCount: revenueEntries.length,
-      checkDates: revenueEntries.filter(e => e.checkDate).map(e => e.checkDate),
-      latestDate: result
-    });
-    return result;
-  }, [revenueEntries]);
+  const latestCheckDate = useMemo(() => getLatestCheckDate(), [revenueEntries]);
 
   // Filter dashboard data based on date filter
   const getDashboardFilteredData = () => {
