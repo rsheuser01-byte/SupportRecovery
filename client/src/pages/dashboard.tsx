@@ -888,7 +888,7 @@ export default function Dashboard() {
                           12% vs last month
                         </p>
                       </div>
-                      <div className="p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <div className="p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
                         <DollarSign className="h-8 w-8 text-white" />
                       </div>
                     </div>
