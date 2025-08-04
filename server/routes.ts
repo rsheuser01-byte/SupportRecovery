@@ -482,6 +482,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily Report
+  app.get("/api/daily-report/:date", async (req, res) => {
+    try {
+      const { date } = req.params;
+      const targetDate = new Date(date);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(targetDate.getDate() + 1);
+
+      // Get revenue entries for the date
+      const allRevenueEntries = await storage.getRevenueEntries();
+      const revenueEntries = allRevenueEntries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= targetDate && entryDate < nextDay;
+      });
+
+      // Get expenses for the date
+      const allExpenses = await storage.getExpenses();
+      const expenses = allExpenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= targetDate && expenseDate < nextDay;
+      });
+
+      // Get related data for the report
+      const houses = await storage.getHouses();
+      const serviceCodes = await storage.getServiceCodes();
+      const patients = await storage.getPatients();
+      const staff = await storage.getStaff();
+      const payoutRates = await storage.getPayoutRates();
+
+      // Calculate totals
+      const totalRevenue = revenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+      const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+      const netIncome = totalRevenue - totalExpenses;
+
+      // Calculate payouts for revenue entries
+      const payouts = revenueEntries.map(entry => {
+        const relevantRates = payoutRates.filter(rate => 
+          rate.houseId === entry.houseId && rate.serviceCodeId === entry.serviceCodeId
+        );
+
+        return staff.map(staffMember => {
+          const rate = relevantRates.find(r => r.staffId === staffMember.id);
+          const percentage = rate ? parseFloat(rate.percentage) : 0;
+          const payoutAmount = (parseFloat(entry.amount) * percentage / 100);
+          
+          return {
+            revenueEntryId: entry.id,
+            staffId: staffMember.id,
+            staffName: staffMember.name,
+            percentage,
+            amount: payoutAmount,
+            revenueAmount: parseFloat(entry.amount)
+          };
+        });
+      }).flat();
+
+      // Group payouts by staff member
+      const payoutsByStaff = staff.map(staffMember => {
+        const staffPayouts = payouts.filter(p => p.staffId === staffMember.id);
+        const totalPayout = staffPayouts.reduce((sum, p) => sum + p.amount, 0);
+        return {
+          staffId: staffMember.id,
+          staffName: staffMember.name,
+          totalPayout,
+          entries: staffPayouts.length
+        };
+      }).filter(sp => sp.totalPayout > 0);
+
+      res.json({
+        date: targetDate.toISOString().split('T')[0],
+        revenueEntries: revenueEntries.map(entry => ({
+          ...entry,
+          houseName: houses.find(h => h.id === entry.houseId)?.name,
+          serviceCodeName: serviceCodes.find(s => s.id === entry.serviceCodeId)?.code,
+          patientName: entry.patientId ? patients.find(p => p.id === entry.patientId)?.name : null
+        })),
+        expenses: expenses,
+        totals: {
+          revenue: totalRevenue,
+          expenses: totalExpenses,
+          netIncome
+        },
+        payoutsByStaff,
+        houses,
+        serviceCodes,
+        patients,
+        staff
+      });
+    } catch (error) {
+      console.error("Daily report error:", error);
+      res.status(500).json({ message: "Failed to generate daily report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

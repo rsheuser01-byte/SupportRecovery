@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [editingServiceCode, setEditingServiceCode] = useState<ServiceCode | undefined>(undefined);
   const [editingHouse, setEditingHouse] = useState<House | undefined>(undefined);
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
+  const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -115,6 +116,13 @@ export default function Dashboard() {
 
   const { data: payoutRates = [] } = useQuery<PayoutRate[]>({
     queryKey: ['/api/payout-rates'],
+  });
+
+  // Daily report query
+  const { data: dailyReport, isLoading: isDailyReportLoading } = useQuery({
+    queryKey: ['/api/daily-report', selectedReportDate],
+    queryFn: () => fetch(`/api/daily-report/${selectedReportDate}`).then(res => res.json()),
+    enabled: selectedTab === "reports"
   });
 
   // Mutations
@@ -1219,6 +1227,177 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
+              {/* Daily Report Section */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Daily Report</CardTitle>
+                  <p className="text-sm text-gray-600">View all entries for a specific date</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="report-date" className="text-sm font-medium text-gray-700">Select Date:</label>
+                      <Input
+                        id="report-date"
+                        type="date"
+                        value={selectedReportDate}
+                        onChange={(e) => setSelectedReportDate(e.target.value)}
+                        className="w-40"
+                      />
+                    </div>
+                    {isDailyReportLoading && (
+                      <div className="text-sm text-gray-500">Loading report...</div>
+                    )}
+                  </div>
+
+                  {dailyReport && (
+                    <div className="space-y-6">
+                      {/* Summary Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center">
+                              <DollarSign className="h-8 w-8 text-green-600 mr-3" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.revenue)}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center">
+                              <Receipt className="h-8 w-8 text-red-600 mr-3" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.expenses)}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center">
+                              <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Net Income</p>
+                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.netIncome)}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Revenue Entries */}
+                      {dailyReport.revenueEntries.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Revenue Entries ({dailyReport.revenueEntries.length})</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Patient</TableHead>
+                                  <TableHead>House</TableHead>
+                                  <TableHead>Service</TableHead>
+                                  <TableHead>Amount</TableHead>
+                                  <TableHead>Check Date</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {dailyReport.revenueEntries.map((entry) => (
+                                  <TableRow key={entry.id}>
+                                    <TableCell>{entry.patientName || 'No Patient'}</TableCell>
+                                    <TableCell>{entry.houseName}</TableCell>
+                                    <TableCell>{entry.serviceCodeName}</TableCell>
+                                    <TableCell>{formatCurrency(parseFloat(entry.amount))}</TableCell>
+                                    <TableCell>{formatDate(entry.checkDate)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Expenses */}
+                      {dailyReport.expenses.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Expenses ({dailyReport.expenses.length})</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Description</TableHead>
+                                  <TableHead>Vendor</TableHead>
+                                  <TableHead>Category</TableHead>
+                                  <TableHead>Amount</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {dailyReport.expenses.map((expense) => (
+                                  <TableRow key={expense.id}>
+                                    <TableCell>{expense.description}</TableCell>
+                                    <TableCell>{expense.vendor}</TableCell>
+                                    <TableCell>{expense.category}</TableCell>
+                                    <TableCell>{formatCurrency(parseFloat(expense.amount))}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Staff Payouts */}
+                      {dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Staff Payouts for Date</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Staff Member</TableHead>
+                                  <TableHead>Entries</TableHead>
+                                  <TableHead>Total Payout</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {dailyReport.payoutsByStaff.map((staffPayout) => (
+                                  <TableRow key={staffPayout.staffId}>
+                                    <TableCell>{staffPayout.staffName}</TableCell>
+                                    <TableCell>{staffPayout.entries}</TableCell>
+                                    <TableCell>{formatCurrency(staffPayout.totalPayout)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* No Data Message */}
+                      {dailyReport.revenueEntries.length === 0 && dailyReport.expenses.length === 0 && (
+                        <Card>
+                          <CardContent className="p-8 text-center">
+                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No entries for {formatDate(selectedReportDate)}</h3>
+                            <p className="text-gray-600">No revenue entries or expenses were recorded for this date.</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Standard Report Options */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <Card>
                   <CardContent className="p-6">
