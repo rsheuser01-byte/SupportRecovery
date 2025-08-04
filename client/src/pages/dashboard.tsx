@@ -433,7 +433,7 @@ export default function Dashboard() {
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-900">Support Recovery LLC</h1>
-          <p className="text-sm text-gray-500">Mental Health Services</p>
+          <p className="text-sm text-gray-500">Addition Treatment, Behavioral & Mental Health Services</p>
         </div>
         
         <nav className="flex-1 p-4">
