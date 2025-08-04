@@ -1001,18 +1001,15 @@ export default function Dashboard() {
                                 <span className="font-medium text-gray-700">Check Date Breakdown:</span>
                               </div>
                               {Array.from(new Set(
-                                staffPayoutEntries.map(payout => {
-                                  const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
-                                  return revenueEntry?.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : null;
-                                }).filter(Boolean)
+                                revenueEntries
+                                  .filter(entry => entry.checkDate)
+                                  .map(entry => new Date(entry.checkDate!).toISOString().split('T')[0])
                               )).sort().reverse().slice(0, 5).map(checkDate => {
                                 const checkDatePayouts = staffPayoutEntries.filter(payout => {
                                   const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
                                   return revenueEntry?.checkDate && new Date(revenueEntry.checkDate).toISOString().split('T')[0] === checkDate;
                                 });
                                 const checkDateTotal = checkDatePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
-                                
-                                if (checkDateTotal === 0) return null;
                                 
                                 return (
                                   <div key={checkDate} className="flex justify-between py-1">
