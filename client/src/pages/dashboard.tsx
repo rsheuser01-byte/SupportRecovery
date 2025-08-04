@@ -208,6 +208,73 @@ export default function Dashboard() {
     });
   };
 
+  // Daily revenue report generation function
+  const generateDailyRevenueReport = (date: string) => {
+    if (!dailyReport || dailyReport.revenueEntries.length === 0) {
+      toast({ title: "No data to export for selected date", variant: "destructive" });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const reportDate = formatDate(date);
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text(`Daily Revenue Report`, 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Date: ${reportDate}`, 20, 40);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 50);
+    
+    // Summary
+    doc.setFontSize(14);
+    doc.text('Revenue Summary', 20, 70);
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ${formatCurrency(dailyReport.totals.revenue)}`, 20, 80);
+    doc.text(`Number of Entries: ${dailyReport.revenueEntries.length}`, 20, 90);
+    
+    // Revenue entries table
+    const revenueTableData = dailyReport.revenueEntries.map(entry => [
+      entry.patientName || 'No Patient',
+      entry.houseName,
+      entry.serviceCodeName,
+      formatCurrency(parseFloat(entry.amount)),
+      formatDate(entry.checkDate)
+    ]);
+    
+    autoTable(doc, {
+      head: [['Patient', 'House', 'Service', 'Amount', 'Check Date']],
+      body: revenueTableData,
+      startY: 100,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] }
+    });
+    
+    // Staff payouts table if available
+    if (dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0) {
+      const finalY = (doc as any).lastAutoTable.finalY || 200;
+      
+      doc.setFontSize(14);
+      doc.text('Staff Payouts', 20, finalY + 20);
+      
+      const payoutTableData = dailyReport.payoutsByStaff.map(payout => [
+        payout.staffName,
+        payout.entries.toString(),
+        formatCurrency(payout.totalPayout)
+      ]);
+      
+      autoTable(doc, {
+        head: [['Staff Member', 'Entries', 'Total Payout']],
+        body: payoutTableData,
+        startY: finalY + 30,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [34, 197, 94] }
+      });
+    }
+    
+    doc.save(`daily-revenue-report-${date}.pdf`);
+    toast({ title: "Daily revenue report downloaded successfully" });
+  };
+
   // Report generation functions
   const generateRevenueReport = (period: 'monthly' | 'quarterly') => {
     const doc = new jsPDF();
@@ -1227,11 +1294,19 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
-              {/* Daily Report Section */}
+              {/* Daily Revenue Report Section */}
               <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Daily Report</CardTitle>
-                  <p className="text-sm text-gray-600">View all entries for a specific date</p>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Daily Revenue Report</CardTitle>
+                    <p className="text-sm text-gray-600">View revenue entries for a specific date</p>
+                  </div>
+                  {dailyReport && dailyReport.revenueEntries.length > 0 && (
+                    <Button onClick={() => generateDailyRevenueReport(selectedReportDate)}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-4 mb-6">
@@ -1252,45 +1327,22 @@ export default function Dashboard() {
 
                   {dailyReport && (
                     <div className="space-y-6">
-                      {/* Summary Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-center">
-                              <DollarSign className="h-8 w-8 text-green-600 mr-3" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.revenue)}</p>
-                              </div>
+                      {/* Revenue Summary Card */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <div className="flex items-center">
+                            <DollarSign className="h-12 w-12 text-green-600 mr-4" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Total Revenue for {formatDate(selectedReportDate)}</p>
+                              <p className="text-3xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.revenue)}</p>
+                              <p className="text-sm text-gray-600 mt-1">{dailyReport.revenueEntries.length} revenue entries</p>
                             </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-center">
-                              <Receipt className="h-8 w-8 text-red-600 mr-3" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.expenses)}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-center">
-                              <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-600">Net Income</p>
-                                <p className="text-xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.netIncome)}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
                       {/* Revenue Entries */}
-                      {dailyReport.revenueEntries.length > 0 && (
+                      {dailyReport.revenueEntries.length > 0 ? (
                         <Card>
                           <CardHeader>
                             <CardTitle>Revenue Entries ({dailyReport.revenueEntries.length})</CardTitle>
@@ -1320,40 +1372,17 @@ export default function Dashboard() {
                             </Table>
                           </CardContent>
                         </Card>
-                      )}
-
-                      {/* Expenses */}
-                      {dailyReport.expenses.length > 0 && (
+                      ) : (
                         <Card>
-                          <CardHeader>
-                            <CardTitle>Expenses ({dailyReport.expenses.length})</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Description</TableHead>
-                                  <TableHead>Vendor</TableHead>
-                                  <TableHead>Category</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {dailyReport.expenses.map((expense) => (
-                                  <TableRow key={expense.id}>
-                                    <TableCell>{expense.description}</TableCell>
-                                    <TableCell>{expense.vendor}</TableCell>
-                                    <TableCell>{expense.category}</TableCell>
-                                    <TableCell>{formatCurrency(parseFloat(expense.amount))}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                          <CardContent className="p-8 text-center">
+                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No revenue entries for {formatDate(selectedReportDate)}</h3>
+                            <p className="text-gray-600">No revenue entries were recorded for this date.</p>
                           </CardContent>
                         </Card>
                       )}
 
-                      {/* Staff Payouts */}
+                      {/* Staff Payouts for the Revenue Entries */}
                       {dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0 && (
                         <Card>
                           <CardHeader>
@@ -1364,7 +1393,7 @@ export default function Dashboard() {
                               <TableHeader>
                                 <TableRow>
                                   <TableHead>Staff Member</TableHead>
-                                  <TableHead>Entries</TableHead>
+                                  <TableHead>Revenue Entries</TableHead>
                                   <TableHead>Total Payout</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -1378,17 +1407,6 @@ export default function Dashboard() {
                                 ))}
                               </TableBody>
                             </Table>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* No Data Message */}
-                      {dailyReport.revenueEntries.length === 0 && dailyReport.expenses.length === 0 && (
-                        <Card>
-                          <CardContent className="p-8 text-center">
-                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No entries for {formatDate(selectedReportDate)}</h3>
-                            <p className="text-gray-600">No revenue entries or expenses were recorded for this date.</p>
                           </CardContent>
                         </Card>
                       )}
