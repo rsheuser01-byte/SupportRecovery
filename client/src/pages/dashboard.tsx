@@ -942,7 +942,7 @@ export default function Dashboard() {
                           Currently enrolled
                         </p>
                       </div>
-                      <div className="p-4 gradient-info rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <div className="p-4 gradient-info rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
                         <UserCheck className="h-8 w-8 text-white" />
                       </div>
                     </div>
