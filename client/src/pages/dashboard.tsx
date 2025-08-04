@@ -53,6 +53,13 @@ export default function Dashboard() {
   const [selectedHouseFilter, setSelectedHouseFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
   
+  // Revenue entry filters
+  const [revenueFilters, setRevenueFilters] = useState({
+    dateRange: 'all',
+    houseId: 'all',
+    serviceCodeId: 'all'
+  });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -168,6 +175,54 @@ export default function Dashboard() {
   
   const netProfit = georgeRevenue - totalExpenses;
   const activePatients = patients.filter(p => p.status === 'active').length;
+
+  // Filter revenue entries based on current filters
+  const getFilteredRevenueEntries = () => {
+    if (!revenueEntries) return [];
+    
+    return revenueEntries.filter(entry => {
+      // Date range filter
+      if (revenueFilters.dateRange !== 'all') {
+        const entryDate = new Date(entry.date);
+        const now = new Date();
+        
+        switch (revenueFilters.dateRange) {
+          case 'this-month':
+            if (entryDate.getMonth() !== now.getMonth() || entryDate.getFullYear() !== now.getFullYear()) {
+              return false;
+            }
+            break;
+          case 'last-month':
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            if (entryDate.getMonth() !== lastMonth.getMonth() || entryDate.getFullYear() !== lastMonth.getFullYear()) {
+              return false;
+            }
+            break;
+          case 'this-quarter':
+            const currentQuarter = Math.floor(now.getMonth() / 3);
+            const entryQuarter = Math.floor(entryDate.getMonth() / 3);
+            if (entryQuarter !== currentQuarter || entryDate.getFullYear() !== now.getFullYear()) {
+              return false;
+            }
+            break;
+        }
+      }
+      
+      // House filter
+      if (revenueFilters.houseId !== 'all' && entry.houseId !== revenueFilters.houseId) {
+        return false;
+      }
+      
+      // Service code filter
+      if (revenueFilters.serviceCodeId !== 'all' && entry.serviceCodeId !== revenueFilters.serviceCodeId) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  const filteredRevenueEntries = getFilteredRevenueEntries();
 
   // Calculate staff payouts for current month
   const staffPayouts = staff.map(staffMember => {
@@ -894,18 +949,25 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Select>
+                    <Select 
+                      value={revenueFilters.dateRange} 
+                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Date Range" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
                         <SelectItem value="this-month">This Month</SelectItem>
                         <SelectItem value="last-month">Last Month</SelectItem>
                         <SelectItem value="this-quarter">This Quarter</SelectItem>
                       </SelectContent>
                     </Select>
                     
-                    <Select>
+                    <Select 
+                      value={revenueFilters.houseId} 
+                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, houseId: value }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="All Houses" />
                       </SelectTrigger>
@@ -917,29 +979,45 @@ export default function Dashboard() {
                       </SelectContent>
                     </Select>
 
-                    <Select>
+                    <Select 
+                      value={revenueFilters.serviceCodeId} 
+                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, serviceCodeId: value }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="All Services" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Services</SelectItem>
                         {serviceCodes.map(service => (
-                          <SelectItem key={service.id} value={service.id}>{service.code}</SelectItem>
+                          <SelectItem key={service.id} value={service.id}>{service.code} - {service.description}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
-                    <Button variant="secondary">
+                    <Button 
+                      variant="secondary"
+                      onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
+                    >
                       <Search className="mr-2 h-4 w-4" />
-                      Filter
+                      Clear Filters
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Entries</CardTitle>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Revenue Entries</CardTitle>
+                    <div className="text-sm text-gray-600">
+                      {filteredRevenueEntries.length} of {revenueEntries.length} entries
+                      {filteredRevenueEntries.length > 0 && (
+                        <span className="ml-2 font-semibold text-green-600">
+                          Total: {formatCurrency(filteredRevenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -956,7 +1034,7 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {revenueEntries.map((entry) => {
+                      {filteredRevenueEntries.map((entry) => {
                         const house = houses.find(h => h.id === entry.houseId);
                         const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
                         const patient = patients.find(p => p.id === entry.patientId);
@@ -998,6 +1076,34 @@ export default function Dashboard() {
                           </TableRow>
                         );
                       })}
+                      {filteredRevenueEntries.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                            <Plus className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>{revenueEntries.length === 0 ? 'No revenue entries found' : 'No entries match current filters'}</p>
+                            {revenueEntries.length === 0 ? (
+                              <Button 
+                                className="mt-2" 
+                                variant="outline" 
+                                onClick={() => {
+                                  setEditingRevenueEntry(undefined);
+                                  setRevenueModalOpen(true);
+                                }}
+                              >
+                                Add First Entry
+                              </Button>
+                            ) : (
+                              <Button 
+                                className="mt-2" 
+                                variant="outline" 
+                                onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
+                              >
+                                Clear Filters
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
