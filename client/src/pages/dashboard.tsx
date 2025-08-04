@@ -637,7 +637,7 @@ export default function Dashboard() {
                               </div>
                               <div>
                                 <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
-                                <p className="text-sm text-gray-500">Staff Member</p>
+                                <p className="text-sm text-gray-500">{staffMember.role || 'Staff Member'}</p>
                               </div>
                             </div>
                             <span className="text-lg font-bold text-gray-900">{formatCurrency(totalPayout)}</span>

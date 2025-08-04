@@ -40,6 +40,7 @@ export function StaffModal({ open, onOpenChange, staff }: StaffModalProps) {
     resolver: zodResolver(insertStaffSchema),
     defaultValues: {
       name: "",
+      role: "",
       isActive: true,
     },
   });
@@ -48,11 +49,13 @@ export function StaffModal({ open, onOpenChange, staff }: StaffModalProps) {
     if (staff) {
       form.reset({
         name: staff.name || "",
+        role: staff.role || "",
         isActive: staff.isActive ?? true,
       });
     } else {
       form.reset({
         name: "",
+        role: "",
         isActive: true,
       });
     }
@@ -113,6 +116,20 @@ export function StaffModal({ open, onOpenChange, staff }: StaffModalProps) {
                   <FormLabel>Staff Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Dr. Kelsey, George, Maria" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Doctor, Therapist, Administrator" {...field} value={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

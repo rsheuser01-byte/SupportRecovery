@@ -20,6 +20,7 @@ export const serviceCodes = pgTable("service_codes", {
 export const staff = pgTable("staff", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
+  role: text("role"),
   isActive: boolean("is_active").default(true),
 });
 
