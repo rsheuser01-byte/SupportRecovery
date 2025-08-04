@@ -49,6 +49,9 @@ export default function Dashboard() {
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCheckDate, setSelectedCheckDate] = useState<string | null>(null);
   const [selectedStaffForCheckDate, setSelectedStaffForCheckDate] = useState<string | null>(null);
+  const [patientSearchTerm, setPatientSearchTerm] = useState("");
+  const [selectedHouseFilter, setSelectedHouseFilter] = useState("all");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -175,6 +178,19 @@ export default function Dashboard() {
       totalPayout,
       payouts: staffPayoutEntries
     };
+  });
+
+  // Filtered patients based on search term and filters
+  const filteredPatients = patients.filter(patient => {
+    const matchesSearch = patientSearchTerm === "" || 
+      patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
+      patient.id.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
+      patient.phone.toLowerCase().includes(patientSearchTerm.toLowerCase());
+    
+    const matchesHouse = selectedHouseFilter === "all" || patient.houseId === selectedHouseFilter;
+    const matchesStatus = selectedStatusFilter === "all" || patient.status === selectedStatusFilter;
+    
+    return matchesSearch && matchesHouse && matchesStatus;
   });
 
   const formatCurrency = (amount: number) => {
@@ -327,53 +343,96 @@ export default function Dashboard() {
   const generatePayoutReport = (type: 'current' | 'historical') => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
-    const reportTitle = type === 'current' ? 'Current Staff Payout Report' : 'Historical Payout Report';
+    
+    // Get the latest check date for current reports
+    const latestCheckDate = type === 'current' ? 
+      Array.from(new Set(
+        revenueEntries
+          .map(entry => entry.checkDate ? new Date(entry.checkDate).toISOString().split('T')[0] : null)
+          .filter(Boolean)
+      )).sort().reverse()[0] : null;
+    
+    const reportTitle = type === 'current' ? 
+      `Current Staff Payout Report - ${latestCheckDate ? formatDate(latestCheckDate) : 'Latest Check Date'}` : 
+      'Historical Payout Report';
+    
+    // Filter payouts based on type
+    const filteredPayouts = type === 'current' && latestCheckDate ?
+      payouts.filter(payout => {
+        const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+        return revenueEntry?.checkDate && 
+               new Date(revenueEntry.checkDate).toISOString().split('T')[0] === latestCheckDate;
+      }) : payouts;
+    
+    // Calculate staff payouts for filtered data
+    const filteredStaffPayouts = staff.map(staffMember => {
+      const staffPayoutEntries = filteredPayouts.filter(p => p.staffId === staffMember.id);
+      const totalPayout = staffPayoutEntries.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+      return {
+        staff: staffMember,
+        totalPayout,
+        payouts: staffPayoutEntries
+      };
+    }).filter(sp => sp.totalPayout > 0);
     
     // Header
     doc.setFontSize(20);
     doc.text(reportTitle, 20, 30);
     doc.setFontSize(12);
     doc.text(`Generated on: ${currentDate}`, 20, 40);
+    if (type === 'current' && latestCheckDate) {
+      doc.text(`Check Date: ${formatDate(latestCheckDate)}`, 20, 50);
+    }
     
     // Staff payout summary
-    let yPosition = 60;
+    let yPosition = type === 'current' ? 70 : 60;
     doc.setFontSize(14);
     doc.text('Staff Payout Summary', 20, yPosition);
     yPosition += 20;
     
-    staffPayouts.forEach(({ staff: staffMember, totalPayout }) => {
+    filteredStaffPayouts.forEach(({ staff: staffMember, totalPayout }) => {
       doc.setFontSize(10);
-      doc.text(`${staffMember.name}: ${formatCurrency(totalPayout)}`, 20, yPosition);
+      doc.text(`${staffMember.name} (${staffMember.role || 'Staff Member'}): ${formatCurrency(totalPayout)}`, 20, yPosition);
       yPosition += 10;
     });
     
     // Detailed payout table
-    const payoutTableData = payouts.map(payout => {
+    const payoutTableData = filteredPayouts.map(payout => {
       const staffMember = staff.find(s => s.id === payout.staffId);
       const revenueEntry = revenueEntries.find(re => re.id === payout.revenueEntryId);
       const house = houses.find(h => h.id === revenueEntry?.houseId);
       const service = serviceCodes.find(sc => sc.id === revenueEntry?.serviceCodeId);
       
       return [
-        staffMember?.name || 'Unknown',
+        `${staffMember?.name || 'Unknown'} (${staffMember?.role || 'Staff'})`,
         house?.name || 'N/A',
         service?.code || 'N/A',
         revenueEntry ? formatDate(revenueEntry.date) : 'N/A',
         formatCurrency(parseFloat(payout.amount)),
-        revenueEntry ? formatCurrency(parseFloat(revenueEntry.amount)) : 'N/A'
+        revenueEntry ? formatCurrency(parseFloat(revenueEntry.amount)) : 'N/A',
+        revenueEntry?.checkDate ? formatDate(revenueEntry.checkDate) : 'N/A'
       ];
     });
     
     autoTable(doc, {
-      head: [['Staff', 'House', 'Service', 'Date', 'Payout', 'Revenue']],
+      head: [['Staff', 'House', 'Service', 'Service Date', 'Payout', 'Revenue', 'Check Date']],
       body: payoutTableData,
       startY: yPosition + 10,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [92, 184, 92] }
     });
     
-    doc.save(`${type}-payout-report-${new Date().toISOString().split('T')[0]}.pdf`);
-    toast({ title: `${type} payout report downloaded successfully` });
+    const filename = type === 'current' && latestCheckDate ?
+      `current-payout-report-${latestCheckDate}.pdf` :
+      `${type}-payout-report-${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    doc.save(filename);
+    
+    const message = type === 'current' && latestCheckDate ?
+      `Current payout report for ${formatDate(latestCheckDate)} downloaded successfully` :
+      `${type} payout report downloaded successfully`;
+    
+    toast({ title: message });
   };
 
   const generateProgramAnalytics = (type: 'performance' | 'comparison') => {
@@ -1181,10 +1240,15 @@ export default function Dashboard() {
                     <div className="md:col-span-2">
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input placeholder="Search by name, ID, or phone..." className="pl-10" />
+                        <Input 
+                          placeholder="Search by name, ID, or phone..." 
+                          className="pl-10"
+                          value={patientSearchTerm}
+                          onChange={(e) => setPatientSearchTerm(e.target.value)}
+                        />
                       </div>
                     </div>
-                    <Select>
+                    <Select value={selectedHouseFilter} onValueChange={setSelectedHouseFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Houses" />
                       </SelectTrigger>
@@ -1195,7 +1259,7 @@ export default function Dashboard() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select>
+                    <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Status" />
                       </SelectTrigger>
@@ -1227,7 +1291,7 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {patients.map((patient) => {
+                      {filteredPatients.map((patient) => {
                         const house = houses.find(h => h.id === patient.houseId);
                         
                         return (
