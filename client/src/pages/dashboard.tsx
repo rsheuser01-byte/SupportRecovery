@@ -375,7 +375,7 @@ export default function Dashboard() {
     doc.text(`Number of Entries: ${dailyReport.revenueEntries.length}`, 20, 90);
     
     // Revenue entries table
-    const revenueTableData = dailyReport.revenueEntries.map(entry => [
+    const revenueTableData = dailyReport.revenueEntries.map((entry: any) => [
       entry.patientName || 'No Patient',
       entry.houseName,
       entry.serviceCodeName,
@@ -398,7 +398,7 @@ export default function Dashboard() {
       doc.setFontSize(14);
       doc.text('Staff Payouts', 20, finalY + 20);
       
-      const payoutTableData = dailyReport.payoutsByStaff.map(payout => [
+      const payoutTableData = dailyReport.payoutsByStaff.map((payout: any) => [
         payout.staffName,
         payout.entries.toString(),
         formatCurrency(payout.totalPayout)
@@ -1764,7 +1764,7 @@ export default function Dashboard() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {dailyReport.revenueEntries.map((entry) => (
+                                {dailyReport.revenueEntries.map((entry: any) => (
                                   <TableRow key={entry.id}>
                                     <TableCell>{entry.patientName || 'No Patient'}</TableCell>
                                     <TableCell>{entry.houseName}</TableCell>
@@ -1803,7 +1803,7 @@ export default function Dashboard() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {dailyReport.payoutsByStaff.map((staffPayout) => (
+                                {dailyReport.payoutsByStaff.map((staffPayout: any) => (
                                   <TableRow key={staffPayout.staffId}>
                                     <TableCell>{staffPayout.staffName}</TableCell>
                                     <TableCell>{staffPayout.entries}</TableCell>

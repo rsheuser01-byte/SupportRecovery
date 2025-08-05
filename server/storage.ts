@@ -112,11 +112,11 @@ export class MemStorage implements IStorage {
 
     // Initialize staff
     const staffData = [
-      { id: "staff-1", name: "Dr. Kelsey", isActive: true },
-      { id: "staff-2", name: "Bardstown Billing", isActive: true },
-      { id: "staff-3", name: "George", isActive: true },
-      { id: "staff-4", name: "Maria", isActive: true },
-      { id: "staff-5", name: "Shelton", isActive: true },
+      { id: "staff-1", name: "Dr. Kelsey", role: "Clinician", isActive: true },
+      { id: "staff-2", name: "Bardstown Billing", role: "Billing", isActive: true },
+      { id: "staff-3", name: "George", role: "Owner", isActive: true },
+      { id: "staff-4", name: "Maria", role: "Staff", isActive: true },
+      { id: "staff-5", name: "Shelton", role: "Staff", isActive: true },
     ];
     staffData.forEach(staff => this.staff.set(staff.id, staff));
 
@@ -256,6 +256,7 @@ export class MemStorage implements IStorage {
     const newStaff: Staff = { 
       ...staff, 
       id,
+      role: staff.role || null,
       isActive: staff.isActive !== undefined ? staff.isActive : true
     };
     this.staff.set(id, newStaff);
@@ -460,7 +461,9 @@ export class DbStorage implements IStorage {
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
     this.db = drizzle(sql);
-    this.initializeData();
+    this.initializeData().catch(error => {
+      console.error("Failed to initialize database data:", error);
+    });
   }
 
   private async initializeData() {
