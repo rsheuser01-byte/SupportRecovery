@@ -108,13 +108,18 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
         
+        const tooltipWidth = 320; // 80 * 4 (w-80)
+        const tooltipHeight = 400; // Estimated height
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
         let top = rect.top + scrollTop;
         let left = rect.left + scrollLeft;
 
         // Adjust position based on desired placement
         switch (currentStepData.position) {
           case 'top':
-            top = rect.top + scrollTop - 20;
+            top = rect.top + scrollTop - tooltipHeight - 20;
             left = rect.left + scrollLeft + rect.width / 2;
             break;
           case 'bottom':
@@ -123,12 +128,25 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
             break;
           case 'left':
             top = rect.top + scrollTop + rect.height / 2;
-            left = rect.left + scrollLeft - 20;
+            left = rect.left + scrollLeft - tooltipWidth - 20;
             break;
           case 'right':
             top = rect.top + scrollTop + rect.height / 2;
             left = rect.right + scrollLeft + 20;
             break;
+        }
+
+        // Ensure tooltip stays within viewport bounds
+        if (left < 20) {
+          left = 20;
+        } else if (left + tooltipWidth > viewportWidth - 20) {
+          left = viewportWidth - tooltipWidth - 20;
+        }
+
+        if (top < 20) {
+          top = 20;
+        } else if (top + tooltipHeight > viewportHeight + scrollTop - 20) {
+          top = viewportHeight + scrollTop - tooltipHeight - 20;
         }
 
         setTooltipPosition({ top, left });
@@ -138,9 +156,13 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
       }
     };
 
-    updateTooltipPosition();
+    // Add delay to ensure DOM is ready
+    const timer = setTimeout(updateTooltipPosition, 100);
     window.addEventListener('resize', updateTooltipPosition);
-    return () => window.removeEventListener('resize', updateTooltipPosition);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateTooltipPosition);
+    };
   }, [currentStep, currentStepData]);
 
   const nextStep = () => {
@@ -190,7 +212,7 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,
-          transform: 'translate(-50%, -50%)'
+          transform: currentStepData.position === 'top' || currentStepData.position === 'bottom' ? 'translateX(-50%)' : 'translateY(-50%)'
         }}
       >
         <Card className="w-80 bg-white shadow-2xl border-2 border-blue-200">
