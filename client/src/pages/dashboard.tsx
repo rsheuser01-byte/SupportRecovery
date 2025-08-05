@@ -851,20 +851,20 @@ export default function Dashboard() {
         <div className="p-4 gradient-header relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-lg font-bold text-slate-900">Support Recovery LLC</h1>
+              <h1 className="text-lg font-bold text-black">Support Recovery LLC</h1>
               <Button
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 p-1"
+                className="text-black hover:text-black hover:bg-gray-100 p-1"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-sm text-slate-700">Addition Treatment, Behavioral & Mental Health Services</p>
+            <p className="text-sm text-black">Addition Treatment, Behavioral & Mental Health Services</p>
             {user && (
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-gray-800 mt-1">
                 Welcome, {(user as any).firstName || (user as any).email || 'User'}
               </p>
             )}
