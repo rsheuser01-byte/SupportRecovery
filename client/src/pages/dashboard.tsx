@@ -210,24 +210,21 @@ export default function Dashboard() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed (August = 7)
     
-    console.log('Current filter:', checkTrackingFilter);
-    console.log('Today:', now.toISOString().split('T')[0]);
-    console.log('Current month (0-indexed):', currentMonth, 'Current year:', currentYear);
-    console.log('All check entries:', checkTrackingEntries.map(e => ({id: e.id, processedDate: e.processedDate, checkNumber: e.checkNumber, serviceProvider: e.serviceProvider})));
-    console.log('Total check entries found:', checkTrackingEntries.length);
+
     
     const filtered = checkTrackingEntries.filter(entry => {
-      const entryDate = new Date(entry.processedDate);
-      const entryYear = entryDate.getFullYear();
-      const entryMonth = entryDate.getMonth(); // 0-indexed
+      // Parse date safely to avoid timezone issues
+      const [year, month, day] = entry.processedDate.split('-').map(Number);
+      const entryYear = year;
+      const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
       
-      console.log(`Entry: ${entry.processedDate} -> Month: ${entryMonth}, Year: ${entryYear}`);
+
       
       switch (checkTrackingFilter) {
         case 'this-month':
           // Include all dates in current month (August 2025)
           const thisMonthMatch = entryMonth === currentMonth && entryYear === currentYear;
-          console.log(`This month match for ${entry.processedDate}: ${thisMonthMatch}`);
+
           return thisMonthMatch;
         case 'last-month':
           // Calculate last month properly (July 2025)
@@ -238,7 +235,7 @@ export default function Dashboard() {
             lastMonthYear = currentYear - 1;
           }
           const lastMonthMatch = entryMonth === lastMonth && entryYear === lastMonthYear;
-          console.log(`Last month match for ${entry.processedDate}: ${lastMonthMatch} (looking for month ${lastMonth}, year ${lastMonthYear})`);
+
           return lastMonthMatch;
         case 'custom-date':
           return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
@@ -247,7 +244,7 @@ export default function Dashboard() {
       }
     });
     
-    console.log('Filtered results:', filtered.length, 'out of', checkTrackingEntries.length);
+
     return filtered;
   };
 
@@ -262,14 +259,23 @@ export default function Dashboard() {
     const now = new Date();
 
     const filterByDateRange = (date: string | Date) => {
-      const entryDate = new Date(date);
+      // Parse date safely to avoid timezone issues
+      const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const entryYear = year;
+      const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
       
       switch (dashboardDateFilter) {
         case 'this-month':
-          return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+          return entryMonth === now.getMonth() && entryYear === now.getFullYear();
         case 'last-month':
-          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          return entryDate.getMonth() === lastMonth.getMonth() && entryDate.getFullYear() === lastMonth.getFullYear();
+          let lastMonth = now.getMonth() - 1;
+          let lastMonthYear = now.getFullYear();
+          if (lastMonth < 0) {
+            lastMonth = 11; // December
+            lastMonthYear = now.getFullYear() - 1;
+          }
+          return entryMonth === lastMonth && entryYear === lastMonthYear;
         case 'this-quarter':
           const currentQuarter = Math.floor(now.getMonth() / 3);
           const entryQuarter = Math.floor(entryDate.getMonth() / 3);
