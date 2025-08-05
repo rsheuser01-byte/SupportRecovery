@@ -58,7 +58,7 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
   }, [checkEntry, form]);
 
   const createMutation = useMutation({
-    mutationFn: (data: InsertCheckTracking) => apiRequest('/api/check-tracking', 'POST', data),
+    mutationFn: (data: InsertCheckTracking) => apiRequest('POST', '/api/check-tracking', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/check-tracking'] });
       toast({ title: "Check entry created successfully" });
@@ -75,7 +75,7 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: InsertCheckTracking) => apiRequest(`/api/check-tracking/${checkEntry!.id}`, 'PUT', data),
+    mutationFn: (data: InsertCheckTracking) => apiRequest('PUT', `/api/check-tracking/${checkEntry!.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/check-tracking'] });
       toast({ title: "Check entry updated successfully" });
