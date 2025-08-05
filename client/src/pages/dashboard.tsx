@@ -1006,15 +1006,7 @@ export default function Dashboard() {
                         <SelectItem value="last-check">Last Check</SelectItem>
                       </SelectContent>
                     </Select>
-                    {(user as any)?.role === 'admin' && (
-                      <Button 
-                        className="bg-red-500/80 hover:bg-red-600 border-red-300/20 text-white hover-lift"
-                        onClick={() => setUserManagementModalOpen(true)}
-                      >
-                        <Shield className="mr-2 h-4 w-4" />
-                        User Management
-                      </Button>
-                    )}
+
                     <Button 
                       className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift"
                       onClick={exportDashboardReport}
@@ -2299,6 +2291,16 @@ export default function Dashboard() {
                           <Settings className="mr-3 h-4 w-4" />
                           Business Settings
                         </Button>
+                        {(user as any)?.role === 'admin' && (
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" 
+                            onClick={() => setUserManagementModalOpen(true)}
+                          >
+                            <Shield className="mr-3 h-4 w-4" />
+                            User Management
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
