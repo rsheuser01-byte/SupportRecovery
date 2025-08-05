@@ -80,84 +80,79 @@ export default function InteractiveCalendar({
   };
 
   return (
-    <Card className="w-full max-w-md shadow-lg border-0 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 backdrop-blur-sm">
-      <CardHeader className="pb-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-3 text-white">
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-              <CalendarIcon className="h-5 w-5" />
-            </div>
-            <span className="font-semibold">Revenue Calendar</span>
+    <Card className="w-full max-w-sm shadow-2xl border-0 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 rounded-2xl overflow-hidden">
+      <CardHeader className="pb-3 px-6 pt-6">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="flex items-center gap-2 text-white text-lg font-bold">
+            <CalendarIcon className="h-5 w-5" />
+            Revenue Calendar
           </CardTitle>
           <Button 
-            variant="secondary" 
+            variant="ghost" 
             size="sm" 
             onClick={goToToday}
-            className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm transition-all duration-200"
+            className="bg-white/10 text-white hover:bg-white/20 rounded-lg text-xs px-3 py-1"
           >
             Today
           </Button>
         </div>
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={goToPreviousMonth}
-            className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200"
+            className="text-white hover:bg-white/10 rounded-lg p-1"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="text-xl font-bold text-white">
-            {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+          <h3 className="text-lg font-bold text-white tracking-wide">
+            {monthNames[currentMonth.getMonth()].toUpperCase()} {currentMonth.getFullYear()}
           </h3>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={goToNextMonth}
-            className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200"
+            className="text-white hover:bg-white/10 rounded-lg p-1"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="px-6 pb-6">
         {/* Day headers */}
-        <div className="grid grid-cols-7 gap-2 mb-4">
+        <div className="grid grid-cols-7 gap-1 mb-2">
           {dayNames.map(day => (
-            <div key={day} className="p-3 text-center text-sm font-semibold text-slate-600 bg-slate-50 rounded-lg">
+            <div key={day} className="py-2 text-center text-xs font-bold text-white/90 uppercase tracking-wider">
               {day}
             </div>
           ))}
         </div>
         
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {days.map((day, index) => (
             <div key={index} className="aspect-square">
               {day ? (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`w-full h-full p-1 text-sm relative rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  className={`w-full h-full p-0 text-sm font-semibold rounded-lg transition-all duration-200 relative ${
                     day.isSelected 
-                      ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg ring-2 ring-blue-300 ring-offset-2' 
+                      ? 'bg-white text-blue-600 shadow-lg transform scale-105' 
                       : day.hasCheckDate 
-                        ? 'bg-gradient-to-br from-emerald-100 to-green-200 text-green-800 border-2 border-green-300 hover:from-emerald-200 hover:to-green-300 shadow-md' 
-                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                        ? 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border border-white/30' 
+                        : 'text-white/60 hover:bg-white/10 hover:text-white/80'
                   }`}
                   onClick={() => day.hasCheckDate && onDateSelect(day.dateStr)}
                   disabled={!day.hasCheckDate}
                 >
                   <span className="relative z-10">{day.day}</span>
                   {day.hasCheckDate && (
-                    <div className="absolute -top-1 -right-1 z-20">
-                      <div className="w-4 h-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                        <DollarSign className="w-2.5 h-2.5 text-white" />
+                    <div className="absolute -top-0.5 -right-0.5 z-20">
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center shadow-sm">
+                        <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
                       </div>
                     </div>
-                  )}
-                  {day.hasCheckDate && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-xl"></div>
                   )}
                 </Button>
               ) : (
@@ -167,17 +162,17 @@ export default function InteractiveCalendar({
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200">
-          <div className="flex items-center justify-center gap-3 text-sm font-medium text-slate-700">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                <DollarSign className="w-2.5 h-2.5 text-white" />
+        <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-white">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
               </div>
-              <span>Revenue Entry Dates</span>
+              <span>Revenue Dates</span>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-500 text-center">
-            Click highlighted dates to view detailed revenue reports
+          <p className="mt-1 text-xs text-white/80 text-center">
+            Click highlighted dates for daily reports
           </p>
         </div>
       </CardContent>
