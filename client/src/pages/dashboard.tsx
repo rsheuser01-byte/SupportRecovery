@@ -977,7 +977,7 @@ export default function Dashboard() {
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
-            <header className="bg-white border-b-2 border-blue-500 relative overflow-hidden shadow-lg">
+            <header className="bg-white border-b-4 border-blue-500 relative overflow-hidden shadow-lg">
               <div className="relative z-10 px-6 py-6">
                 <div className="flex items-center justify-between">
                   <div className="animate-slide-up">
