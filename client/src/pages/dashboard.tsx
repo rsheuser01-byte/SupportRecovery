@@ -237,6 +237,22 @@ export default function Dashboard() {
     return filtered;
   }, [checkTrackingEntries, checkTrackingFilter, checkTrackingCustomDate]);
 
+  // Calculate current month total for check tracking
+  const currentMonthCheckTotal = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed (August = 7)
+    
+    return checkTrackingEntries
+      .filter(entry => {
+        const [year, month, day] = entry.processedDate.split('-').map(Number);
+        const entryYear = year;
+        const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
+        return entryMonth === currentMonth && entryYear === currentYear;
+      })
+      .reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0);
+  }, [checkTrackingEntries]);
+
   // Filter dashboard data based on date filter (memoized for performance)
   const { filteredRevenueEntries: dashboardRevenue, filteredExpenses: dashboardExpenses } = useMemo(() => {
     if (dashboardDateFilter === 'all') {
@@ -2077,6 +2093,18 @@ export default function Dashboard() {
                       {formatCurrency(filteredCheckTrackingEntries.reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0))}
                     </div>
                     <p className="text-sm text-gray-600">Cumulative check amount</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>This Month Total</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {formatCurrency(currentMonthCheckTotal)}
+                    </div>
+                    <p className="text-sm text-gray-600">Current month processed checks</p>
                   </CardContent>
                 </Card>
 
