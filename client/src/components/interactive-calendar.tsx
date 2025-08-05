@@ -80,7 +80,7 @@ export default function InteractiveCalendar({
   };
 
   return (
-    <Card className="w-full max-w-sm shadow-2xl border-0 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 rounded-2xl overflow-hidden">
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 rounded-2xl overflow-hidden">
       <CardHeader className="pb-3 px-6 pt-6">
         <div className="flex items-center justify-between mb-2">
           <CardTitle className="flex items-center gap-2 text-white text-lg font-bold">
@@ -148,10 +148,8 @@ export default function InteractiveCalendar({
                 >
                   <span className="relative z-10">{day.day}</span>
                   {day.hasCheckDate && (
-                    <div className="absolute -top-0.5 -right-0.5 z-20">
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center shadow-sm">
-                        <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
-                      </div>
+                    <div className="absolute top-0 right-0 z-20">
+                      <DollarSign className="w-3 h-3 text-green-300 drop-shadow-sm" />
                     </div>
                   )}
                 </Button>
@@ -165,9 +163,7 @@ export default function InteractiveCalendar({
         <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
           <div className="flex items-center justify-center gap-2 text-xs font-medium text-white">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
-              </div>
+              <DollarSign className="w-3 h-3 text-green-300" />
               <span>Revenue Dates</span>
             </div>
           </div>
