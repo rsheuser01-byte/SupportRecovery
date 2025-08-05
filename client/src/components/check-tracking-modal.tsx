@@ -13,12 +13,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface CheckTrackingModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   checkEntry?: CheckTracking;
 }
 
-export function CheckTrackingModal({ isOpen, onClose, checkEntry }: CheckTrackingModalProps) {
+export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrackingModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -62,7 +62,7 @@ export function CheckTrackingModal({ isOpen, onClose, checkEntry }: CheckTrackin
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/check-tracking'] });
       toast({ title: "Check entry created successfully" });
-      onClose();
+      onOpenChange(false);
       form.reset();
     },
     onError: (error: any) => {
@@ -79,7 +79,7 @@ export function CheckTrackingModal({ isOpen, onClose, checkEntry }: CheckTrackin
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/check-tracking'] });
       toast({ title: "Check entry updated successfully" });
-      onClose();
+      onOpenChange(false);
     },
     onError: (error: any) => {
       toast({
@@ -110,7 +110,7 @@ export function CheckTrackingModal({ isOpen, onClose, checkEntry }: CheckTrackin
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{checkEntry ? 'Edit Check Entry' : 'Add New Check Entry'}</DialogTitle>
@@ -210,7 +210,7 @@ export function CheckTrackingModal({ isOpen, onClose, checkEntry }: CheckTrackin
             />
 
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button 
