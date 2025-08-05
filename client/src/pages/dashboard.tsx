@@ -863,7 +863,7 @@ export default function Dashboard() {
             <p className="text-sm text-blue-100 opacity-90">Addition Treatment, Behavioral & Mental Health Services</p>
             {user && (
               <p className="text-xs text-blue-200 opacity-75 mt-1">
-                Welcome, {user.firstName || user.email || 'User'}
+                Welcome, {(user as any).firstName || (user as any).email || 'User'}
               </p>
             )}
           </div>
