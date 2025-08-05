@@ -210,15 +210,23 @@ export default function Dashboard() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed (August = 7)
     
-    return checkTrackingEntries.filter(entry => {
+    console.log('Current filter:', checkTrackingFilter);
+    console.log('Today:', now.toISOString().split('T')[0]);
+    console.log('Current month (0-indexed):', currentMonth, 'Current year:', currentYear);
+    
+    const filtered = checkTrackingEntries.filter(entry => {
       const entryDate = new Date(entry.processedDate);
       const entryYear = entryDate.getFullYear();
       const entryMonth = entryDate.getMonth(); // 0-indexed
       
+      console.log(`Entry: ${entry.processedDate} -> Month: ${entryMonth}, Year: ${entryYear}`);
+      
       switch (checkTrackingFilter) {
         case 'this-month':
           // Include all dates in current month (August 2025)
-          return entryMonth === currentMonth && entryYear === currentYear;
+          const thisMonthMatch = entryMonth === currentMonth && entryYear === currentYear;
+          console.log(`This month match for ${entry.processedDate}: ${thisMonthMatch}`);
+          return thisMonthMatch;
         case 'last-month':
           // Calculate last month properly (July 2025)
           let lastMonth = currentMonth - 1;
@@ -227,13 +235,18 @@ export default function Dashboard() {
             lastMonth = 11; // December
             lastMonthYear = currentYear - 1;
           }
-          return entryMonth === lastMonth && entryYear === lastMonthYear;
+          const lastMonthMatch = entryMonth === lastMonth && entryYear === lastMonthYear;
+          console.log(`Last month match for ${entry.processedDate}: ${lastMonthMatch} (looking for month ${lastMonth}, year ${lastMonthYear})`);
+          return lastMonthMatch;
         case 'custom-date':
           return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
         default:
           return true;
       }
     });
+    
+    console.log('Filtered results:', filtered.length, 'out of', checkTrackingEntries.length);
+    return filtered;
   };
 
   const filteredCheckTrackingEntries = getFilteredCheckTrackingEntries();
