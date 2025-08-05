@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, numeric, timestamp, boolean, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, numeric, timestamp, boolean, decimal, date, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -82,6 +82,28 @@ export const businessSettings = pgTable("business_settings", {
   email: text("email"),
 });
 
+// Session storage table for authentication
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for authentication
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Check Tracking table for George's running tab of check totals
 export const checkTracking = pgTable('check_tracking', {
   id: varchar('id', { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
@@ -104,6 +126,7 @@ export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit(
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
 export const insertPayoutSchema = createInsertSchema(payouts).omit({ id: true });
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCheckTrackingSchema = createInsertSchema(checkTracking).omit({
   id: true,
   createdAt: true,
@@ -127,5 +150,7 @@ export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Payout = typeof payouts.$inferSelect;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
+export type User = typeof users.$inferSelect;
+export type UpsertUser = typeof users.$inferInsert;
 export type CheckTracking = typeof checkTracking.$inferSelect;
 export type InsertCheckTracking = z.infer<typeof insertCheckTrackingSchema>;

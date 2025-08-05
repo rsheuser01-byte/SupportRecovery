@@ -9,7 +9,8 @@ import {
   type Payout,
   type BusinessSettings, type InsertBusinessSettings,
   type CheckTracking, type InsertCheckTracking,
-  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking
+  type User, type UpsertUser,
+  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking, users
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -81,6 +82,10 @@ export interface IStorage {
   createCheckTrackingEntry(entry: InsertCheckTracking): Promise<CheckTracking>;
   updateCheckTrackingEntry(id: string, entry: Partial<InsertCheckTracking>): Promise<CheckTracking | undefined>;
   deleteCheckTrackingEntry(id: string): Promise<boolean>;
+
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
 }
 
 export class MemStorage implements IStorage {
@@ -94,6 +99,7 @@ export class MemStorage implements IStorage {
   private payouts: Map<string, Payout> = new Map();
   private businessSettings: BusinessSettings | null = null;
   private checkTrackingEntries: Map<string, CheckTracking> = new Map();
+  private users: Map<string, User> = new Map();
 
   constructor() {
     this.initializeData();
@@ -496,6 +502,25 @@ export class MemStorage implements IStorage {
   async deleteCheckTrackingEntry(id: string): Promise<boolean> {
     return this.checkTrackingEntries.delete(id);
   }
+
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const user: User = {
+      id: userData.id || randomUUID(),
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      createdAt: userData.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
 }
 
 // Database Storage Implementation
@@ -831,6 +856,37 @@ export class DbStorage implements IStorage {
   async deleteCheckTrackingEntry(id: string): Promise<boolean> {
     const result = await this.db.delete(checkTracking).where(eq(checkTracking.id, id));
     return result.rowCount > 0;
+  }
+
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    try {
+      const [user] = await this.db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error("Error getting user:", error);
+      return undefined;
+    }
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    try {
+      const [user] = await this.db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            ...userData,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    } catch (error) {
+      console.error("Error upserting user:", error);
+      throw error;
+    }
   }
 }
 

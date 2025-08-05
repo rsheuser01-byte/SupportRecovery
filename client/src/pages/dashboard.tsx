@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -73,6 +75,27 @@ export default function Dashboard() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Redirect to home if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Handle logout
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
+  };
 
   // Delete mutations
   const deleteServiceCodeMutation = useMutation({
@@ -825,8 +848,24 @@ export default function Dashboard() {
       <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
         <div className="p-6 gradient-header relative overflow-hidden ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[34px] pb-[34px]">
           <div className="relative z-10">
-            <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
             <p className="text-sm text-blue-100 opacity-90">Addition Treatment, Behavioral & Mental Health Services</p>
+            {user && (
+              <p className="text-xs text-blue-200 opacity-75 mt-1">
+                Welcome, {user.firstName || user.email || 'User'}
+              </p>
+            )}
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
         </div>

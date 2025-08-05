@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
@@ -8,8 +9,22 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Houses
-  app.get("/api/houses", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  // Houses - Protected with authentication
+  app.get("/api/houses", isAuthenticated, async (req, res) => {
     try {
       const houses = await storage.getHouses();
       res.json(houses);
@@ -18,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/houses", async (req, res) => {
+  app.post("/api/houses", isAuthenticated, async (req, res) => {
     try {
       const houseData = insertHouseSchema.parse(req.body);
       const house = await storage.createHouse(houseData);
@@ -28,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/houses/:id", async (req, res) => {
+  app.put("/api/houses/:id", isAuthenticated, async (req, res) => {
     try {
       const houseData = insertHouseSchema.partial().parse(req.body);
       const house = await storage.updateHouse(req.params.id, houseData);
@@ -41,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/houses/:id", async (req, res) => {
+  app.delete("/api/houses/:id", isAuthenticated, async (req, res) => {
     try {
       const deleted = await storage.deleteHouse(req.params.id);
       if (!deleted) {
@@ -54,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service Codes
-  app.get("/api/service-codes", async (req, res) => {
+  app.get("/api/service-codes", isAuthenticated, async (req, res) => {
     try {
       const serviceCodes = await storage.getServiceCodes();
       res.json(serviceCodes);
@@ -63,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/service-codes", async (req, res) => {
+  app.post("/api/service-codes", isAuthenticated, async (req, res) => {
     try {
       const serviceCodeData = insertServiceCodeSchema.parse(req.body);
       const serviceCode = await storage.createServiceCode(serviceCodeData);
@@ -73,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/service-codes/:id", async (req, res) => {
+  app.put("/api/service-codes/:id", isAuthenticated, async (req, res) => {
     try {
       const serviceCodeData = insertServiceCodeSchema.partial().parse(req.body);
       const serviceCode = await storage.updateServiceCode(req.params.id, serviceCodeData);
@@ -86,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/service-codes/:id", async (req, res) => {
+  app.delete("/api/service-codes/:id", isAuthenticated, async (req, res) => {
     try {
       const deleted = await storage.deleteServiceCode(req.params.id);
       if (!deleted) {
@@ -99,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Staff
-  app.get("/api/staff", async (req, res) => {
+  app.get("/api/staff", isAuthenticated, async (req, res) => {
     try {
       const staff = await storage.getStaff();
       res.json(staff);
@@ -108,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/staff", async (req, res) => {
+  app.post("/api/staff", isAuthenticated, async (req, res) => {
     try {
       const staffData = insertStaffSchema.parse(req.body);
       const staff = await storage.createStaff(staffData);
@@ -118,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/staff/:id", async (req, res) => {
+  app.put("/api/staff/:id", isAuthenticated, async (req, res) => {
     try {
       const staffData = insertStaffSchema.partial().parse(req.body);
       const staff = await storage.updateStaff(req.params.id, staffData);
@@ -131,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/staff/:id", async (req, res) => {
+  app.delete("/api/staff/:id", isAuthenticated, async (req, res) => {
     try {
       const deleted = await storage.deleteStaff(req.params.id);
       if (!deleted) {
@@ -144,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payout Rates
-  app.get("/api/payout-rates", async (req, res) => {
+  app.get("/api/payout-rates", isAuthenticated, async (req, res) => {
     try {
       const payoutRates = await storage.getPayoutRates();
       res.json(payoutRates);
@@ -153,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payout-rates", async (req, res) => {
+  app.post("/api/payout-rates", isAuthenticated, async (req, res) => {
     try {
       const payoutRateData = insertPayoutRateSchema.parse(req.body);
       const payoutRate = await storage.createPayoutRate(payoutRateData);
@@ -163,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/payout-rates/:id", async (req, res) => {
+  app.put("/api/payout-rates/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       const payoutRateData = insertPayoutRateSchema.partial().parse(req.body);
@@ -178,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Patients
-  app.get("/api/patients", async (req, res) => {
+  app.get("/api/patients", isAuthenticated, async (req, res) => {
     try {
       const { search } = req.query;
       let patients;
@@ -193,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/patients", async (req, res) => {
+  app.post("/api/patients", isAuthenticated, async (req, res) => {
     try {
       console.log("Received patient data:", req.body);
       // Convert date string to Date object before validation if startDate exists
@@ -212,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/patients/:id", async (req, res) => {
+  app.put("/api/patients/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       // Convert date string to Date object before validation if startDate exists
@@ -233,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Revenue Entries
-  app.get("/api/revenue-entries", async (req, res) => {
+  app.get("/api/revenue-entries", isAuthenticated, async (req, res) => {
     try {
       const revenueEntries = await storage.getRevenueEntries();
       res.json(revenueEntries);
@@ -242,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/revenue-entries", async (req, res) => {
+  app.post("/api/revenue-entries", isAuthenticated, async (req, res) => {
     try {
       console.log("Received revenue entry data:", req.body);
       // Convert date strings to Date objects before validation
@@ -279,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/revenue-entries/:id", async (req, res) => {
+  app.put("/api/revenue-entries/:id", isAuthenticated, async (req, res) => {
     console.log("=== PUT /api/revenue-entries/:id CALLED ===");
     console.log("Request ID:", req.params.id);
     console.log("Request body:", JSON.stringify(req.body, null, 2));
@@ -338,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/revenue-entries/:id", async (req, res) => {
+  app.delete("/api/revenue-entries/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteRevenueEntry(id);
@@ -352,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Expenses
-  app.get("/api/expenses", async (req, res) => {
+  app.get("/api/expenses", isAuthenticated, async (req, res) => {
     try {
       const expenses = await storage.getExpenses();
       res.json(expenses);
@@ -361,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/expenses", async (req, res) => {
+  app.post("/api/expenses", isAuthenticated, async (req, res) => {
     try {
       console.log("Received expense data:", req.body);
       // Convert date string to Date object before validation
@@ -380,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/expenses/:id", async (req, res) => {
+  app.put("/api/expenses/:id", isAuthenticated, async (req, res) => {
     try {
       // Convert date string to Date object before validation
       const processedData = {
@@ -396,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/expenses/:id", async (req, res) => {
+  app.put("/api/expenses/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       const expenseData = insertExpenseSchema.partial().parse(req.body);
@@ -410,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/expenses/:id", async (req, res) => {
+  app.delete("/api/expenses/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteExpense(id);
@@ -424,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payouts
-  app.get("/api/payouts", async (req, res) => {
+  app.get("/api/payouts", isAuthenticated, async (req, res) => {
     try {
       const payouts = await storage.getPayouts();
       res.json(payouts);
@@ -434,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Calculate payout preview
-  app.post("/api/calculate-payouts", async (req, res) => {
+  app.post("/api/calculate-payouts", isAuthenticated, async (req, res) => {
     try {
       const { amount, houseId, serviceCodeId } = req.body;
       const payoutRates = await storage.getPayoutRates();
@@ -463,7 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Business Settings
-  app.get("/api/business-settings", async (req, res) => {
+  app.get("/api/business-settings", isAuthenticated, async (req, res) => {
     try {
       const settings = await storage.getBusinessSettings();
       res.json(settings);
@@ -472,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/business-settings", async (req, res) => {
+  app.put("/api/business-settings", isAuthenticated, async (req, res) => {
     try {
       const settingsData = insertBusinessSettingsSchema.parse(req.body);
       const settings = await storage.updateBusinessSettings(settingsData);
@@ -483,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Daily Report
-  app.get("/api/daily-report/:date", async (req, res) => {
+  app.get("/api/daily-report/:date", isAuthenticated, async (req, res) => {
     try {
       const { date } = req.params;
       // Parse date safely to avoid timezone issues
@@ -585,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check Tracking Routes
-  app.get("/api/check-tracking", async (req, res) => {
+  app.get("/api/check-tracking", isAuthenticated, async (req, res) => {
     try {
       const entries = await storage.getCheckTrackingEntries();
       res.json(entries);
@@ -594,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/check-tracking", async (req, res) => {
+  app.post("/api/check-tracking", isAuthenticated, async (req, res) => {
     try {
       const entryData = insertCheckTrackingSchema.parse(req.body);
       const entry = await storage.createCheckTrackingEntry(entryData);
@@ -605,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/check-tracking/:id", async (req, res) => {
+  app.put("/api/check-tracking/:id", isAuthenticated, async (req, res) => {
     try {
       const entryData = insertCheckTrackingSchema.partial().parse(req.body);
       const entry = await storage.updateCheckTrackingEntry(req.params.id, entryData);
@@ -619,7 +634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/check-tracking/:id", async (req, res) => {
+  app.delete("/api/check-tracking/:id", isAuthenticated, async (req, res) => {
     try {
       const deleted = await storage.deleteCheckTrackingEntry(req.params.id);
       if (!deleted) {
