@@ -978,12 +978,12 @@ export default function Dashboard() {
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
-            <header className="gradient-header relative overflow-hidden shadow-lg">
-              <div className="relative z-10 px-6 py-8">
+            <header className="bg-white border-b-2 border-blue-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
                 <div className="flex items-center justify-between">
                   <div className="animate-slide-up">
-                    <h2 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
-                    <p className="text-blue-100 opacity-90 text-lg">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Dashboard Overview</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>
                       {dashboardDateFilter === 'last-check' && latestCheckDate 
                         ? `Last Check Date: ${formatDate(latestCheckDate)}` 
                         : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
@@ -995,7 +995,7 @@ export default function Dashboard() {
                       value={dashboardDateFilter} 
                       onValueChange={setDashboardDateFilter}
                     >
-                      <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+                      <SelectTrigger className="w-48 bg-white border-gray-300" style={{color: '#000000'}}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1008,7 +1008,7 @@ export default function Dashboard() {
                     </Select>
 
                     <Button 
-                      className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift"
+                      className="bg-blue-600 hover:bg-blue-700 text-white hover-lift"
                       onClick={exportDashboardReport}
                     >
                       <Download className="mr-2 h-4 w-4" />
@@ -1017,7 +1017,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
+
             </header>
 
             <div className="p-6 bg-gradient-to-br from-transparent via-slate-50/30 to-transparent">
