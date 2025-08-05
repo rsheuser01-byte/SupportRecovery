@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,6 +51,8 @@ export default function Dashboard() {
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   const [checkTrackingModalOpen, setCheckTrackingModalOpen] = useState(false);
   const [editingCheckEntry, setEditingCheckEntry] = useState<CheckTracking | undefined>(undefined);
+  const [checkTrackingFilter, setCheckTrackingFilter] = useState<'all' | 'this-month' | 'last-month' | 'custom-date'>('all');
+  const [checkTrackingCustomDate, setCheckTrackingCustomDate] = useState<string>('');
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCheckDate, setSelectedCheckDate] = useState<string | null>(null);
   const [selectedStaffForCheckDate, setSelectedStaffForCheckDate] = useState<string | null>(null);
@@ -196,6 +199,33 @@ export default function Dashboard() {
 
   // Memoize the latest check date to avoid recalculation
   const latestCheckDate = useMemo(() => getLatestCheckDate(), [revenueEntries]);
+
+  // Filter check tracking entries based on selected filter
+  const getFilteredCheckTrackingEntries = () => {
+    if (checkTrackingFilter === 'all') {
+      return checkTrackingEntries;
+    }
+
+    const now = new Date();
+    
+    return checkTrackingEntries.filter(entry => {
+      const entryDate = new Date(entry.processedDate);
+      
+      switch (checkTrackingFilter) {
+        case 'this-month':
+          return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+        case 'last-month':
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          return entryDate.getMonth() === lastMonth.getMonth() && entryDate.getFullYear() === lastMonth.getFullYear();
+        case 'custom-date':
+          return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filteredCheckTrackingEntries = getFilteredCheckTrackingEntries();
 
   // Filter dashboard data based on date filter
   const getDashboardFilteredData = () => {
@@ -1962,6 +1992,44 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
+              {/* Check Tracking Filters */}
+              <div className="mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Filter Check Entries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-4 items-end">
+                      <div className="flex-1 min-w-48">
+                        <Label htmlFor="check-filter">Filter By</Label>
+                        <Select value={checkTrackingFilter} onValueChange={(value: any) => setCheckTrackingFilter(value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select filter" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Entries</SelectItem>
+                            <SelectItem value="this-month">This Month</SelectItem>
+                            <SelectItem value="last-month">Last Month</SelectItem>
+                            <SelectItem value="custom-date">Specific Date</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {checkTrackingFilter === 'custom-date' && (
+                        <div className="flex-1 min-w-48">
+                          <Label htmlFor="custom-date">Processed Date</Label>
+                          <Input
+                            id="custom-date"
+                            type="date"
+                            value={checkTrackingCustomDate}
+                            onChange={(e) => setCheckTrackingCustomDate(e.target.value)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Check Tracking Summary Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
                 <Card>
@@ -1969,7 +2037,7 @@ export default function Dashboard() {
                     <CardTitle>Total Checks</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{checkTrackingEntries.length}</div>
+                    <div className="text-2xl font-bold text-gray-900">{filteredCheckTrackingEntries.length}</div>
                     <p className="text-sm text-gray-600">Total check entries tracked</p>
                   </CardContent>
                 </Card>
@@ -1980,7 +2048,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(checkTrackingEntries.reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0))}
+                      {formatCurrency(filteredCheckTrackingEntries.reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0))}
                     </div>
                     <p className="text-sm text-gray-600">Cumulative check amount</p>
                   </CardContent>
@@ -2011,7 +2079,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-purple-600">
-                      {Array.from(new Set(checkTrackingEntries.map(entry => entry.serviceProvider))).length}
+                      {Array.from(new Set(filteredCheckTrackingEntries.map(entry => entry.serviceProvider))).length}
                     </div>
                     <p className="text-sm text-gray-600">Unique providers</p>
                   </CardContent>
@@ -2026,11 +2094,16 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-600">All tracked checks with service provider details</p>
                 </CardHeader>
                 <CardContent>
-                  {checkTrackingEntries.length === 0 ? (
+                  {filteredCheckTrackingEntries.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p>No check entries found</p>
-                      <p className="text-sm">Add your first check entry to start tracking</p>
+                      <p className="text-sm">
+                        {checkTrackingEntries.length === 0 
+                          ? "Add your first check entry to start tracking"
+                          : `No entries match the current filter (${checkTrackingFilter === 'this-month' ? 'This Month' : checkTrackingFilter === 'last-month' ? 'Last Month' : checkTrackingFilter === 'custom-date' ? 'Specific Date' : 'All Entries'})`
+                        }
+                      </p>
                     </div>
                   ) : (
                     <Table>
@@ -2045,13 +2118,13 @@ export default function Dashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {checkTrackingEntries
+                        {filteredCheckTrackingEntries
                           .sort((a, b) => new Date(b.processedDate).getTime() - new Date(a.processedDate).getTime())
                           .map(entry => (
                           <TableRow key={entry.id}>
                             <TableCell className="font-medium">{entry.checkNumber}</TableCell>
                             <TableCell>{entry.serviceProvider}</TableCell>
-                            <TableCell>{formatDate(entry.issueDate)}</TableCell>
+                            <TableCell>{formatDate(entry.checkDate)}</TableCell>
                             <TableCell>{formatDate(entry.processedDate)}</TableCell>
                             <TableCell className="font-medium text-green-600">{formatCurrency(parseFloat(entry.checkAmount))}</TableCell>
                             <TableCell>
