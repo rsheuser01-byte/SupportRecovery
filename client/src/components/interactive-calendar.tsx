@@ -148,9 +148,9 @@ export default function InteractiveCalendar({
         <div className="mt-4 text-xs text-gray-500 text-center">
           <div className="flex items-center justify-center gap-2">
             <Badge variant="destructive" className="w-2 h-2 p-0 rounded-full"></Badge>
-            <span>Dates with check payouts</span>
+            <span>Dates with revenue entries</span>
           </div>
-          <p className="mt-1">Click highlighted dates to view staff payouts</p>
+          <p className="mt-1">Click highlighted dates to view daily revenue reports</p>
         </div>
       </CardContent>
     </Card>

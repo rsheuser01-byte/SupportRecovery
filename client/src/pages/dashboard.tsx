@@ -355,11 +355,11 @@ export default function Dashboard() {
   // Handle calendar date selection
   const handleCalendarDateSelect = (date: string) => {
     setCalendarSelectedDate(date);
-    setSelectedTab("payouts");
-    setSelectedCheckDate(date);
+    setSelectedTab("reports");
+    setSelectedReportDate(date);
     toast({ 
       title: "Date Selected", 
-      description: `Viewing staff payouts for ${formatDate(date)}` 
+      description: `Viewing daily revenue report for ${formatDate(date)}` 
     });
   };
 
