@@ -200,8 +200,8 @@ export default function Dashboard() {
   // Memoize the latest check date to avoid recalculation
   const latestCheckDate = useMemo(() => getLatestCheckDate(), [revenueEntries]);
 
-  // Filter check tracking entries based on selected filter
-  const getFilteredCheckTrackingEntries = () => {
+  // Filter check tracking entries based on selected filter (memoized for performance)
+  const filteredCheckTrackingEntries = useMemo(() => {
     if (checkTrackingFilter === 'all') {
       return checkTrackingEntries;
     }
@@ -210,33 +210,23 @@ export default function Dashboard() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed (August = 7)
     
-
-    
     const filtered = checkTrackingEntries.filter(entry => {
       // Parse date safely to avoid timezone issues
       const [year, month, day] = entry.processedDate.split('-').map(Number);
       const entryYear = year;
       const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
       
-
-      
       switch (checkTrackingFilter) {
         case 'this-month':
-          // Include all dates in current month (August 2025)
-          const thisMonthMatch = entryMonth === currentMonth && entryYear === currentYear;
-
-          return thisMonthMatch;
+          return entryMonth === currentMonth && entryYear === currentYear;
         case 'last-month':
-          // Calculate last month properly (July 2025)
           let lastMonth = currentMonth - 1;
           let lastMonthYear = currentYear;
           if (lastMonth < 0) {
             lastMonth = 11; // December
             lastMonthYear = currentYear - 1;
           }
-          const lastMonthMatch = entryMonth === lastMonth && entryYear === lastMonthYear;
-
-          return lastMonthMatch;
+          return entryMonth === lastMonth && entryYear === lastMonthYear;
         case 'custom-date':
           return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
         default:
@@ -244,14 +234,11 @@ export default function Dashboard() {
       }
     });
     
-
     return filtered;
-  };
+  }, [checkTrackingEntries, checkTrackingFilter, checkTrackingCustomDate]);
 
-  const filteredCheckTrackingEntries = getFilteredCheckTrackingEntries();
-
-  // Filter dashboard data based on date filter
-  const getDashboardFilteredData = () => {
+  // Filter dashboard data based on date filter (memoized for performance)
+  const { filteredRevenueEntries: dashboardRevenue, filteredExpenses: dashboardExpenses } = useMemo(() => {
     if (dashboardDateFilter === 'all') {
       return { filteredRevenueEntries: revenueEntries, filteredExpenses: expenses };
     }
@@ -299,9 +286,7 @@ export default function Dashboard() {
     const filteredExpenses = expenses.filter(expense => filterByDateRange(expense.date));
 
     return { filteredRevenueEntries, filteredExpenses };
-  };
-
-  const { filteredRevenueEntries: dashboardRevenue, filteredExpenses: dashboardExpenses } = getDashboardFilteredData();
+  }, [revenueEntries, expenses, dashboardDateFilter, latestCheckDate]);
 
   // Calculate dashboard metrics using filtered data
   const totalRevenue = dashboardRevenue.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
@@ -327,8 +312,8 @@ export default function Dashboard() {
   const netProfit = georgeRevenue - totalExpenses;
   const activePatients = patients.filter(p => p.status === 'active').length;
 
-  // Filter revenue entries based on current filters
-  const getFilteredRevenueEntries = () => {
+  // Filter revenue entries based on current filters (memoized for performance)
+  const filteredRevenueEntries = useMemo(() => {
     if (!revenueEntries) return [];
     
     return revenueEntries.filter(entry => {
@@ -380,9 +365,7 @@ export default function Dashboard() {
       
       return true;
     });
-  };
-
-  const filteredRevenueEntries = getFilteredRevenueEntries();
+  }, [revenueEntries, revenueFilters]);
 
   // Calculate staff payouts for current month
   const staffPayouts = staff.map(staffMember => {
@@ -395,18 +378,20 @@ export default function Dashboard() {
     };
   });
 
-  // Filtered patients based on search term and filters
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patientSearchTerm === "" || 
-      patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
-      (patient.phone && patient.phone.toLowerCase().includes(patientSearchTerm.toLowerCase()));
-    
-    const matchesHouse = selectedHouseFilter === "all" || patient.houseId === selectedHouseFilter;
-    const matchesStatus = selectedStatusFilter === "all" || patient.status === selectedStatusFilter;
-    
-    return matchesSearch && matchesHouse && matchesStatus;
-  });
+  // Filtered patients based on search term and filters (memoized for performance)
+  const filteredPatients = useMemo(() => {
+    return patients.filter(patient => {
+      const matchesSearch = patientSearchTerm === "" || 
+        patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
+        patient.id.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
+        (patient.phone && patient.phone.toLowerCase().includes(patientSearchTerm.toLowerCase()));
+      
+      const matchesHouse = selectedHouseFilter === "all" || patient.houseId === selectedHouseFilter;
+      const matchesStatus = selectedStatusFilter === "all" || patient.status === selectedStatusFilter;
+      
+      return matchesSearch && matchesHouse && matchesStatus;
+    });
+  }, [patients, patientSearchTerm, selectedHouseFilter, selectedStatusFilter]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

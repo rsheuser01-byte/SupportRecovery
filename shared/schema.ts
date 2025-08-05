@@ -102,6 +102,7 @@ export const insertPayoutRateSchema = createInsertSchema(payoutRates).omit({ id:
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true });
 export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
+export const insertPayoutSchema = createInsertSchema(payouts).omit({ id: true });
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
 export const insertCheckTrackingSchema = createInsertSchema(checkTracking).omit({
   id: true,

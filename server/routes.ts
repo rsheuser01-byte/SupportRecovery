@@ -486,22 +486,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/daily-report/:date", async (req, res) => {
     try {
       const { date } = req.params;
-      const targetDate = new Date(date);
-      const nextDay = new Date(targetDate);
-      nextDay.setDate(targetDate.getDate() + 1);
+      // Parse date safely to avoid timezone issues
+      const [year, month, day] = date.split('-').map(Number);
+      const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
       // Get revenue entries for the date
       const allRevenueEntries = await storage.getRevenueEntries();
       const revenueEntries = allRevenueEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= targetDate && entryDate < nextDay;
+        // Compare date strings directly to avoid timezone issues
+        const entryDate = entry.date;
+        const entryDateStr = entryDate instanceof Date 
+          ? entryDate.toISOString().split('T')[0] 
+          : String(entryDate).split('T')[0];
+        return entryDateStr === targetDateStr;
       });
 
       // Get expenses for the date
       const allExpenses = await storage.getExpenses();
       const expenses = allExpenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return expenseDate >= targetDate && expenseDate < nextDay;
+        // Compare date strings directly to avoid timezone issues
+        const expenseDate = expense.date;
+        const expenseDateStr = expenseDate instanceof Date 
+          ? expenseDate.toISOString().split('T')[0] 
+          : String(expenseDate).split('T')[0];
+        return expenseDateStr === targetDateStr;
       });
 
       // Get related data for the report
@@ -551,7 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).filter(sp => sp.totalPayout > 0);
 
       res.json({
-        date: targetDate.toISOString().split('T')[0],
+        date: targetDateStr,
         revenueEntries: revenueEntries.map(entry => ({
           ...entry,
           houseName: houses.find(h => h.id === entry.houseId)?.name,

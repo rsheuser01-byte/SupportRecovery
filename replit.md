@@ -11,6 +11,14 @@ The application features a React frontend with shadcn/ui components, an Express.
 - Fixed critical date parsing timezone issues affecting both check tracking and revenue entry filters  
 - Implemented safe date parsing to prevent JavaScript Date() timezone interpretation bugs
 - All filter systems now use consistent manual string parsing for reliable month boundary detection
+- **Bug Fixes Applied (August 5, 2025):**
+  - Optimized dashboard filtering performance by memoizing all filter functions using `useMemo`
+  - Fixed excessive re-computation of filtered data causing performance issues
+  - Resolved TypeScript compilation errors in daily report API route date handling
+  - Enhanced error handling in React Query with intelligent retry logic for network failures
+  - Added proper error boundaries for 4xx/5xx HTTP responses
+  - Improved stale time configuration for better caching (5 minutes)
+  - Fixed missing type exports in schema for `Payout`, `BusinessSettings`, and `CheckTracking`
 
 ## User Preferences
 
