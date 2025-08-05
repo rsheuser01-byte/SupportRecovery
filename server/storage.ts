@@ -8,7 +8,8 @@ import {
   type Expense, type InsertExpense,
   type Payout,
   type BusinessSettings, type InsertBusinessSettings,
-  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings
+  type CheckTracking, type InsertCheckTracking,
+  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -73,6 +74,13 @@ export interface IStorage {
   // Business Settings
   getBusinessSettings(): Promise<BusinessSettings | undefined>;
   updateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings>;
+
+  // Check Tracking
+  getCheckTrackingEntries(): Promise<CheckTracking[]>;
+  getCheckTrackingEntry(id: string): Promise<CheckTracking | undefined>;
+  createCheckTrackingEntry(entry: InsertCheckTracking): Promise<CheckTracking>;
+  updateCheckTrackingEntry(id: string, entry: Partial<InsertCheckTracking>): Promise<CheckTracking | undefined>;
+  deleteCheckTrackingEntry(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -85,6 +93,7 @@ export class MemStorage implements IStorage {
   private expenses: Map<string, Expense> = new Map();
   private payouts: Map<string, Payout> = new Map();
   private businessSettings: BusinessSettings | null = null;
+  private checkTrackingEntries: Map<string, CheckTracking> = new Map();
 
   constructor() {
     this.initializeData();
@@ -452,6 +461,41 @@ export class MemStorage implements IStorage {
     this.businessSettings = updated;
     return updated;
   }
+
+  // Check Tracking methods
+  async getCheckTrackingEntries(): Promise<CheckTracking[]> {
+    return Array.from(this.checkTrackingEntries.values()).sort((a, b) => 
+      new Date(b.processedDate).getTime() - new Date(a.processedDate).getTime()
+    );
+  }
+
+  async getCheckTrackingEntry(id: string): Promise<CheckTracking | undefined> {
+    return this.checkTrackingEntries.get(id);
+  }
+
+  async createCheckTrackingEntry(entry: InsertCheckTracking): Promise<CheckTracking> {
+    const id = randomUUID();
+    const newEntry: CheckTracking = {
+      ...entry,
+      id,
+      notes: entry.notes || null,
+      createdAt: new Date()
+    };
+    this.checkTrackingEntries.set(id, newEntry);
+    return newEntry;
+  }
+
+  async updateCheckTrackingEntry(id: string, entry: Partial<InsertCheckTracking>): Promise<CheckTracking | undefined> {
+    const existing = this.checkTrackingEntries.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...entry };
+    this.checkTrackingEntries.set(id, updated);
+    return updated;
+  }
+
+  async deleteCheckTrackingEntry(id: string): Promise<boolean> {
+    return this.checkTrackingEntries.delete(id);
+  }
 }
 
 // Database Storage Implementation
@@ -762,6 +806,31 @@ export class DbStorage implements IStorage {
       const result = await this.db.insert(businessSettings).values(settings).returning();
       return result[0];
     }
+  }
+
+  // Check Tracking methods
+  async getCheckTrackingEntries(): Promise<CheckTracking[]> {
+    return await this.db.select().from(checkTracking).orderBy(desc(checkTracking.processedDate));
+  }
+
+  async getCheckTrackingEntry(id: string): Promise<CheckTracking | undefined> {
+    const result = await this.db.select().from(checkTracking).where(eq(checkTracking.id, id));
+    return result[0];
+  }
+
+  async createCheckTrackingEntry(entry: InsertCheckTracking): Promise<CheckTracking> {
+    const result = await this.db.insert(checkTracking).values(entry).returning();
+    return result[0];
+  }
+
+  async updateCheckTrackingEntry(id: string, entry: Partial<InsertCheckTracking>): Promise<CheckTracking | undefined> {
+    const result = await this.db.update(checkTracking).set(entry).where(eq(checkTracking.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCheckTrackingEntry(id: string): Promise<boolean> {
+    const result = await this.db.delete(checkTracking).where(eq(checkTracking.id, id));
+    return result.rowCount > 0;
   }
 }
 

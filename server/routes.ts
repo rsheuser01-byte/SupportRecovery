@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema, insertBusinessSettingsSchema 
+  insertExpenseSchema, insertBusinessSettingsSchema, insertCheckTrackingSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -573,6 +573,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Daily report error:", error);
       res.status(500).json({ message: "Failed to generate daily report" });
+    }
+  });
+
+  // Check Tracking Routes
+  app.get("/api/check-tracking", async (req, res) => {
+    try {
+      const entries = await storage.getCheckTrackingEntries();
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch check tracking entries" });
+    }
+  });
+
+  app.post("/api/check-tracking", async (req, res) => {
+    try {
+      const entryData = insertCheckTrackingSchema.parse(req.body);
+      const entry = await storage.createCheckTrackingEntry(entryData);
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Check tracking validation error:", error);
+      res.status(400).json({ message: "Invalid check tracking data", error: error.message });
+    }
+  });
+
+  app.put("/api/check-tracking/:id", async (req, res) => {
+    try {
+      const entryData = insertCheckTrackingSchema.partial().parse(req.body);
+      const entry = await storage.updateCheckTrackingEntry(req.params.id, entryData);
+      if (!entry) {
+        return res.status(404).json({ message: "Check tracking entry not found" });
+      }
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Check tracking update error:", error);
+      res.status(400).json({ message: "Invalid check tracking data", error: error.message });
+    }
+  });
+
+  app.delete("/api/check-tracking/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteCheckTrackingEntry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Check tracking entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete check tracking entry" });
     }
   });
 

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, numeric, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, numeric, timestamp, boolean, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -82,6 +82,18 @@ export const businessSettings = pgTable("business_settings", {
   email: text("email"),
 });
 
+// Check Tracking table for George's running tab of check totals
+export const checkTracking = pgTable('check_tracking', {
+  id: varchar('id', { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  serviceProvider: varchar('service_provider', { length: 255 }).notNull(),
+  checkNumber: varchar('check_number', { length: 100 }).notNull(),
+  checkAmount: decimal('check_amount', { precision: 10, scale: 2 }).notNull(),
+  checkDate: date('check_date').notNull(), // Date check was issued
+  processedDate: date('processed_date').notNull(), // Date check was processed
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 // Insert schemas
 export const insertHouseSchema = createInsertSchema(houses).omit({ id: true });
 export const insertServiceCodeSchema = createInsertSchema(serviceCodes).omit({ id: true });
@@ -91,6 +103,10 @@ export const insertPatientSchema = createInsertSchema(patients).omit({ id: true 
 export const insertRevenueEntrySchema = createInsertSchema(revenueEntries).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({ id: true });
+export const insertCheckTrackingSchema = createInsertSchema(checkTracking).omit({
+  id: true,
+  createdAt: true,
+});
 
 // Types
 export type House = typeof houses.$inferSelect;
@@ -110,3 +126,5 @@ export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Payout = typeof payouts.$inferSelect;
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
+export type CheckTracking = typeof checkTracking.$inferSelect;
+export type InsertCheckTracking = z.infer<typeof insertCheckTrackingSchema>;
