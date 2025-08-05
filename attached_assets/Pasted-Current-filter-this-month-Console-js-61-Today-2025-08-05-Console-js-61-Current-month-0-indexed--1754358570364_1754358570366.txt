@@ -1,0 +1,96 @@
+Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4
+Console.js:61 Current filter: this-month
+Console.js:61 Today: 2025-08-05
+Console.js:61 Current month (0-indexed): 7 Current year: 2025
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-04 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-04: true
+Console.js:61 Entry: 2025-08-03 -> Month: 7, Year: 2025
+Console.js:61 This month match for 2025-08-03: true
+Console.js:61 Entry: 2025-07-04 -> Month: 6, Year: 2025
+Console.js:61 This month match for 2025-07-04: false
+Console.js:61 Filtered results: 3 out of 4

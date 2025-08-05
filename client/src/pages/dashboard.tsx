@@ -213,6 +213,7 @@ export default function Dashboard() {
     console.log('Current filter:', checkTrackingFilter);
     console.log('Today:', now.toISOString().split('T')[0]);
     console.log('Current month (0-indexed):', currentMonth, 'Current year:', currentYear);
+    console.log('All check entries:', checkTrackingEntries.map(e => ({id: e.id, processedDate: e.processedDate, checkNumber: e.checkNumber})));
     
     const filtered = checkTrackingEntries.filter(entry => {
       const entryDate = new Date(entry.processedDate);
