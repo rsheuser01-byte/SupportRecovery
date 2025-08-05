@@ -138,7 +138,7 @@ export function UserManagementModal({ open, onOpenChange }: UserManagementModalP
                         <div className="font-medium">
                           {user.firstName || user.lastName ? 
                             `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
-                            'No name provided'
+                            user.email === 'gclemons22@gmail.com' ? 'George Clemons' : 'No name provided'
                           }
                         </div>
                       </div>
