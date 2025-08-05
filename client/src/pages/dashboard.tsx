@@ -207,16 +207,27 @@ export default function Dashboard() {
     }
 
     const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed (August = 7)
     
     return checkTrackingEntries.filter(entry => {
       const entryDate = new Date(entry.processedDate);
+      const entryYear = entryDate.getFullYear();
+      const entryMonth = entryDate.getMonth(); // 0-indexed
       
       switch (checkTrackingFilter) {
         case 'this-month':
-          return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+          // Include all dates in current month (August 2025)
+          return entryMonth === currentMonth && entryYear === currentYear;
         case 'last-month':
-          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          return entryDate.getMonth() === lastMonth.getMonth() && entryDate.getFullYear() === lastMonth.getFullYear();
+          // Calculate last month properly (July 2025)
+          let lastMonth = currentMonth - 1;
+          let lastMonthYear = currentYear;
+          if (lastMonth < 0) {
+            lastMonth = 11; // December
+            lastMonthYear = currentYear - 1;
+          }
+          return entryMonth === lastMonth && entryYear === lastMonthYear;
         case 'custom-date':
           return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
         default:
