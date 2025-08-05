@@ -25,6 +25,7 @@ import { ServiceCodeModal } from "../components/service-code-modal";
 import { BusinessSettingsModal } from "../components/business-settings-modal";
 import { HouseModal } from "../components/house-modal";
 import { StaffModal } from "../components/staff-modal";
+import InteractiveCalendar from "../components/interactive-calendar";
 import type { 
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout 
 } from "@shared/schema";
@@ -49,6 +50,7 @@ export default function Dashboard() {
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCheckDate, setSelectedCheckDate] = useState<string | null>(null);
   const [selectedStaffForCheckDate, setSelectedStaffForCheckDate] = useState<string | null>(null);
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<string | undefined>(undefined);
   const [patientSearchTerm, setPatientSearchTerm] = useState("");
   const [selectedHouseFilter, setSelectedHouseFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
@@ -347,6 +349,17 @@ export default function Dashboard() {
       year: 'numeric', 
       month: 'short', 
       day: 'numeric' 
+    });
+  };
+
+  // Handle calendar date selection
+  const handleCalendarDateSelect = (date: string) => {
+    setCalendarSelectedDate(date);
+    setSelectedTab("payouts");
+    setSelectedCheckDate(date);
+    toast({ 
+      title: "Date Selected", 
+      description: `Viewing staff payouts for ${formatDate(date)}` 
     });
   };
 
@@ -876,6 +889,17 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6 bg-gradient-to-br from-transparent via-slate-50/30 to-transparent">
+              {/* Interactive Calendar Section */}
+              <div className="mb-8 animate-slide-up">
+                <div className="flex justify-center">
+                  <InteractiveCalendar 
+                    revenueEntries={revenueEntries}
+                    onDateSelect={handleCalendarDateSelect}
+                    selectedDate={calendarSelectedDate}
+                  />
+                </div>
+              </div>
+
               {/* Key Metrics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 animate-slide-up">
                 <Card className="stat-card hover-lift border-0 shadow-xl">
