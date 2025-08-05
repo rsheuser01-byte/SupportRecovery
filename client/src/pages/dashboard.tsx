@@ -278,8 +278,8 @@ export default function Dashboard() {
           return entryMonth === lastMonth && entryYear === lastMonthYear;
         case 'this-quarter':
           const currentQuarter = Math.floor(now.getMonth() / 3);
-          const entryQuarter = Math.floor(entryDate.getMonth() / 3);
-          return entryQuarter === currentQuarter && entryDate.getFullYear() === now.getFullYear();
+          const entryQuarter = Math.floor(entryMonth / 3);
+          return entryQuarter === currentQuarter && entryYear === now.getFullYear();
         case 'last-check':
           if (!latestCheckDate) return false;
           // This case is handled separately in the filter function below
@@ -334,25 +334,33 @@ export default function Dashboard() {
     return revenueEntries.filter(entry => {
       // Date range filter
       if (revenueFilters.dateRange !== 'all') {
-        const entryDate = new Date(entry.date);
+        // Parse date safely to avoid timezone issues
+        const [year, month, day] = entry.date.split('-').map(Number);
+        const entryYear = year;
+        const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
         const now = new Date();
         
         switch (revenueFilters.dateRange) {
           case 'this-month':
-            if (entryDate.getMonth() !== now.getMonth() || entryDate.getFullYear() !== now.getFullYear()) {
+            if (entryMonth !== now.getMonth() || entryYear !== now.getFullYear()) {
               return false;
             }
             break;
           case 'last-month':
-            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            if (entryDate.getMonth() !== lastMonth.getMonth() || entryDate.getFullYear() !== lastMonth.getFullYear()) {
+            let lastMonth = now.getMonth() - 1;
+            let lastMonthYear = now.getFullYear();
+            if (lastMonth < 0) {
+              lastMonth = 11; // December
+              lastMonthYear = now.getFullYear() - 1;
+            }
+            if (entryMonth !== lastMonth || entryYear !== lastMonthYear) {
               return false;
             }
             break;
           case 'this-quarter':
             const currentQuarter = Math.floor(now.getMonth() / 3);
-            const entryQuarter = Math.floor(entryDate.getMonth() / 3);
-            if (entryQuarter !== currentQuarter || entryDate.getFullYear() !== now.getFullYear()) {
+            const entryQuarter = Math.floor(entryMonth / 3);
+            if (entryQuarter !== currentQuarter || entryYear !== now.getFullYear()) {
               return false;
             }
             break;
