@@ -2110,25 +2110,6 @@ export default function Dashboard() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>This Month</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(checkTrackingEntries
-                        .filter(entry => {
-                          const entryDate = new Date(entry.processedDate);
-                          const now = new Date();
-                          return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
-                        })
-                        .reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0)
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">Current month total</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
                     <CardTitle>Service Providers</CardTitle>
                   </CardHeader>
                   <CardContent>
