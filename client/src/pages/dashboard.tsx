@@ -851,7 +851,7 @@ export default function Dashboard() {
         <div className="p-6 gradient-header relative overflow-hidden ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[34px] pb-[34px]">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
+              <h1 className="text-xl font-bold text-white">Support Recovery</h1>
               <Button
                 onClick={handleLogout}
                 variant="ghost"
@@ -2540,7 +2540,6 @@ export default function Dashboard() {
         }}
         checkEntry={editingCheckEntry}
       />
-
       <UserManagementModal
         open={userManagementModalOpen}
         onOpenChange={setUserManagementModalOpen}
