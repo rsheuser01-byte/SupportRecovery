@@ -61,10 +61,10 @@
 @layer components {
   /* Professional gradient backgrounds */
   .gradient-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%) !important;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
     border-radius: 12px;
     margin: 8px;
-    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.15);
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.25);
   }
   
   .gradient-primary {
