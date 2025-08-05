@@ -33,6 +33,7 @@ import type {
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckTracking 
 } from "@shared/schema";
 import { CheckTrackingModal } from "@/components/check-tracking-modal";
+import { UserManagementModal } from "@/components/user-management-modal";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [editingStaff, setEditingStaff] = useState<Staff | undefined>(undefined);
   const [checkTrackingModalOpen, setCheckTrackingModalOpen] = useState(false);
   const [editingCheckEntry, setEditingCheckEntry] = useState<CheckTracking | undefined>(undefined);
+  const [userManagementModalOpen, setUserManagementModalOpen] = useState(false);
   const [checkTrackingFilter, setCheckTrackingFilter] = useState<'all' | 'this-month' | 'last-month' | 'custom-date'>('all');
   const [checkTrackingCustomDate, setCheckTrackingCustomDate] = useState<string>('');
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
@@ -1004,6 +1006,15 @@ export default function Dashboard() {
                         <SelectItem value="last-check">Last Check</SelectItem>
                       </SelectContent>
                     </Select>
+                    {(user as any)?.role === 'admin' && (
+                      <Button 
+                        className="bg-red-500/80 hover:bg-red-600 border-red-300/20 text-white hover-lift"
+                        onClick={() => setUserManagementModalOpen(true)}
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        User Management
+                      </Button>
+                    )}
                     <Button 
                       className="bg-white/10 hover:bg-white/20 border-white/20 text-white hover-lift"
                       onClick={exportDashboardReport}
@@ -2526,6 +2537,11 @@ export default function Dashboard() {
           if (!open) setEditingCheckEntry(undefined);
         }}
         checkEntry={editingCheckEntry}
+      />
+
+      <UserManagementModal
+        open={userManagementModalOpen}
+        onOpenChange={setUserManagementModalOpen}
       />
     </div>
   );

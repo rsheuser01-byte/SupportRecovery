@@ -155,3 +155,38 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+// Middleware to check if user is approved
+export const isApproved: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = (req.user as any).claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (!user || !user.isApproved) {
+      return res.status(403).json({ 
+        message: "Account pending approval", 
+        needsApproval: true 
+      });
+    }
+    
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Failed to check user approval status" });
+  }
+};
+
+// Middleware to check if user is admin
+export const isAdmin: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = (req.user as any).claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Failed to check admin status" });
+  }
+};

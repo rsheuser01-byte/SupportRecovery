@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, isApproved, isAdmin } from "./replitAuth";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
@@ -17,14 +17,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      if (!user) {
+        // Check if this is the first user in the system - make them admin
+        const allUsers = await storage.getAllUsers();
+        const isFirstUser = allUsers.length === 0;
+        
+        // Create user
+        const userData = {
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.given_name,
+          lastName: req.user.claims.family_name,
+          profileImageUrl: req.user.claims.picture,
+          role: isFirstUser ? "admin" : "pending",
+          isApproved: isFirstUser, // First user is auto-approved
+        };
+        const newUser = await storage.upsertUser(userData);
+        res.json(newUser);
+      } else {
+        res.json(user);
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
-  // Houses - Protected with authentication
-  app.get("/api/houses", isAuthenticated, async (req, res) => {
+  // User management routes
+  app.get("/api/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users/:id/approve", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const adminUserId = (req as any).user.claims.sub;
+      const user = await storage.approveUser(req.params.id, adminUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve user" });
+    }
+  });
+
+  app.post("/api/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { role } = req.body;
+      if (!['pending', 'user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      const adminUserId = (req as any).user.claims.sub;
+      const user = await storage.updateUserRole(req.params.id, role, adminUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  // Houses - Protected with authentication and approval
+  app.get("/api/houses", isAuthenticated, isApproved, async (req, res) => {
     try {
       const houses = await storage.getHouses();
       res.json(houses);
@@ -33,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/houses", isAuthenticated, async (req, res) => {
+  app.post("/api/houses", isAuthenticated, isApproved, async (req, res) => {
     try {
       const houseData = insertHouseSchema.parse(req.body);
       const house = await storage.createHouse(houseData);
@@ -43,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/houses/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/houses/:id", isAuthenticated, isApproved, async (req, res) => {
     try {
       const houseData = insertHouseSchema.partial().parse(req.body);
       const house = await storage.updateHouse(req.params.id, houseData);
@@ -56,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/houses/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/houses/:id", isAuthenticated, isApproved, async (req, res) => {
     try {
       const deleted = await storage.deleteHouse(req.params.id);
       if (!deleted) {

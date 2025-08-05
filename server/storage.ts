@@ -86,6 +86,9 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUserRole(userId: string, role: string, approvedBy?: string): Promise<User | undefined>;
+  approveUser(userId: string, approvedBy: string): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -509,17 +512,65 @@ export class MemStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id!);
     const user: User = {
+      ...existingUser,
       id: userData.id || randomUUID(),
-      email: userData.email || null,
-      firstName: userData.firstName || null,
-      lastName: userData.lastName || null,
-      profileImageUrl: userData.profileImageUrl || null,
-      createdAt: userData.createdAt || new Date(),
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      role: userData.role || existingUser?.role || "pending",
+      isApproved: userData.isApproved ?? existingUser?.isApproved ?? false,
+      approvedBy: userData.approvedBy || existingUser?.approvedBy || null,
+      approvedAt: userData.approvedAt || existingUser?.approvedAt || null,
+      createdAt: existingUser?.createdAt || new Date(),
       updatedAt: new Date(),
     };
     this.users.set(user.id, user);
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
+  }
+
+  async updateUserRole(userId: string, role: string, approvedBy?: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      role,
+      updatedAt: new Date(),
+      ...(approvedBy && {
+        approvedBy,
+        approvedAt: new Date(),
+        isApproved: true,
+      }),
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async approveUser(userId: string, approvedBy: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      isApproved: true,
+      role: "user",
+      approvedBy,
+      approvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 }
 
@@ -871,7 +922,7 @@ export class DbStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     try {
-      const [user] = await this.db
+      const result = await this.db
         .insert(users)
         .values(userData)
         .onConflictDoUpdate({
@@ -882,10 +933,60 @@ export class DbStorage implements IStorage {
           },
         })
         .returning();
-      return user;
+      return result[0];
     } catch (error) {
       console.error("Error upserting user:", error);
       throw error;
+    }
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await this.db.select().from(users).orderBy(desc(users.createdAt));
+    } catch (error) {
+      console.error("Error getting all users:", error);
+      return [];
+    }
+  }
+
+  async updateUserRole(userId: string, role: string, approvedBy?: string): Promise<User | undefined> {
+    try {
+      const updateData: any = { role, updatedAt: new Date() };
+      if (approvedBy) {
+        updateData.approvedBy = approvedBy;
+        updateData.approvedAt = new Date();
+        updateData.isApproved = true;
+      }
+      
+      const result = await this.db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      return undefined;
+    }
+  }
+
+  async approveUser(userId: string, approvedBy: string): Promise<User | undefined> {
+    try {
+      const result = await this.db
+        .update(users)
+        .set({
+          isApproved: true,
+          role: "user",
+          approvedBy,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error approving user:", error);
+      return undefined;
     }
   }
 }
