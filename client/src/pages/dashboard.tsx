@@ -869,7 +869,7 @@ export default function Dashboard() {
               </p>
             )}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-100/20 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
         </div>
         
         <nav className="flex-1 p-4">
