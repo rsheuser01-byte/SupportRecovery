@@ -91,10 +91,16 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
   });
 
   const onSubmit = (data: InsertCheckTracking) => {
+    // Ensure amount is properly formatted as decimal
+    const formattedData = {
+      ...data,
+      checkAmount: parseFloat(data.checkAmount).toFixed(2)
+    };
+    
     if (checkEntry) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(formattedData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(formattedData);
     }
   };
 
@@ -102,11 +108,8 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
     // Remove any non-numeric characters except decimal point
     const numericValue = value.replace(/[^0-9.]/g, '');
     
-    // Parse to float and format
-    const floatValue = parseFloat(numericValue);
-    if (isNaN(floatValue)) return '';
-    
-    return floatValue.toFixed(2);
+    // Don't format until user is done typing - just return the cleaned numeric value
+    return numericValue;
   };
 
   return (
@@ -154,11 +157,11 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
                   <FormLabel>Check Amount</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="0.00" 
+                      placeholder="Enter amount (e.g., 25.00)" 
                       {...field}
                       onChange={(e) => {
-                        const formatted = formatCurrency(e.target.value);
-                        field.onChange(formatted);
+                        const cleaned = e.target.value.replace(/[^0-9.]/g, '');
+                        field.onChange(cleaned);
                       }}
                     />
                   </FormControl>
