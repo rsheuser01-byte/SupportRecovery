@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,6 +34,8 @@ import type {
 } from "@shared/schema";
 import { CheckTrackingModal } from "@/components/check-tracking-modal";
 import { UserManagementModal } from "@/components/user-management-modal";
+import { OnboardingWalkthrough } from "@/components/onboarding-walkthrough";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -77,6 +79,7 @@ export default function Dashboard() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { showOnboarding, hasCompletedOnboarding, completeOnboarding, startOnboarding } = useOnboarding();
   const { user, isAuthenticated, isLoading } = useAuth();
 
   // Redirect to home if not authenticated
@@ -846,21 +849,38 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-fade-in">
+      {/* Onboarding Walkthrough */}
+      {showOnboarding && (
+        <OnboardingWalkthrough onComplete={completeOnboarding} />
+      )}
       {/* Sidebar */}
       <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
         <div className="p-4 gradient-header relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
               <h1 className="text-lg font-bold text-white">Support Recovery LLC</h1>
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="sm"
-                className="p-1 text-white/80 hover:text-white hover:bg-white/10"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center space-x-2">
+                {hasCompletedOnboarding && (
+                  <Button
+                    onClick={startOnboarding}
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 text-white/80 hover:text-white hover:bg-white/10"
+                    title="Take Interactive Tour"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 text-white/80 hover:text-white hover:bg-white/10"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <p className="text-sm text-white/90">Addition Treatment, Behavioral & Mental Health Services</p>
             {user && (
