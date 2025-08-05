@@ -851,25 +851,25 @@ export default function Dashboard() {
         <div className="p-6 gradient-header relative overflow-hidden ml-[0px] mr-[0px] mt-[0px] mb-[0px] pt-[34px] pb-[34px]">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-xl font-bold text-slate-900">Support Recovery LLC</h1>
+              <h1 className="text-xl font-bold text-white">Support Recovery LLC</h1>
               <Button
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
-                className="text-slate-700 hover:text-slate-900 hover:bg-slate-200 p-1"
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-sm text-slate-700">Addition Treatment, Behavioral & Mental Health Services</p>
+            <p className="text-sm text-white/90">Addition Treatment, Behavioral & Mental Health Services</p>
             {user && (
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-white/75 mt-1">
                 Welcome, {(user as any).firstName || (user as any).email || 'User'}
               </p>
             )}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-200/30 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-y-12 transition-transform duration-1000"></div>
         </div>
         
         <nav className="flex-1 p-4">

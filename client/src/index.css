@@ -61,9 +61,9 @@
 @layer components {
   /* Professional gradient backgrounds */
   .gradient-header {
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-    border-bottom: 1px solid #94a3b8;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    border-bottom: 1px solid #334155;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2);
   }
   
   .gradient-primary {
