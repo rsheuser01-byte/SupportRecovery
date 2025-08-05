@@ -335,7 +335,8 @@ export default function Dashboard() {
       // Date range filter
       if (revenueFilters.dateRange !== 'all') {
         // Parse date safely to avoid timezone issues
-        const [year, month, day] = entry.date.split('-').map(Number);
+        const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
         const entryYear = year;
         const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
         const now = new Date();

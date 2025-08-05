@@ -6,6 +6,12 @@ This is a full-stack healthcare management application built for tracking revenu
 
 The application features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database with Drizzle ORM for data management.
 
+**Recent Enhancements (August 2025):**
+- Added comprehensive check tracking filtering system with month-based and custom date filters
+- Fixed critical date parsing timezone issues affecting both check tracking and revenue entry filters  
+- Implemented safe date parsing to prevent JavaScript Date() timezone interpretation bugs
+- All filter systems now use consistent manual string parsing for reliable month boundary detection
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
