@@ -108,45 +108,71 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
         
-        const tooltipWidth = 320; // 80 * 4 (w-80)
-        const tooltipHeight = 400; // Estimated height
+        const tooltipWidth = 320; // w-80 = 20rem = 320px
+        const tooltipHeight = 300; // Reduced estimated height
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
+        const margin = 20;
         
         let top = rect.top + scrollTop;
         let left = rect.left + scrollLeft;
+        let position = currentStepData.position;
 
-        // Adjust position based on desired placement
-        switch (currentStepData.position) {
+        // Calculate initial position
+        switch (position) {
           case 'top':
-            top = rect.top + scrollTop - tooltipHeight - 20;
-            left = rect.left + scrollLeft + rect.width / 2;
+            top = rect.top + scrollTop - tooltipHeight - margin;
+            left = rect.left + scrollLeft + rect.width / 2 - tooltipWidth / 2;
             break;
           case 'bottom':
-            top = rect.bottom + scrollTop + 20;
-            left = rect.left + scrollLeft + rect.width / 2;
+            top = rect.bottom + scrollTop + margin;
+            left = rect.left + scrollLeft + rect.width / 2 - tooltipWidth / 2;
             break;
           case 'left':
-            top = rect.top + scrollTop + rect.height / 2;
-            left = rect.left + scrollLeft - tooltipWidth - 20;
+            top = rect.top + scrollTop + rect.height / 2 - tooltipHeight / 2;
+            left = rect.left + scrollLeft - tooltipWidth - margin;
             break;
           case 'right':
-            top = rect.top + scrollTop + rect.height / 2;
-            left = rect.right + scrollLeft + 20;
+            top = rect.top + scrollTop + rect.height / 2 - tooltipHeight / 2;
+            left = rect.right + scrollLeft + margin;
             break;
         }
 
-        // Ensure tooltip stays within viewport bounds
-        if (left < 20) {
-          left = 20;
-        } else if (left + tooltipWidth > viewportWidth - 20) {
-          left = viewportWidth - tooltipWidth - 20;
+        // Check bounds and adjust if necessary
+        const rightEdge = left + tooltipWidth;
+        const bottomEdge = top + tooltipHeight;
+
+        // Horizontal bounds checking
+        if (left < margin) {
+          left = margin;
+        } else if (rightEdge > viewportWidth - margin) {
+          left = viewportWidth - tooltipWidth - margin;
         }
 
-        if (top < 20) {
-          top = 20;
-        } else if (top + tooltipHeight > viewportHeight + scrollTop - 20) {
-          top = viewportHeight + scrollTop - tooltipHeight - 20;
+        // Vertical bounds checking  
+        if (top < scrollTop + margin) {
+          // If tooltip would be above viewport, position it below target
+          if (position === 'top') {
+            top = rect.bottom + scrollTop + margin;
+          } else {
+            top = scrollTop + margin;
+          }
+        } else if (bottomEdge > scrollTop + viewportHeight - margin) {
+          // If tooltip would be below viewport, position it above target
+          if (position === 'bottom') {
+            top = rect.top + scrollTop - tooltipHeight - margin;
+          } else {
+            top = scrollTop + viewportHeight - tooltipHeight - margin;
+          }
+        }
+
+        // Final safety check - if still out of bounds, center in viewport
+        if (left < margin || left + tooltipWidth > viewportWidth - margin) {
+          left = Math.max(margin, (viewportWidth - tooltipWidth) / 2);
+        }
+        
+        if (top < scrollTop + margin || top + tooltipHeight > scrollTop + viewportHeight - margin) {
+          top = Math.max(scrollTop + margin, scrollTop + (viewportHeight - tooltipHeight) / 2);
         }
 
         setTooltipPosition({ top, left });
@@ -157,11 +183,13 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
     };
 
     // Add delay to ensure DOM is ready
-    const timer = setTimeout(updateTooltipPosition, 100);
+    const timer = setTimeout(updateTooltipPosition, 200);
     window.addEventListener('resize', updateTooltipPosition);
+    window.addEventListener('scroll', updateTooltipPosition);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updateTooltipPosition);
+      window.removeEventListener('scroll', updateTooltipPosition);
     };
   }, [currentStep, currentStepData]);
 
@@ -211,8 +239,7 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
         className="fixed z-50 animate-bounce-in"
         style={{
           top: tooltipPosition.top,
-          left: tooltipPosition.left,
-          transform: currentStepData.position === 'top' || currentStepData.position === 'bottom' ? 'translateX(-50%)' : 'translateY(-50%)'
+          left: tooltipPosition.left
         }}
       >
         <Card className="w-80 bg-white shadow-2xl border-2 border-blue-200">
