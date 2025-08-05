@@ -271,15 +271,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/patients", isAuthenticated, async (req, res) => {
     try {
-      console.log("Received patient data:", req.body);
       // Convert date string to Date object before validation if startDate exists
       const processedData = {
         ...req.body,
         ...(req.body.startDate && { startDate: new Date(req.body.startDate) })
       };
-      console.log("Processed patient data:", processedData);
       const patientData = insertPatientSchema.parse(processedData);
-      console.log("Parsed patient data:", patientData);
       const patient = await storage.createPatient(patientData);
       res.json(patient);
     } catch (error: any) {
@@ -320,16 +317,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/revenue-entries", isAuthenticated, async (req, res) => {
     try {
-      console.log("Received revenue entry data:", req.body);
-      // Convert date strings to Date objects before validation
+      // Convert date strings to Date objects before validation with error handling
       const processedData = {
         ...req.body,
-        date: new Date(req.body.date),
-        checkDate: new Date(req.body.checkDate)
+        date: req.body.date ? new Date(req.body.date) : undefined,
+        checkDate: req.body.checkDate ? new Date(req.body.checkDate) : undefined
       };
-      console.log("Processed revenue entry data:", processedData);
+      
+      // Validate dates are not invalid
+      if (processedData.date && isNaN(processedData.date.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      if (processedData.checkDate && isNaN(processedData.checkDate.getTime())) {
+        return res.status(400).json({ message: "Invalid check date format" });
+      }
       const revenueEntryData = insertRevenueEntrySchema.parse(processedData);
-      console.log("Parsed revenue entry data:", revenueEntryData);
       const revenueEntry = await storage.createRevenueEntry(revenueEntryData);
       
       // Calculate and create payouts
@@ -356,27 +358,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.put("/api/revenue-entries/:id", isAuthenticated, async (req, res) => {
-    console.log("=== PUT /api/revenue-entries/:id CALLED ===");
-    console.log("Request ID:", req.params.id);
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-    
     try {
       const { id } = req.params;
-      console.log("Updating revenue entry with ID:", id);
-      console.log("Received revenue entry update data:", JSON.stringify(req.body, null, 2));
-      console.log("Raw body keys:", Object.keys(req.body));
-      console.log("Raw body values:", Object.values(req.body));
       
       // Convert date strings to Date objects before validation if they exist
-      const processedData = {
-        ...req.body,
-        ...(req.body.date && { date: new Date(req.body.date) }),
-        ...(req.body.checkDate && { checkDate: new Date(req.body.checkDate) })
-      };
-      console.log("Processed revenue entry update data:", processedData);
+      const processedData = { ...req.body };
+      
+      if (req.body.date) {
+        const dateObj = new Date(req.body.date);
+        if (isNaN(dateObj.getTime())) {
+          return res.status(400).json({ message: "Invalid date format" });
+        }
+        processedData.date = dateObj;
+      }
+      
+      if (req.body.checkDate) {
+        const checkDateObj = new Date(req.body.checkDate);
+        if (isNaN(checkDateObj.getTime())) {
+          return res.status(400).json({ message: "Invalid check date format" });
+        }
+        processedData.checkDate = checkDateObj;
+      }
       
       const revenueEntryData = insertRevenueEntrySchema.partial().parse(processedData);
-      console.log("Parsed revenue entry update data:", revenueEntryData);
       
       const revenueEntry = await storage.updateRevenueEntry(id, revenueEntryData);
       if (!revenueEntry) {
