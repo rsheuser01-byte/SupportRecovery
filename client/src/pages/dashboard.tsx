@@ -1317,7 +1317,7 @@ export default function Dashboard() {
                           {recentRevenueEntries.map((entry, index) => {
                             const patient = patients.find(p => p.id === entry.patientId);
                             const serviceCode = serviceCodes.find(s => s.id === entry.serviceCodeId);
-                            const staff = staffMembers.find(s => s.id === entry.staffId);
+                            const staffMember = staff.find(s => s.id === entry.staffId);
                             
                             return (
                               <TableRow key={index} className="hover:bg-gray-50">
@@ -1328,7 +1328,7 @@ export default function Dashboard() {
                                     {serviceCode?.code || 'N/A'}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="text-xs lg:text-sm">{staff?.name || 'Unknown'}</TableCell>
+                                <TableCell className="text-xs lg:text-sm">{staffMember?.name || 'Unknown'}</TableCell>
                                 <TableCell className="text-xs lg:text-sm text-right font-semibold text-green-600">
                                   {formatCurrency(parseFloat(entry.amount))}
                                 </TableCell>
