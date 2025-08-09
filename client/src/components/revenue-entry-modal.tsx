@@ -50,10 +50,16 @@ export default function RevenueEntryModal({
   const queryClient = useQueryClient();
   const isEdit = !!revenueEntry;
 
+  // Get last payment date from localStorage
+  const getLastPaymentDate = () => {
+    const lastDate = localStorage.getItem('lastPaymentDate');
+    return lastDate || new Date().toISOString().split('T')[0];
+  };
+
   const form = useForm<RevenueEntryForm>({
     resolver: zodResolver(revenueEntrySchema),
     defaultValues: {
-      date: new Date().toISOString().split('T')[0],
+      date: getLastPaymentDate(),
       checkDate: new Date().toISOString().split('T')[0],
       amount: "",
       patientId: "",
@@ -76,7 +82,7 @@ export default function RevenueEntryModal({
       });
     } else {
       form.reset({
-        date: new Date().toISOString().split('T')[0],
+        date: getLastPaymentDate(),
         checkDate: new Date().toISOString().split('T')[0],
         amount: "",
         patientId: "",
@@ -94,7 +100,20 @@ export default function RevenueEntryModal({
       queryClient.invalidateQueries({ queryKey: ['/api/revenue-entries'] });
       queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
       toast({ title: "Revenue entry created successfully" });
-      form.reset();
+      
+      // Save the payment date to localStorage for next time
+      const currentDate = form.getValues('date');
+      localStorage.setItem('lastPaymentDate', currentDate);
+      
+      form.reset({
+        date: getLastPaymentDate(),
+        checkDate: new Date().toISOString().split('T')[0],
+        amount: "",
+        patientId: "",
+        houseId: "",
+        serviceCodeId: "",
+        notes: "",
+      });
       setPayoutPreview([]);
       onOpenChange(false);
     },
