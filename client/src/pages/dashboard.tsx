@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -387,6 +387,27 @@ export default function Dashboard() {
   
   const netProfit = georgeRevenue - totalExpenses;
   const activePatients = patients.filter(p => p.status === 'active').length;
+  
+  // Calculate total payouts for the current dashboard filter period
+  const totalPayouts = useMemo(() => {
+    return payouts
+      .filter(p => {
+        if (dashboardDateFilter === 'all') return true;
+        
+        const payoutRevenueEntry = revenueEntries.find(re => re.id === p.revenueEntryId);
+        if (!payoutRevenueEntry) return false;
+        
+        return dashboardRevenue.some(dre => dre.id === payoutRevenueEntry.id);
+      })
+      .reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+  }, [payouts, dashboardRevenue, dashboardDateFilter, revenueEntries]);
+
+  // Get recent revenue entries for the recent activity section
+  const recentRevenueEntries = useMemo(() => {
+    return dashboardRevenue
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5); // Show only the 5 most recent entries
+  }, [dashboardRevenue]);
 
   // Filter revenue entries based on current filters (memoized for performance)
   const filteredRevenueEntries = useMemo(() => {
