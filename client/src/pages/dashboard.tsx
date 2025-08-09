@@ -1704,7 +1704,7 @@ export default function Dashboard() {
                     </TableHeader>
                     <TableBody>
                       {filteredRevenueEntries
-                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
                         .map((entry) => {
                         const house = houses.find(h => h.id === entry.houseId);
                         const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
