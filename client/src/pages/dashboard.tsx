@@ -355,7 +355,12 @@ export default function Dashboard() {
     const filterByDateRange = (date: string | Date) => {
       try {
         // Parse date safely to avoid timezone issues
-        const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+        let dateStr = typeof date === 'string' ? date : date.toISOString();
+        
+        // Extract just the date part if it's a full ISO string
+        if (dateStr.includes('T')) {
+          dateStr = dateStr.split('T')[0];
+        }
         
         // Validate date format and extract components
         if (!dateStr || !dateStr.includes('-')) {
@@ -455,7 +460,12 @@ export default function Dashboard() {
       // Date range filter
       if (revenueFilters.dateRange !== 'all') {
         // Parse checkDate (processing date) safely to avoid timezone issues
-        const dateStr = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString().split('T')[0];
+        let dateStr = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString();
+        
+        // Extract just the date part if it's a full ISO string
+        if (dateStr.includes('T')) {
+          dateStr = dateStr.split('T')[0];
+        }
         
         // Validate date format
         if (!dateStr || !dateStr.includes('-')) {
