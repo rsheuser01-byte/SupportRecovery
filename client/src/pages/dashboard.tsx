@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -77,10 +77,35 @@ export default function Dashboard() {
   // Dashboard date filter
   const [dashboardDateFilter, setDashboardDateFilter] = useState('all');
   
+  // Sidebar toggle state - default collapsed on mobile
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { showOnboarding, hasCompletedOnboarding, completeOnboarding, startOnboarding } = useOnboarding();
   const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Handle responsive sidebar behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    // Check on mount
+    checkMobile();
+
+    const handleResize = () => {
+      checkMobile();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -884,8 +909,31 @@ export default function Dashboard() {
       {showOnboarding && (
         <OnboardingWalkthrough onComplete={completeOnboarding} />
       )}
+      {/* Hamburger Menu Button - Fixed Position */}
+      <Button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        variant="ghost"
+        size="sm"
+        className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-lg border border-gray-200"
+        title={sidebarCollapsed ? "Show Menu" : "Hide Menu"}
+      >
+        {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+      </Button>
+      
+      {/* Mobile Backdrop Overlay */}
+      {!sidebarCollapsed && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
+      <aside className={`${
+        sidebarCollapsed 
+          ? 'w-0 overflow-hidden md:w-0' 
+          : 'w-64 md:w-64'
+      } glass-sidebar flex flex-col shadow-xl transition-all duration-300 ease-in-out fixed md:relative z-40 h-full`}>
         <div className="p-4 gradient-header relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
@@ -1024,7 +1072,9 @@ export default function Dashboard() {
         </nav>
       </aside>
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
+        sidebarCollapsed ? 'ml-0' : 'md:ml-0'
+      }`}>
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
