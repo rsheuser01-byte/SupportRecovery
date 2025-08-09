@@ -432,18 +432,64 @@ export default function Dashboard() {
   const totalRevenue = dashboardRevenue.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
   const totalExpenses = dashboardExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
   
-  // Debug logging for dashboard statistics
-  console.log('Dashboard Statistics Debug:', {
-    dashboardDateFilter,
-    revenueEntriesCount: revenueEntries.length,
-    expensesCount: expenses.length,
-    filteredRevenueCount: dashboardRevenue.length,
-    filteredExpensesCount: dashboardExpenses.length,
-    totalRevenue,
-    totalExpenses,
-    sampleRevenue: dashboardRevenue.slice(0, 2),
-    sampleExpenses: dashboardExpenses.slice(0, 2)
-  });
+  // Calculate month-over-month comparisons
+  const calculateMonthOverMonth = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    let lastMonth = currentMonth - 1;
+    let lastMonthYear = currentYear;
+    if (lastMonth < 0) {
+      lastMonth = 11; // December
+      lastMonthYear = currentYear - 1;
+    }
+
+    const currentMonthRevenue = revenueEntries
+      .filter(entry => {
+        if (!entry.checkDate) return false;
+        const date = new Date(entry.checkDate);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      })
+      .reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+
+    const lastMonthRevenue = revenueEntries
+      .filter(entry => {
+        if (!entry.checkDate) return false;
+        const date = new Date(entry.checkDate);
+        return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+
+    const currentMonthExpenses = expenses
+      .filter(expense => {
+        const date = new Date(expense.date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      })
+      .reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+    const lastMonthExpenses = expenses
+      .filter(expense => {
+        const date = new Date(expense.date);
+        return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+    const revenueChange = lastMonthRevenue === 0 ? 0 : 
+      ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+
+    const expenseChange = lastMonthExpenses === 0 ? 0 : 
+      ((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100;
+
+    return {
+      revenueChange: Math.round(revenueChange),
+      expenseChange: Math.round(expenseChange),
+      currentMonthRevenue,
+      lastMonthRevenue,
+      currentMonthExpenses,
+      lastMonthExpenses
+    };
+  }, [revenueEntries, expenses]);
   
   // Calculate George's portion (business owner's share) for profit calculation using filtered data
   const georgeStaff = staff.find(s => s.name === "George");
@@ -1252,9 +1298,11 @@ export default function Dashboard() {
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-2">Total Revenue</p>
                         <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalRevenue)}</p>
-                        <p className="text-sm text-green-600 mt-2 flex items-center">
+                        <p className={`text-sm mt-2 flex items-center ${
+                          calculateMonthOverMonth.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
                           <TrendingUp className="mr-1 h-3 w-3" />
-                          12% vs last month
+                          {calculateMonthOverMonth.revenueChange >= 0 ? '+' : ''}{calculateMonthOverMonth.revenueChange}% vs last month
                         </p>
                       </div>
                       <div className="p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
@@ -1270,9 +1318,11 @@ export default function Dashboard() {
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-2">Total Expenses</p>
                         <p className="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{formatCurrency(totalExpenses)}</p>
-                        <p className="text-sm text-red-600 mt-2 flex items-center">
+                        <p className={`text-sm mt-2 flex items-center ${
+                          calculateMonthOverMonth.expenseChange >= 0 ? 'text-red-600' : 'text-green-600'
+                        }`}>
                           <TrendingUp className="mr-1 h-3 w-3" />
-                          3% vs last month
+                          {calculateMonthOverMonth.expenseChange >= 0 ? '+' : ''}{calculateMonthOverMonth.expenseChange}% vs last month
                         </p>
                       </div>
                       <div className="p-4 gradient-danger rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
