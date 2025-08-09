@@ -380,7 +380,8 @@ export default function Dashboard() {
       if (dashboardDateFilter === 'last-check' && latestCheckDate) {
         return entry.checkDate && entry.checkDate === latestCheckDate;
       }
-      return filterByDateRange(entry.date);
+      // Use checkDate (processing date) instead of service date for consistency
+      return filterByDateRange(entry.checkDate);
     });
 
     const filteredExpenses = expenses.filter(expense => filterByDateRange(expense.date));
@@ -419,8 +420,8 @@ export default function Dashboard() {
     return revenueEntries.filter(entry => {
       // Date range filter
       if (revenueFilters.dateRange !== 'all') {
-        // Parse date safely to avoid timezone issues
-        const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+        // Parse checkDate (processing date) safely to avoid timezone issues
+        const dateStr = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString().split('T')[0];
         const [year, month, day] = dateStr.split('-').map(Number);
         const entryYear = year;
         const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
