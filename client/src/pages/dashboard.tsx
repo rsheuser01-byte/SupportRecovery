@@ -14,7 +14,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
-  Search, Edit, Trash2, FileText, BarChart3, PieChart, 
+  Search, Edit, Trash2, Copy, FileText, BarChart3, PieChart, 
   Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X
 } from "lucide-react";
 import jsPDF from 'jspdf';
@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [settingsSubTab, setSettingsSubTab] = useState("service-codes");
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
+  const [revenueModalMode, setRevenueModalMode] = useState<'create' | 'edit' | 'copy'>('create');
   const [editingRevenueEntry, setEditingRevenueEntry] = useState<RevenueEntry | undefined>(undefined);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
@@ -1541,6 +1542,7 @@ export default function Dashboard() {
                 </div>
                 <Button onClick={() => {
                   setEditingRevenueEntry(undefined);
+                  setRevenueModalMode('create');
                   setRevenueModalOpen(true);
                 }}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -1726,10 +1728,31 @@ export default function Dashboard() {
                                   size="sm"
                                   onClick={() => {
                                     setEditingRevenueEntry(entry);
+                                    setRevenueModalMode('edit');
                                     setRevenueModalOpen(true);
                                   }}
+                                  title="Edit entry"
                                 >
                                   <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    // Create a copy of the entry with new dates
+                                    const copyEntry = {
+                                      ...entry,
+                                      id: undefined, // Remove ID so it creates a new entry
+                                      date: new Date().toISOString().split('T')[0], // Use today's date
+                                      checkDate: new Date().toISOString().split('T')[0], // Use today's date
+                                    };
+                                    setEditingRevenueEntry(copyEntry as RevenueEntry);
+                                    setRevenueModalMode('copy');
+                                    setRevenueModalOpen(true);
+                                  }}
+                                  title="Copy entry"
+                                >
+                                  <Copy className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   variant="ghost" 
@@ -1749,6 +1772,7 @@ export default function Dashboard() {
                                       deleteRevenueMutation.mutate(entry.id);
                                     }
                                   }}
+                                  title="Delete entry"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -2828,12 +2852,16 @@ export default function Dashboard() {
         open={revenueModalOpen} 
         onOpenChange={(open) => {
           setRevenueModalOpen(open);
-          if (!open) setEditingRevenueEntry(undefined);
+          if (!open) {
+            setEditingRevenueEntry(undefined);
+            setRevenueModalMode('create');
+          }
         }}
         houses={houses}
         serviceCodes={serviceCodes}
         patients={patients}
         revenueEntry={editingRevenueEntry}
+        mode={revenueModalMode}
       />
       <ExpenseModal 
         open={expenseModalOpen} 

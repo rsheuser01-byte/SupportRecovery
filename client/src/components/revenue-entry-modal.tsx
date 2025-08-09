@@ -35,6 +35,7 @@ interface RevenueEntryModalProps {
   serviceCodes: ServiceCode[];
   patients: Patient[];
   revenueEntry?: RevenueEntry;
+  mode?: 'create' | 'edit' | 'copy';
 }
 
 export default function RevenueEntryModal({ 
@@ -43,12 +44,14 @@ export default function RevenueEntryModal({
   houses, 
   serviceCodes, 
   patients,
-  revenueEntry
+  revenueEntry,
+  mode = 'create'
 }: RevenueEntryModalProps) {
   const [payoutPreview, setPayoutPreview] = useState<any[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isEdit = !!revenueEntry;
+  const isEdit = mode === 'edit';
+  const isCopy = mode === 'copy';
 
   // Get last payment date from localStorage
   const getLastPaymentDate = () => {
@@ -70,10 +73,10 @@ export default function RevenueEntryModal({
   });
 
   useEffect(() => {
-    if (revenueEntry) {
+    if (revenueEntry && (isEdit || isCopy)) {
       form.reset({
-        date: new Date(revenueEntry.date).toISOString().split('T')[0],
-        checkDate: revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        date: isCopy ? getLastPaymentDate() : new Date(revenueEntry.date).toISOString().split('T')[0],
+        checkDate: isCopy ? new Date().toISOString().split('T')[0] : (revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
         amount: revenueEntry.amount,
         patientId: revenueEntry.patientId || "",
         houseId: revenueEntry.houseId,
@@ -92,7 +95,7 @@ export default function RevenueEntryModal({
       });
       setPayoutPreview([]);
     }
-  }, [revenueEntry, form]);
+  }, [revenueEntry, mode, form]);
 
   const createRevenueMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/revenue-entries', data),
@@ -194,9 +197,13 @@ export default function RevenueEntryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Revenue Entry" : "Add New Revenue Entry"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Edit Revenue Entry" : isCopy ? "Copy Revenue Entry" : "Add New Revenue Entry"}
+          </DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update the revenue entry details below." : "Enter the details for a new revenue entry."}
+            {isEdit ? "Update the revenue entry details below." : 
+             isCopy ? "Review and modify the copied entry details below." : 
+             "Enter the details for a new revenue entry."}
           </DialogDescription>
         </DialogHeader>
         
