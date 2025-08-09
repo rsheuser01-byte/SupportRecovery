@@ -981,7 +981,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "dashboard" ? "active" : ""}`}
-              onClick={() => setSelectedTab("dashboard")}
+              onClick={() => {
+                setSelectedTab("dashboard");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <BarChart3 className="mr-3 h-4 w-4" />
               Dashboard
@@ -993,7 +996,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "revenue" ? "active" : ""}`}
-              onClick={() => setSelectedTab("revenue")}
+              onClick={() => {
+                setSelectedTab("revenue");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <DollarSign className="mr-3 h-4 w-4" />
               Revenue Entry
@@ -1005,7 +1011,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "payouts" ? "active" : ""}`}
-              onClick={() => setSelectedTab("payouts")}
+              onClick={() => {
+                setSelectedTab("payouts");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <Users className="mr-3 h-4 w-4" />
               Staff Payouts
@@ -1017,7 +1026,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "expenses" ? "active" : ""}`}
-              onClick={() => setSelectedTab("expenses")}
+              onClick={() => {
+                setSelectedTab("expenses");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <Receipt className="mr-3 h-4 w-4" />
               Expenses
@@ -1029,7 +1041,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "patients" ? "active" : ""}`}
-              onClick={() => setSelectedTab("patients")}
+              onClick={() => {
+                setSelectedTab("patients");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <UserCheck className="mr-3 h-4 w-4" />
               Patients
@@ -1041,7 +1056,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "reports" ? "active" : ""}`}
-              onClick={() => setSelectedTab("reports")}
+              onClick={() => {
+                setSelectedTab("reports");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <FileText className="mr-3 h-4 w-4" />
               Reports
@@ -1053,7 +1071,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "check-dates" ? "active" : ""}`}
-              onClick={() => setSelectedTab("check-dates")}
+              onClick={() => {
+                setSelectedTab("check-dates");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <Calendar className="mr-3 h-4 w-4" />
               Check Tracking
@@ -1065,7 +1086,10 @@ export default function Dashboard() {
                   ? "bg-gradient-to-r from-gray-600 to-slate-700 text-white shadow-lg hover:shadow-xl" 
                   : "hover:bg-white/20 hover:text-gray-800"
               } ${selectedTab === "settings" ? "active" : ""}`}
-              onClick={() => setSelectedTab("settings")}
+              onClick={() => {
+                setSelectedTab("settings");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
             >
               <Settings className="mr-3 h-4 w-4" />
               Settings
@@ -1079,7 +1103,13 @@ export default function Dashboard() {
       }`}>
         {/* Content wrapper with top padding to avoid button overlap */}
         <div className="pt-16">
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+        <Tabs value={selectedTab} onValueChange={(value) => {
+          setSelectedTab(value);
+          // Auto-close menu when tab is selected, especially useful on mobile
+          if (isMobile) {
+            setSidebarCollapsed(true);
+          }
+        }}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
             <header className="bg-white border-b-4 border-blue-500 relative overflow-hidden shadow-lg">
