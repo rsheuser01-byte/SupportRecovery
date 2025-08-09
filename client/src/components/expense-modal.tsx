@@ -82,8 +82,10 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
   });
 
   const onSubmit = (data: any) => {
+    // Ensure we have a valid date
+    const dateValue = data.date || new Date().toISOString().slice(0, 10);
     const submitData = {
-      date: new Date(data.date + 'T12:00:00'),
+      date: new Date(dateValue + 'T12:00:00'),
       amount: data.amount,
       vendor: data.vendor,
       category: data.category,
@@ -117,7 +119,7 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
                 id="date"
                 type="date" 
                 {...form.register("date", {
-                  setValueAs: (value) => new Date(value + 'T12:00:00')
+                  required: "Date is required"
                 })}
                 defaultValue={new Date().toISOString().slice(0, 10)}
                 className="mt-1"
