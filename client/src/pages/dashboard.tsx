@@ -1045,7 +1045,6 @@ export default function Dashboard() {
       >
         {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
       </Button>
-      
       {/* Mobile Backdrop Overlay */}
       {!sidebarCollapsed && isMobile && (
         <div 
@@ -1053,7 +1052,6 @@ export default function Dashboard() {
           onClick={() => setSidebarCollapsed(true)}
         />
       )}
-      
       {/* Sidebar */}
       <aside className={`${
         sidebarCollapsed 
@@ -1087,7 +1085,7 @@ export default function Dashboard() {
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-white/90">Addition Treatment, Behavioral & Mental Health Services</p>
+            <p className="text-sm text-white/90">Addiction Treatment, Behavioral & Mental Health Services</p>
             {user && (
               <p className="text-xs mt-1 text-white/75">
                 Welcome, {(user as any).firstName || (user as any).email || 'User'}

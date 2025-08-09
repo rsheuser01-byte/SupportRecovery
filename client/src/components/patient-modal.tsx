@@ -54,12 +54,9 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
         phone: patient.phone || "",
         houseId: patient.houseId || "",
         program: patient.program || "",
-        startDate: patient.startDate ? (
-          typeof patient.startDate === 'string' && patient.startDate.includes('T') ? 
-            new Date(patient.startDate).toISOString().split('T')[0] : 
-            typeof patient.startDate === 'string' ? patient.startDate : 
-            new Date(patient.startDate).toISOString().split('T')[0]
-        ) : new Date().toISOString().split('T')[0],
+        startDate: patient.startDate ? 
+          new Date(patient.startDate).toISOString().split('T')[0] : 
+          new Date().toISOString().split('T')[0],
         status: patient.status || "active",
       });
     } else {
