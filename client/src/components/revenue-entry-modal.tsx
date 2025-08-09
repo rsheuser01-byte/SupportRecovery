@@ -232,8 +232,8 @@ export default function RevenueEntryModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No patient selected</SelectItem>
-                {(patients || []).map(patient => {
-                  const house = (houses || []).find(h => h.id === patient.houseId);
+                {patients.map(patient => {
+                  const house = houses.find(h => h.id === patient.houseId);
                   return (
                     <SelectItem key={patient.id} value={patient.id}>
                       {patient.name} - {house?.name || 'No House'}
@@ -252,7 +252,7 @@ export default function RevenueEntryModal({
                   <SelectValue placeholder="Select House" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(houses || []).map(house => (
+                  {houses.map(house => (
                     <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -268,7 +268,7 @@ export default function RevenueEntryModal({
                   <SelectValue placeholder="Select Service" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(serviceCodes || []).map(service => (
+                  {serviceCodes.map(service => (
                     <SelectItem key={service.id} value={service.id}>{service.code}</SelectItem>
                   ))}
                 </SelectContent>

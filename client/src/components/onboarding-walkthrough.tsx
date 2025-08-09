@@ -89,7 +89,7 @@ const onboardingSteps: OnboardingStep[] = [
 ];
 
 interface OnboardingWalkthroughProps {
-  onComplete?: () => void;
+  onComplete: () => void;
 }
 
 export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps) {
@@ -209,12 +209,12 @@ export function OnboardingWalkthrough({ onComplete }: OnboardingWalkthroughProps
 
   const handleComplete = () => {
     setIsVisible(false);
-    onComplete?.();
+    onComplete();
   };
 
   const skipTour = () => {
     setIsVisible(false);
-    onComplete?.();
+    onComplete();
   };
 
   if (!isVisible) return null;

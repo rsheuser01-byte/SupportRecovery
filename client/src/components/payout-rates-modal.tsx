@@ -45,10 +45,10 @@ export default function PayoutRatesModal({
       const rates: EditableRate[] = [];
       
       // Create entries for all house/service combinations
-      (houses || []).forEach(house => {
-        (serviceCodes || []).forEach(service => {
-          (staff || []).forEach(staffMember => {
-            const existingRate = (payoutRates || []).find(
+      houses.forEach(house => {
+        serviceCodes.forEach(service => {
+          staff.forEach(staffMember => {
+            const existingRate = payoutRates.find(
               rate => rate.houseId === house.id && 
                      rate.serviceCodeId === service.id && 
                      rate.staffId === staffMember.id
@@ -124,7 +124,7 @@ export default function PayoutRatesModal({
     // Validate that percentages don't exceed 100% per house/service combination
     const combinationTotals = new Map<string, number>();
     
-    (editableRates || []).forEach(rate => {
+    editableRates.forEach(rate => {
       const key = `${rate.houseId}-${rate.serviceCodeId}`;
       const percentage = parseFloat(rate.percentage) || 0;
       combinationTotals.set(key, (combinationTotals.get(key) || 0) + percentage);
@@ -151,9 +151,9 @@ export default function PayoutRatesModal({
   };
 
   // Group rates by house and service for display
-  const groupedRates = (houses || []).reduce((acc, house) => {
-    acc[house.id] = (serviceCodes || []).reduce((serviceAcc, service) => {
-      const serviceRates = (editableRates || []).filter(
+  const groupedRates = houses.reduce((acc, house) => {
+    acc[house.id] = serviceCodes.reduce((serviceAcc, service) => {
+      const serviceRates = editableRates.filter(
         rate => rate.houseId === house.id && rate.serviceCodeId === service.id
       );
       if (serviceRates.length > 0) {
@@ -200,7 +200,7 @@ export default function PayoutRatesModal({
                     const serviceRates = groupedRates[house.id]?.[service.id];
                     if (!serviceRates) return null;
 
-                    const total = (serviceRates || []).reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0);
+                    const total = serviceRates.reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0);
                     const isOverLimit = total > 100;
 
                     return (

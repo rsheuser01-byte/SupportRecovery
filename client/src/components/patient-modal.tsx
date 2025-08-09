@@ -58,7 +58,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
           typeof patient.startDate === 'string' && patient.startDate.includes('T') ? 
             new Date(patient.startDate).toISOString().split('T')[0] : 
             typeof patient.startDate === 'string' ? patient.startDate : 
-            patient.startDate instanceof Date ? patient.startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            new Date(patient.startDate).toISOString().split('T')[0]
         ) : new Date().toISOString().split('T')[0],
         status: patient.status || "active",
       });
@@ -155,7 +155,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No house assigned</SelectItem>
-                {(houses || []).map(house => (
+                {houses.map(house => (
                   <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                 ))}
               </SelectContent>
