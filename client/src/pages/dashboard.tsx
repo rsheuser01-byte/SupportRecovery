@@ -264,26 +264,50 @@ export default function Dashboard() {
     const currentMonth = now.getMonth(); // 0-indexed (August = 7)
     
     const filtered = checkTrackingEntries.filter(entry => {
-      // Parse date safely to avoid timezone issues
-      const [year, month, day] = entry.processedDate.split('-').map(Number);
-      const entryYear = year;
-      const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
-      
-      switch (checkTrackingFilter) {
-        case 'this-month':
-          return entryMonth === currentMonth && entryYear === currentYear;
-        case 'last-month':
-          let lastMonth = currentMonth - 1;
-          let lastMonthYear = currentYear;
-          if (lastMonth < 0) {
-            lastMonth = 11; // December
-            lastMonthYear = currentYear - 1;
-          }
-          return entryMonth === lastMonth && entryYear === lastMonthYear;
-        case 'custom-date':
-          return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
-        default:
-          return true;
+      try {
+        // Validate entry has processedDate
+        if (!entry.processedDate || typeof entry.processedDate !== 'string') {
+          return false;
+        }
+        
+        // Parse date safely to avoid timezone issues
+        const dateParts = entry.processedDate.split('-');
+        if (dateParts.length !== 3) {
+          return false;
+        }
+        
+        const [year, month, day] = dateParts.map(Number);
+        
+        // Validate date components
+        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+          return false;
+        }
+        if (month < 1 || month > 12 || day < 1 || day > 31) {
+          return false;
+        }
+        
+        const entryYear = year;
+        const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
+        
+        switch (checkTrackingFilter) {
+          case 'this-month':
+            return entryMonth === currentMonth && entryYear === currentYear;
+          case 'last-month':
+            let lastMonth = currentMonth - 1;
+            let lastMonthYear = currentYear;
+            if (lastMonth < 0) {
+              lastMonth = 11; // December
+              lastMonthYear = currentYear - 1;
+            }
+            return entryMonth === lastMonth && entryYear === lastMonthYear;
+          case 'custom-date':
+            return checkTrackingCustomDate && entry.processedDate === checkTrackingCustomDate;
+          default:
+            return true;
+        }
+      } catch (error) {
+        console.warn('Check tracking filter error:', error, 'for entry:', entry);
+        return false;
       }
     });
     
@@ -333,23 +357,12 @@ export default function Dashboard() {
         // Parse date safely to avoid timezone issues
         const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
         
-        // Add debug logging
-        console.log('Dashboard filter debug:', {
-          filter: dashboardDateFilter,
-          inputDate: date,
-          parsedDateStr: dateStr,
-          currentMonth: now.getMonth(), // August = 7
-          currentYear: now.getFullYear()
-        });
-        
         // Validate date format and extract components
         if (!dateStr || !dateStr.includes('-')) {
-          console.log('Invalid date format:', dateStr);
           return false;
         }
         const dateParts = dateStr.split('-');
         if (dateParts.length !== 3) {
-          console.log('Invalid date parts:', dateParts);
           return false;
         }
         
@@ -357,33 +370,21 @@ export default function Dashboard() {
         
         // Validate date components
         if (isNaN(year) || isNaN(month) || isNaN(day)) {
-          console.log('Invalid date numbers:', {year, month, day});
           return false;
         }
         if (month < 1 || month > 12) {
-          console.log('Invalid month:', month);
           return false;
         }
         if (day < 1 || day > 31) {
-          console.log('Invalid day:', day);
           return false;
         }
         
         const entryYear = year;
         const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
         
-        console.log('Date comparison:', {
-          entryYear, 
-          entryMonth, 
-          currentYear: now.getFullYear(), 
-          currentMonth: now.getMonth()
-        });
-        
         switch (dashboardDateFilter) {
           case 'this-month':
-            const thisMonthMatch = entryMonth === now.getMonth() && entryYear === now.getFullYear();
-            console.log('This month match:', thisMonthMatch);
-            return thisMonthMatch;
+            return entryMonth === now.getMonth() && entryYear === now.getFullYear();
           case 'last-month':
             let lastMonth = now.getMonth() - 1;
             let lastMonthYear = now.getFullYear();
@@ -391,15 +392,11 @@ export default function Dashboard() {
               lastMonth = 11; // December
               lastMonthYear = now.getFullYear() - 1;
             }
-            const lastMonthMatch = entryMonth === lastMonth && entryYear === lastMonthYear;
-            console.log('Last month match:', lastMonthMatch, {lastMonth, lastMonthYear});
-            return lastMonthMatch;
+            return entryMonth === lastMonth && entryYear === lastMonthYear;
           case 'this-quarter':
             const currentQuarter = Math.floor(now.getMonth() / 3);
             const entryQuarter = Math.floor(entryMonth / 3);
-            const quarterMatch = entryQuarter === currentQuarter && entryYear === now.getFullYear();
-            console.log('Quarter match:', quarterMatch, {currentQuarter, entryQuarter});
-            return quarterMatch;
+            return entryQuarter === currentQuarter && entryYear === now.getFullYear();
           case 'last-check':
             if (!latestCheckDate) return false;
             // This case is handled separately in the filter function below
@@ -459,7 +456,27 @@ export default function Dashboard() {
       if (revenueFilters.dateRange !== 'all') {
         // Parse checkDate (processing date) safely to avoid timezone issues
         const dateStr = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString().split('T')[0];
-        const [year, month, day] = dateStr.split('-').map(Number);
+        
+        // Validate date format
+        if (!dateStr || !dateStr.includes('-')) {
+          return false;
+        }
+        
+        const dateParts = dateStr.split('-');
+        if (dateParts.length !== 3) {
+          return false;
+        }
+        
+        const [year, month, day] = dateParts.map(Number);
+        
+        // Validate date components
+        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+          return false;
+        }
+        if (month < 1 || month > 12 || day < 1 || day > 31) {
+          return false;
+        }
+        
         const entryYear = year;
         const entryMonth = month - 1; // Convert to 0-indexed (January = 0)
         const now = new Date();
