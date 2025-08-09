@@ -27,6 +27,7 @@ The application features a React frontend with shadcn/ui components, an Express.
   - Improved stale time configuration for better caching (5 minutes)
   - Fixed missing type exports in schema for `Payout`, `BusinessSettings`, and `CheckTracking`
   - **Mobile UX Enhancement (August 9, 2025):** Added hamburger menu auto-close functionality when navigating tabs for improved mobile experience
+- **Console Error Fixes (August 9, 2025):** Resolved dashboard filter console errors by improving date parsing logic to handle full ISO timestamp strings, removing excessive debug logging, and enhancing date validation in all filtering functions
 
 ## User Preferences
 
