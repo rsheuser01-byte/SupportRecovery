@@ -210,21 +210,6 @@ export default function RevenueEntryModal({
           </div>
 
           <div>
-            <Label htmlFor="amount">Amount</Label>
-            <Input 
-              id="amount"
-              type="number" 
-              placeholder="0.00" 
-              step="0.01"
-              {...form.register("amount")}
-              className="mt-1"
-            />
-            {form.formState.errors.amount && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.amount.message}</p>
-            )}
-          </div>
-
-          <div>
             <Label htmlFor="patientId">Patient (Optional) - House will auto-select</Label>
             <Select onValueChange={(value) => form.setValue("patientId", value)} value={form.watch("patientId") || "none"}>
               <SelectTrigger className="mt-1">
@@ -242,6 +227,21 @@ export default function RevenueEntryModal({
                 })}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="amount">Amount</Label>
+            <Input 
+              id="amount"
+              type="number" 
+              placeholder="0.00" 
+              step="0.01"
+              {...form.register("amount")}
+              className="mt-1"
+            />
+            {form.formState.errors.amount && (
+              <p className="text-sm text-red-600 mt-1">{form.formState.errors.amount.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
