@@ -58,7 +58,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
           typeof patient.startDate === 'string' && patient.startDate.includes('T') ? 
             new Date(patient.startDate).toISOString().split('T')[0] : 
             typeof patient.startDate === 'string' ? patient.startDate : 
-            new Date(patient.startDate).toISOString().split('T')[0]
+            patient.startDate instanceof Date ? patient.startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
         ) : new Date().toISOString().split('T')[0],
         status: patient.status || "active",
       });
