@@ -914,7 +914,9 @@ export default function Dashboard() {
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         variant="ghost"
         size="sm"
-        className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-lg border border-gray-200"
+        className={`fixed top-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-lg border border-gray-200 transition-all duration-300 ${
+          sidebarCollapsed ? 'left-4' : 'left-72'
+        }`}
         title={sidebarCollapsed ? "Show Menu" : "Hide Menu"}
       >
         {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
@@ -1075,6 +1077,8 @@ export default function Dashboard() {
       <main className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
         sidebarCollapsed ? 'ml-0' : 'md:ml-0'
       }`}>
+        {/* Content wrapper with top padding to avoid button overlap */}
+        <div className="pt-16">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
@@ -2566,6 +2570,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </main>
       {/* Modals */}
       <RevenueEntryModal 
