@@ -1604,7 +1604,21 @@ export default function Dashboard() {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  onClick={() => deleteRevenueMutation.mutate(entry.id)}
+                                  onClick={() => {
+                                    const patient = patients.find(p => p.id === entry.patientId);
+                                    const house = houses.find(h => h.id === entry.houseId);
+                                    const confirmed = window.confirm(
+                                      `Are you sure you want to delete this revenue entry?\n\n` +
+                                      `Patient: ${patient?.name || 'Unknown'}\n` +
+                                      `House: ${house?.name || 'Unknown'}\n` +
+                                      `Amount: ${formatCurrency(parseFloat(entry.amount))}\n` +
+                                      `Date: ${formatDate(entry.date)}\n\n` +
+                                      `This action cannot be undone and will also delete any related payouts.`
+                                    );
+                                    if (confirmed) {
+                                      deleteRevenueMutation.mutate(entry.id);
+                                    }
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
