@@ -175,7 +175,7 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
               name="checkDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Check Issue Date</FormLabel>
+                  <FormLabel>Payment Date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>

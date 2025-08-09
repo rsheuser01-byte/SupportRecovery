@@ -71,7 +71,8 @@ export default function Dashboard() {
   const [revenueFilters, setRevenueFilters] = useState({
     dateRange: 'all',
     houseId: 'all',
-    serviceCodeId: 'all'
+    serviceCodeId: 'all',
+    paymentDate: ''
   });
 
   // Dashboard date filter
@@ -585,6 +586,14 @@ export default function Dashboard() {
       // Service code filter
       if (revenueFilters.serviceCodeId !== 'all' && entry.serviceCodeId !== revenueFilters.serviceCodeId) {
         return false;
+      }
+      
+      // Specific payment date filter
+      if (revenueFilters.paymentDate) {
+        const paymentDateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+        if (paymentDateStr !== revenueFilters.paymentDate) {
+          return false;
+        }
       }
       
       return true;
@@ -1528,7 +1537,7 @@ export default function Dashboard() {
                   <CardTitle>Filter Revenue Entries</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <Select 
                       value={revenueFilters.dateRange} 
                       onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}
@@ -1574,9 +1583,20 @@ export default function Dashboard() {
                       </SelectContent>
                     </Select>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentDate">Specific Payment Date</Label>
+                      <Input
+                        id="paymentDate"
+                        type="date"
+                        value={revenueFilters.paymentDate}
+                        onChange={(e) => setRevenueFilters(prev => ({ ...prev, paymentDate: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+
                     <Button 
                       variant="secondary"
-                      onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
+                      onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all', paymentDate: '' })}
                     >
                       <Search className="mr-2 h-4 w-4" />
                       Clear Filters
@@ -2456,7 +2476,7 @@ export default function Dashboard() {
                         <TableRow>
                           <TableHead>Check #</TableHead>
                           <TableHead>Service Provider</TableHead>
-                          <TableHead>Issue Date</TableHead>
+                          <TableHead>Payment Date</TableHead>
                           <TableHead>Processed Date</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Actions</TableHead>
