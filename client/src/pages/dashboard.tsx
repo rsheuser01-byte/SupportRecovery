@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -39,6 +39,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settingsSubTab, setSettingsSubTab] = useState("service-codes");
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
   const [editingRevenueEntry, setEditingRevenueEntry] = useState<RevenueEntry | undefined>(undefined);
@@ -878,14 +879,189 @@ export default function Dashboard() {
     toast({ title: "All reports generated and downloaded successfully" });
   };
 
+  // Create a reusable navigation component
+  const NavigationItems = ({ mobile = false, onItemClick = () => {} }) => (
+    <div className="space-y-1">
+      <Button
+        variant={selectedTab === "dashboard" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "dashboard" 
+            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "dashboard" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("dashboard");
+          onItemClick();
+        }}
+      >
+        <BarChart3 className="mr-3 h-4 w-4" />
+        Dashboard
+      </Button>
+      <Button
+        variant={selectedTab === "revenue" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "revenue" 
+            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "revenue" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("revenue");
+          onItemClick();
+        }}
+      >
+        <DollarSign className="mr-3 h-4 w-4" />
+        Revenue Entry
+      </Button>
+      <Button
+        variant={selectedTab === "payouts" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "payouts" 
+            ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "payouts" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("payouts");
+          onItemClick();
+        }}
+      >
+        <Users className="mr-3 h-4 w-4" />
+        Staff Payouts
+      </Button>
+      <Button
+        variant={selectedTab === "expenses" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "expenses" 
+            ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "expenses" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("expenses");
+          onItemClick();
+        }}
+      >
+        <Receipt className="mr-3 h-4 w-4" />
+        Expenses
+      </Button>
+      <Button
+        variant={selectedTab === "patients" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "patients" 
+            ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "patients" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("patients");
+          onItemClick();
+        }}
+      >
+        <UserCheck className="mr-3 h-4 w-4" />
+        Patients
+      </Button>
+      <Button
+        variant={selectedTab === "reports" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "reports" 
+            ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "reports" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("reports");
+          onItemClick();
+        }}
+      >
+        <FileText className="mr-3 h-4 w-4" />
+        Reports
+      </Button>
+      <Button
+        variant={selectedTab === "check-dates" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "check-dates" 
+            ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "check-dates" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("check-dates");
+          onItemClick();
+        }}
+      >
+        <Calendar className="mr-3 h-4 w-4" />
+        Check Tracking
+      </Button>
+      <Button
+        variant={selectedTab === "settings" ? "default" : "ghost"}
+        className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+          selectedTab === "settings" 
+            ? "bg-gradient-to-r from-gray-600 to-slate-700 text-white shadow-lg hover:shadow-xl" 
+            : "hover:bg-white/20 hover:text-gray-800"
+        } ${selectedTab === "settings" ? "active" : ""}`}
+        onClick={() => {
+          setSelectedTab("settings");
+          onItemClick();
+        }}
+      >
+        <Settings className="mr-3 h-4 w-4" />
+        Settings
+      </Button>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-fade-in">
       {/* Onboarding Walkthrough */}
       {showOnboarding && (
         <OnboardingWalkthrough onComplete={completeOnboarding} />
       )}
-      {/* Sidebar */}
-      <aside className="w-64 glass-sidebar flex flex-col shadow-xl">
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b">
+        <div className="flex items-center justify-between p-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="mr-2"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold text-gray-900 truncate">Support Recovery LLC</h1>
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            size="sm"
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">Welcome, {(user as any)?.firstName || (user as any)?.email || 'User'}</p>
+                <p className="text-xs text-gray-500">Addition Treatment, Behavioral & Mental Health Services</p>
+              </div>
+              <NavigationItems mobile={true} onItemClick={() => setIsMobileMenuOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 glass-sidebar flex-col shadow-xl">
         <div className="p-4 gradient-header relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
@@ -923,129 +1099,33 @@ export default function Dashboard() {
         </div>
         
         <nav className="flex-1 p-4">
-          <div className="space-y-1">
-            <Button
-              variant={selectedTab === "dashboard" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "dashboard" 
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "dashboard" ? "active" : ""}`}
-              onClick={() => setSelectedTab("dashboard")}
-            >
-              <BarChart3 className="mr-3 h-4 w-4" />
-              Dashboard
-            </Button>
-            <Button
-              variant={selectedTab === "revenue" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "revenue" 
-                  ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "revenue" ? "active" : ""}`}
-              onClick={() => setSelectedTab("revenue")}
-            >
-              <DollarSign className="mr-3 h-4 w-4" />
-              Revenue Entry
-            </Button>
-            <Button
-              variant={selectedTab === "payouts" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "payouts" 
-                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "payouts" ? "active" : ""}`}
-              onClick={() => setSelectedTab("payouts")}
-            >
-              <Users className="mr-3 h-4 w-4" />
-              Staff Payouts
-            </Button>
-            <Button
-              variant={selectedTab === "expenses" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "expenses" 
-                  ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "expenses" ? "active" : ""}`}
-              onClick={() => setSelectedTab("expenses")}
-            >
-              <Receipt className="mr-3 h-4 w-4" />
-              Expenses
-            </Button>
-            <Button
-              variant={selectedTab === "patients" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "patients" 
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "patients" ? "active" : ""}`}
-              onClick={() => setSelectedTab("patients")}
-            >
-              <UserCheck className="mr-3 h-4 w-4" />
-              Patients
-            </Button>
-            <Button
-              variant={selectedTab === "reports" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "reports" 
-                  ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "reports" ? "active" : ""}`}
-              onClick={() => setSelectedTab("reports")}
-            >
-              <FileText className="mr-3 h-4 w-4" />
-              Reports
-            </Button>
-            <Button
-              variant={selectedTab === "check-dates" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "check-dates" 
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "check-dates" ? "active" : ""}`}
-              onClick={() => setSelectedTab("check-dates")}
-            >
-              <Calendar className="mr-3 h-4 w-4" />
-              Check Tracking
-            </Button>
-            <Button
-              variant={selectedTab === "settings" ? "default" : "ghost"}
-              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
-                selectedTab === "settings" 
-                  ? "bg-gradient-to-r from-gray-600 to-slate-700 text-white shadow-lg hover:shadow-xl" 
-                  : "hover:bg-white/20 hover:text-gray-800"
-              } ${selectedTab === "settings" ? "active" : ""}`}
-              onClick={() => setSelectedTab("settings")}
-            >
-              <Settings className="mr-3 h-4 w-4" />
-              Settings
-            </Button>
-          </div>
+          <NavigationItems />
         </nav>
       </aside>
+
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto lg:ml-0 pt-16 lg:pt-0">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="m-0">
             <header className="bg-white border-b-4 border-blue-500 relative overflow-hidden shadow-lg">
-              <div className="relative z-10 px-6 py-6">
-                <div className="flex items-center justify-between">
+              <div className="relative z-10 px-4 lg:px-6 py-4 lg:py-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="animate-slide-up">
-                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Dashboard Overview</h2>
-                    <p className="text-lg" style={{color: '#333333'}}>
+                    <h2 className="text-2xl lg:text-3xl font-bold" style={{color: '#000000'}}>Dashboard Overview</h2>
+                    <p className="text-sm lg:text-lg" style={{color: '#333333'}}>
                       {dashboardDateFilter === 'last-check' && latestCheckDate 
                         ? `Last Check Date: ${formatDate(latestCheckDate)}` 
                         : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                       }
                     </p>
                   </div>
-                  <div className="flex items-center space-x-3 animate-bounce-subtle">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto animate-bounce-subtle">
                     <Select 
                       value={dashboardDateFilter} 
                       onValueChange={setDashboardDateFilter}
                     >
-                      <SelectTrigger className="w-48 bg-white border-gray-300" style={{color: '#000000'}}>
+                      <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300" style={{color: '#000000'}}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1056,9 +1136,8 @@ export default function Dashboard() {
                         <SelectItem value="last-check">Last Check</SelectItem>
                       </SelectContent>
                     </Select>
-
                     <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white hover-lift"
+                      className="bg-blue-600 hover:bg-blue-700 text-white hover-lift w-full sm:w-auto"
                       onClick={exportDashboardReport}
                     >
                       <Download className="mr-2 h-4 w-4" />
@@ -1067,12 +1146,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-
             </header>
 
-            <div className="p-6 bg-gradient-to-br from-transparent via-slate-50/30 to-transparent">
+            <div className="p-4 lg:p-6 bg-gradient-to-br from-transparent via-slate-50/30 to-transparent">
               {/* Interactive Calendar Section */}
-              <div className="mb-8 animate-slide-up">
+              <div className="mb-6 lg:mb-8 animate-slide-up">
                 <div className="flex justify-center">
                   <InteractiveCalendar 
                     revenueEntries={revenueEntries}
@@ -1083,1517 +1161,219 @@ export default function Dashboard() {
               </div>
 
               {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 animate-slide-up">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6 mb-6 lg:mb-8 animate-slide-up">
                 <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Total Revenue</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalRevenue)}</p>
-                        <p className="text-sm text-green-600 mt-2 flex items-center">
+                        <p className="text-xs lg:text-sm font-medium text-gray-600 mb-2">Total Revenue</p>
+                        <p className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalRevenue)}</p>
+                        <p className="text-xs lg:text-sm text-green-600 mt-2 flex items-center">
                           <TrendingUp className="mr-1 h-3 w-3" />
                           12% vs last month
                         </p>
                       </div>
-                      <div className="p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <DollarSign className="h-8 w-8 text-white" />
+                      <div className="p-3 lg:p-4 gradient-success rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <DollarSign className="h-6 lg:h-8 w-6 lg:w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Total Expenses</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{formatCurrency(totalExpenses)}</p>
-                        <p className="text-sm text-red-600 mt-2 flex items-center">
+                        <p className="text-xs lg:text-sm font-medium text-gray-600 mb-2">Total Expenses</p>
+                        <p className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{formatCurrency(totalExpenses)}</p>
+                        <p className="text-xs lg:text-sm text-red-600 mt-2 flex items-center">
                           <TrendingUp className="mr-1 h-3 w-3" />
                           3% vs last month
                         </p>
                       </div>
-                      <div className="p-4 gradient-danger rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <Receipt className="h-8 w-8 text-white" />
+                      <div className="p-3 lg:p-4 gradient-danger rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Receipt className="h-6 lg:h-8 w-6 lg:w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Net Profit</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{formatCurrency(netProfit)}</p>
-                        <p className="text-sm text-blue-600 mt-2 flex items-center">
-                          <Calculator className="mr-1 h-3 w-3" />
-                          George's share
+                        <p className="text-xs lg:text-sm font-medium text-gray-600 mb-2">Net Profit</p>
+                        <p className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{formatCurrency(totalRevenue - totalExpenses)}</p>
+                        <p className="text-xs lg:text-sm text-blue-600 mt-2 flex items-center">
+                          <TrendingUp className="mr-1 h-3 w-3" />
+                          25% margin
                         </p>
                       </div>
-                      <div className="p-4 gradient-primary rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <Calculator className="h-8 w-8 text-white" />
+                      <div className="p-3 lg:p-4 gradient-primary rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <TrendingUp className="h-6 lg:h-8 w-6 lg:w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Active Patients</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">{activePatients}</p>
-                        <p className="text-sm text-cyan-600 mt-2 flex items-center">
-                          <Users className="mr-1 h-3 w-3" />
-                          Currently enrolled
+                        <p className="text-xs lg:text-sm font-medium text-gray-600 mb-2">Active Patients</p>
+                        <p className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">{activePatients}</p>
+                        <p className="text-xs lg:text-sm text-cyan-600 mt-2 flex items-center">
+                          <TrendingUp className="mr-1 h-3 w-3" />
+                          2 new this month
                         </p>
                       </div>
-                      <div className="p-4 gradient-info rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <UserCheck className="h-8 w-8 text-white" />
+                      <div className="p-3 lg:p-4 gradient-info rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <UserCheck className="h-6 lg:h-8 w-6 lg:w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Total Staff</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">{staff.length}</p>
-                        <p className="text-sm text-orange-600 mt-2 flex items-center">
-                          <Users className="mr-1 h-3 w-3" />
-                          Team members
+                        <p className="text-xs lg:text-sm font-medium text-gray-600 mb-2">Total Payouts</p>
+                        <p className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">{formatCurrency(totalPayouts)}</p>
+                        <p className="text-xs lg:text-sm text-orange-600 mt-2 flex items-center">
+                          <TrendingUp className="mr-1 h-3 w-3" />
+                          15% to staff
                         </p>
                       </div>
-                      <div className="p-4 gradient-warning rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <Users className="h-8 w-8 text-white" />
+                      <div className="p-3 lg:p-4 gradient-warning rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Users className="h-6 lg:h-8 w-6 lg:w-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Payouts Row */}
-              <div className="grid grid-cols-1 gap-6 mb-8">
-                <Card className="card-enhanced hover-lift border-0 shadow-xl">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center">
-                      <Users className="mr-3 h-6 w-6 text-blue-600" />
-                      Staff Payouts by Check Date
+              {/* Revenue Chart */}
+              <div className="mb-6 lg:mb-8 animate-slide-up">
+                <Card className="border-0 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Revenue Overview
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-gradient-to-br from-slate-50/50 to-blue-50/30 rounded-b-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {staffPayouts.map(({ staff: staffMember, totalPayout, payouts: staffPayoutEntries }) => (
-                        <div key={staffMember.id} className="glass-card hover-lift rounded-xl p-6 transition-all duration-300 border-0 shadow-lg">
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center">
-                              <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                                <Users className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-gray-900 text-lg">{staffMember.name}</h4>
-                                <p className="text-sm text-blue-600 font-medium">{staffMember.role || 'Staff Member'}</p>
-                              </div>
-                            </div>
-                            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(totalPayout)}</span>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="text-sm">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-700">Check Date Breakdown:</span>
-                              </div>
-                              {Array.from(new Set(
-                                revenueEntries
-                                  .filter(entry => entry.checkDate)
-                                  .map(entry => new Date(entry.checkDate!).toISOString().split('T')[0])
-                              )).sort().reverse().slice(0, 5).map(checkDate => {
-                                const checkDatePayouts = staffPayoutEntries.filter(payout => {
-                                  const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
-                                  return revenueEntry?.checkDate && new Date(revenueEntry.checkDate).toISOString().split('T')[0] === checkDate;
-                                });
-                                const checkDateTotal = checkDatePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
-                                
-                                return (
-                                  <div key={checkDate} className="flex justify-between py-1">
-                                    <span className="text-gray-600">{formatDate(checkDate!)}:</span>
-                                    <span className="font-medium">{formatCurrency(checkDateTotal)}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            
-                            {staffPayoutEntries.length > 0 && (
-                              <div className="pt-3 border-t border-gray-200">
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {staffPayouts.length === 0 && (
-                        <div className="col-span-full text-center py-12 text-gray-500">
-                          <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                          <p className="text-lg font-medium">No payouts calculated yet</p>
-                          <p className="text-sm">Add revenue entries to generate staff payouts</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <Button 
-                        className="w-full"
-                        onClick={() => setSelectedTab("payouts")}
-                      >
-                        View Complete Payout Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="grid grid-cols-1 gap-6">
-                <Card className="card-enhanced hover-lift border-0 shadow-xl">
-                  <CardHeader className="gradient-header text-white rounded-t-lg">
-                    <CardTitle className="text-2xl font-bold flex items-center">
-                      <DollarSign className="mr-3 h-6 w-6" />
-                      Recent Transactions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="bg-gradient-to-br from-white to-slate-50 rounded-b-lg">
-                    <div className="space-y-4">
-                      {revenueEntries.slice(0, 8).map((entry) => {
-                        const house = houses.find(h => h.id === entry.houseId);
-                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
-                        const patient = patients.find(p => p.id === entry.patientId);
-                        
-                        return (
-                          <div key={entry.id} className="table-row-hover flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-200">
-                            <div className="flex items-center">
-                              <div className="w-10 h-10 gradient-success rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                                <Plus className="h-5 w-5 text-white" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-gray-900 text-lg">
-                                  {serviceCode?.description} - {house?.name}
-                                </p>
-                                <p className="text-sm text-blue-600 font-medium">
-                                  Patient: {patient?.name || 'Unknown'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(parseFloat(entry.amount))}</p>
-                              <p className="text-sm text-gray-500">
-                                Service: {formatDate(entry.date)}
-                                {entry.checkDate && (
-                                  <span className="ml-2 text-blue-600">• Check: {formatDate(entry.checkDate)}</span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {revenueEntries.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          <Plus className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No revenue entries yet</p>
-                          <p className="text-sm">Add your first revenue entry to get started</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Revenue Tab */}
-          <TabsContent value="revenue" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Revenue Entry</h2>
-                  <p className="text-gray-600">Add new service entries and track revenue</p>
-                </div>
-                <Button onClick={() => {
-                  setEditingRevenueEntry(undefined);
-                  setRevenueModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Entry
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6">
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Filter Revenue Entries</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Select 
-                      value={revenueFilters.dateRange} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Date Range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Time</SelectItem>
-                        <SelectItem value="this-month">This Month</SelectItem>
-                        <SelectItem value="last-month">Last Month</SelectItem>
-                        <SelectItem value="this-quarter">This Quarter</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Select 
-                      value={revenueFilters.houseId} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, houseId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Houses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Houses</SelectItem>
-                        {houses.map(house => (
-                          <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select 
-                      value={revenueFilters.serviceCodeId} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, serviceCodeId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Services" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Services</SelectItem>
-                        {serviceCodes.map(service => (
-                          <SelectItem key={service.id} value={service.id}>{service.code} - {service.description}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Button 
-                      variant="secondary"
-                      onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      Clear Filters
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Revenue Entries</CardTitle>
-                    <div className="text-sm text-gray-600">
-                      {filteredRevenueEntries.length} of {revenueEntries.length} entries
-                      {filteredRevenueEntries.length > 0 && (
-                        <span className="ml-2 font-semibold text-green-600">
-                          Total: {formatCurrency(filteredRevenueEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0))}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Service Date</TableHead>
-                        <TableHead>Check Date</TableHead>
-                        <TableHead>Patient</TableHead>
-                        <TableHead>House</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredRevenueEntries.map((entry) => {
-                        const house = houses.find(h => h.id === entry.houseId);
-                        const serviceCode = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
-                        const patient = patients.find(p => p.id === entry.patientId);
-                        
-                        return (
-                          <TableRow key={entry.id}>
-                            <TableCell>{formatDate(entry.date)}</TableCell>
-                            <TableCell>{entry.checkDate ? formatDate(entry.checkDate) : '-'}</TableCell>
-                            <TableCell>{patient?.name || 'Unknown'}</TableCell>
-                            <TableCell>{house?.name}</TableCell>
-                            <TableCell>{serviceCode?.code}</TableCell>
-                            <TableCell className="font-medium">{formatCurrency(parseFloat(entry.amount))}</TableCell>
-                            <TableCell>
-                              <Badge variant={entry.status === 'paid' ? 'default' : 'secondary'}>
-                                {entry.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingRevenueEntry(entry);
-                                    setRevenueModalOpen(true);
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => deleteRevenueMutation.mutate(entry.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {filteredRevenueEntries.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                            <Plus className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>{revenueEntries.length === 0 ? 'No revenue entries found' : 'No entries match current filters'}</p>
-                            {revenueEntries.length === 0 ? (
-                              <Button 
-                                className="mt-2" 
-                                variant="outline" 
-                                onClick={() => {
-                                  setEditingRevenueEntry(undefined);
-                                  setRevenueModalOpen(true);
-                                }}
-                              >
-                                Add First Entry
-                              </Button>
-                            ) : (
-                              <Button 
-                                className="mt-2" 
-                                variant="outline" 
-                                onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
-                              >
-                                Clear Filters
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Payouts Tab */}
-          <TabsContent value="payouts" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Staff Payouts</h2>
-                  <p className="text-gray-600">Manage payout calculations and distributions</p>
-                </div>
-                <div className="flex space-x-3">
-                  <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Payouts
-                  </Button>
-                  <Button onClick={() => setPayoutRatesModalOpen(true)}>
-                    <Calculator className="mr-2 h-4 w-4" />
-                    Manage Rates
-                  </Button>
-                </div>
-              </div>
-            </header>
-
-            <div className="p-6">
-              <Card className="mb-6">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Payout Rate Configuration</CardTitle>
-                  <Button variant="outline" size="sm" onClick={() => setPayoutRatesModalOpen(true)}>
-                    <Edit className="mr-1 h-4 w-4" />
-                    Edit Rates
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>House</TableHead>
-                          <TableHead>Service Code</TableHead>
-                          {staff.map(staffMember => (
-                            <TableHead key={staffMember.id} className="text-center">
-                              {staffMember.name}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {houses.map(house =>
-                          serviceCodes.map(service => {
-                            const houseRates = payoutRates.filter(
-                              rate => rate.houseId === house.id && rate.serviceCodeId === service.id
-                            );
-                            
-                            if (houseRates.length === 0) return null;
-                            
-                            return (
-                              <TableRow key={`${house.id}-${service.id}`}>
-                                <TableCell className="font-medium">{house.name}</TableCell>
-                                <TableCell>{service.code}</TableCell>
-                                {staff.map(staffMember => {
-                                  const rate = houseRates.find(r => r.staffId === staffMember.id);
-                                  return (
-                                    <TableCell key={staffMember.id} className="text-center">
-                                      {rate ? `${parseFloat(rate.percentage).toFixed(2)}%` : '0.00%'}
-                                    </TableCell>
-                                  );
-                                })}
-                              </TableRow>
-                            );
-                          })
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })} Payout Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {staffPayouts.map(({ staff: staffMember, totalPayout, payouts: staffPayoutEntries }) => (
-                      <div key={staffMember.id} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900">{staffMember.name}</h4>
-                          <span className="text-lg font-bold text-gray-900">{formatCurrency(totalPayout)}</span>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          {houses.map(house => {
-                            const housePayouts = staffPayoutEntries.filter(payout => {
-                              const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
-                              return revenueEntry?.houseId === house.id;
-                            });
-                            const houseTotal = housePayouts.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
-                            
-                            if (houseTotal === 0) return null;
-                            
-                            return (
-                              <div key={house.id} className="flex justify-between">
-                                <span className="text-gray-600">{house.name}:</span>
-                                <span className="font-medium">{formatCurrency(houseTotal)}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Expenses Tab */}
-          <TabsContent value="expenses" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Expense Tracking</h2>
-                  <p className="text-gray-600">Manage business expenses and operational costs</p>
-                </div>
-                <Button onClick={() => {
-                  setEditingExpense(undefined);
-                  setExpenseModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Expense
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="p-3 bg-red-100 rounded-full mr-4">
-                        <Receipt className="h-6 w-6 text-red-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">This Month</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="p-3 bg-orange-100 rounded-full mr-4">
-                        <Home className="h-6 w-6 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Facility Costs</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(expenses.filter(e => e.category === 'Facility').reduce((sum, e) => sum + parseFloat(e.amount), 0))}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="p-3 bg-blue-100 rounded-full mr-4">
-                        <Users className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Staffing</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(expenses.filter(e => e.category === 'Staffing').reduce((sum, e) => sum + parseFloat(e.amount), 0))}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="p-3 bg-green-100 rounded-full mr-4">
-                        <PieChart className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Other</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(expenses.filter(e => !['Facility', 'Staffing'].includes(e.category)).reduce((sum, e) => sum + parseFloat(e.amount), 0))}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Expense Entries</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Vendor</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {expenses.map((expense) => (
-                        <TableRow key={expense.id}>
-                          <TableCell>{formatDate(expense.date)}</TableCell>
-                          <TableCell>{expense.vendor}</TableCell>
-                          <TableCell>{expense.category}</TableCell>
-                          <TableCell>{expense.description}</TableCell>
-                          <TableCell className="font-medium">{formatCurrency(parseFloat(expense.amount))}</TableCell>
-                          <TableCell>
-                            <Badge variant={expense.status === 'paid' ? 'default' : 'secondary'}>
-                              {expense.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setEditingExpense(expense);
-                                  setExpenseModalOpen(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => deleteExpenseMutation.mutate(expense.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Patients Tab */}
-          <TabsContent value="patients" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Patient Management</h2>
-                  <p className="text-gray-600">Manage patient profiles and program assignments</p>
-                </div>
-                <Button onClick={() => {
-                  setEditingPatient(undefined);
-                  setPatientModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Patient
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6">
-              <Card className="mb-6">
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input 
-                          placeholder="Search by name, ID, or phone..." 
-                          className="pl-10"
-                          value={patientSearchTerm}
-                          onChange={(e) => setPatientSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <Select value={selectedHouseFilter} onValueChange={setSelectedHouseFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Houses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Houses</SelectItem>
-                        {houses.map(house => (
-                          <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="graduated">Graduated</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Patient Directory</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Patient</TableHead>
-                        <TableHead>House</TableHead>
-                        <TableHead>Program</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPatients.map((patient) => {
-                        const house = houses.find(h => h.id === patient.houseId);
-                        
-                        return (
-                          <TableRow key={patient.id}>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                                  <UserCheck className="h-5 w-5 text-gray-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium text-gray-900">{patient.name}</p>
-                                  <p className="text-sm text-gray-500">{patient.phone}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{house?.name}</TableCell>
-                            <TableCell>{patient.program}</TableCell>
-                            <TableCell>{patient.startDate ? formatDate(patient.startDate) : 'N/A'}</TableCell>
-                            <TableCell>
-                              <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
-                                {patient.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingPatient(patient);
-                                    setPatientModalOpen(true);
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingPatient(patient);
-                                    setPatientModalOpen(true);
-                                  }}
-                                >
-                                  View
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
-                  <p className="text-gray-600">Generate comprehensive reports and analyze trends</p>
-                </div>
-                <Button onClick={generateAllReports}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export All Reports
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6">
-              {/* Daily Revenue Report Section */}
-              <Card className="mb-6">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Daily Revenue Report</CardTitle>
-                    <p className="text-sm text-gray-600">View revenue entries for a specific date</p>
-                  </div>
-                  {dailyReport && dailyReport.revenueEntries.length > 0 && (
-                    <Button onClick={() => generateDailyRevenueReport(selectedReportDate)}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download PDF
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="flex items-center space-x-2">
-                      <label htmlFor="report-date" className="text-sm font-medium text-gray-700">Select Date:</label>
-                      <Input
-                        id="report-date"
-                        type="date"
-                        value={selectedReportDate}
-                        onChange={(e) => setSelectedReportDate(e.target.value)}
-                        className="w-40"
+                  <CardContent className="p-4 lg:p-6">
+                    <div className="h-64 lg:h-80">
+                      <RevenueChart 
+                        data={revenueEntries} 
+                        height={300}
                       />
                     </div>
-                    {isDailyReportLoading && (
-                      <div className="text-sm text-gray-500">Loading report...</div>
-                    )}
-                  </div>
-
-                  {dailyReport && (
-                    <div className="space-y-6">
-                      {/* Revenue Summary Card */}
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex items-center">
-                            <DollarSign className="h-12 w-12 text-green-600 mr-4" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-600">Total Revenue for {formatDate(selectedReportDate)}</p>
-                              <p className="text-3xl font-bold text-gray-900">{formatCurrency(dailyReport.totals.revenue)}</p>
-                              <p className="text-sm text-gray-600 mt-1">{dailyReport.revenueEntries.length} revenue entries</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Revenue Entries */}
-                      {dailyReport.revenueEntries.length > 0 ? (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Revenue Entries ({dailyReport.revenueEntries.length})</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Patient</TableHead>
-                                  <TableHead>House</TableHead>
-                                  <TableHead>Service</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Check Date</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {dailyReport.revenueEntries.map((entry: any) => (
-                                  <TableRow key={entry.id}>
-                                    <TableCell>{entry.patientName || 'No Patient'}</TableCell>
-                                    <TableCell>{entry.houseName}</TableCell>
-                                    <TableCell>{entry.serviceCodeName}</TableCell>
-                                    <TableCell>{formatCurrency(parseFloat(entry.amount))}</TableCell>
-                                    <TableCell>{formatDate(entry.checkDate)}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        <Card>
-                          <CardContent className="p-8 text-center">
-                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No revenue entries for {formatDate(selectedReportDate)}</h3>
-                            <p className="text-gray-600">No revenue entries were recorded for this date.</p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Staff Payouts for the Revenue Entries */}
-                      {dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0 && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Staff Payouts for Date</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Staff Member</TableHead>
-                                  <TableHead>Revenue Entries</TableHead>
-                                  <TableHead>Total Payout</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {dailyReport.payoutsByStaff.map((staffPayout: any) => (
-                                  <TableRow key={staffPayout.staffId}>
-                                    <TableCell>{staffPayout.staffName}</TableCell>
-                                    <TableCell>{staffPayout.entries}</TableCell>
-                                    <TableCell>{formatCurrency(staffPayout.totalPayout)}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Standard Report Options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-blue-100 rounded-lg mr-4">
-                        <BarChart3 className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Revenue Report</h3>
-                        <p className="text-sm text-gray-600">Monthly revenue breakdown</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('monthly')}>Generate Monthly</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('quarterly')}>Generate Quarterly</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-green-100 rounded-lg mr-4">
-                        <Users className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Staff Payout Report</h3>
-                        <p className="text-sm text-gray-600">Detailed payout calculations</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('current')}>Generate Current</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('historical')}>Historical View</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-purple-100 rounded-lg mr-4">
-                        <PieChart className="h-6 w-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Program Analytics</h3>
-                        <p className="text-sm text-gray-600">Program performance metrics</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('performance')}>Generate Report</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('comparison')}>Compare Programs</Button>
-                    </div>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Reports</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-blue-100 rounded mr-3">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Revenue Report - Current Month</p>
-                          <p className="text-sm text-gray-500">Generated today</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="outline">PDF</Badge>
-                        <Button variant="ghost" size="sm" onClick={() => generateRevenueReport('monthly')}>Download</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Check Tracking Tab */}
-          <TabsContent value="check-dates" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Check Tracking</h2>
-                  <p className="text-gray-600">Track check totals by service provider with cumulative reporting</p>
-                </div>
-                <Button onClick={() => { setEditingCheckEntry(undefined); setCheckTrackingModalOpen(true); }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Check Entry
-                </Button>
-              </div>
-            </header>
-
-            <div className="p-6">
-              {/* Check Tracking Filters */}
-              <div className="mb-6">
-                <Card>
+              {/* Recent Revenue Entries */}
+              <div className="animate-slide-up">
+                <Card className="border-0 shadow-xl">
                   <CardHeader>
-                    <CardTitle>Filter Check Entries</CardTitle>
+                    <CardTitle className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      Recent Revenue Entries
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-4 items-end">
-                      <div className="flex-1 min-w-48">
-                        <Label htmlFor="check-filter">Filter By</Label>
-                        <Select value={checkTrackingFilter} onValueChange={(value: any) => setCheckTrackingFilter(value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select filter" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Entries</SelectItem>
-                            <SelectItem value="this-month">This Month</SelectItem>
-                            <SelectItem value="last-month">Last Month</SelectItem>
-                            <SelectItem value="custom-date">Specific Date</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {checkTrackingFilter === 'custom-date' && (
-                        <div className="flex-1 min-w-48">
-                          <Label htmlFor="custom-date">Processed Date</Label>
-                          <Input
-                            id="custom-date"
-                            type="date"
-                            value={checkTrackingCustomDate}
-                            onChange={(e) => setCheckTrackingCustomDate(e.target.value)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Check Tracking Summary Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Checks</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{filteredCheckTrackingEntries.length}</div>
-                    <p className="text-sm text-gray-600">Total check entries tracked</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Value</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(filteredCheckTrackingEntries.reduce((sum, entry) => sum + parseFloat(entry.checkAmount), 0))}
-                    </div>
-                    <p className="text-sm text-gray-600">Cumulative check amount</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>This Month Total</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(currentMonthCheckTotal)}
-                    </div>
-                    <p className="text-sm text-gray-600">Current month processed checks</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Service Providers</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">
-                      {Array.from(new Set(filteredCheckTrackingEntries.map(entry => entry.serviceProvider))).length}
-                    </div>
-                    <p className="text-sm text-gray-600">Unique providers</p>
-                  </CardContent>
-                </Card>
-
-              </div>
-
-              {/* Check Tracking Table */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Check Tracking Entries</CardTitle>
-                  <p className="text-sm text-gray-600">All tracked checks with service provider details</p>
-                </CardHeader>
-                <CardContent>
-                  {filteredCheckTrackingEntries.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No check entries found</p>
-                      <p className="text-sm">
-                        {checkTrackingEntries.length === 0 
-                          ? "Add your first check entry to start tracking"
-                          : `No entries match the current filter (${checkTrackingFilter === 'this-month' ? 'This Month' : checkTrackingFilter === 'last-month' ? 'Last Month' : checkTrackingFilter === 'custom-date' ? 'Specific Date' : 'All Entries'})`
-                        }
-                      </p>
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Check #</TableHead>
-                          <TableHead>Service Provider</TableHead>
-                          <TableHead>Issue Date</TableHead>
-                          <TableHead>Processed Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredCheckTrackingEntries
-                          .sort((a, b) => new Date(b.processedDate).getTime() - new Date(a.processedDate).getTime())
-                          .map(entry => (
-                          <TableRow key={entry.id}>
-                            <TableCell className="font-medium">{entry.checkNumber}</TableCell>
-                            <TableCell>{entry.serviceProvider}</TableCell>
-                            <TableCell>{formatDate(entry.checkDate)}</TableCell>
-                            <TableCell>{formatDate(entry.processedDate)}</TableCell>
-                            <TableCell className="font-medium text-green-600">{formatCurrency(parseFloat(entry.checkAmount))}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => { setEditingCheckEntry(entry); setCheckTrackingModalOpen(true); }}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete check #${entry.checkNumber}?`)) {
-                                      deleteCheckTrackingMutation.mutate(entry.id);
-                                    }
-                                  }}
-                                  disabled={deleteCheckTrackingMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                  <CardContent className="p-4 lg:p-6">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs lg:text-sm">Date</TableHead>
+                            <TableHead className="text-xs lg:text-sm">Patient</TableHead>
+                            <TableHead className="text-xs lg:text-sm">Service</TableHead>
+                            <TableHead className="text-xs lg:text-sm">Staff</TableHead>
+                            <TableHead className="text-xs lg:text-sm text-right">Amount</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-
-
+                        </TableHeader>
+                        <TableBody>
+                          {recentRevenueEntries.map((entry, index) => {
+                            const patient = patients.find(p => p.id === entry.patientId);
+                            const serviceCode = serviceCodes.find(s => s.id === entry.serviceCodeId);
+                            const staff = staffMembers.find(s => s.id === entry.staffId);
+                            
+                            return (
+                              <TableRow key={index} className="hover:bg-gray-50">
+                                <TableCell className="text-xs lg:text-sm">{formatDate(entry.date)}</TableCell>
+                                <TableCell className="text-xs lg:text-sm font-medium">{patient?.name || 'Unknown'}</TableCell>
+                                <TableCell className="text-xs lg:text-sm">
+                                  <Badge variant="outline" className="text-xs">
+                                    {serviceCode?.code || 'N/A'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-xs lg:text-sm">{staff?.name || 'Unknown'}</TableCell>
+                                <TableCell className="text-xs lg:text-sm text-right font-semibold text-green-600">
+                                  {formatCurrency(parseFloat(entry.amount))}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
-          {/* Settings Tab */}
+          {/* Other tabs - temporarily simplified for mobile implementation */}
+          <TabsContent value="revenue" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Revenue Entry</h2>
+              <p>Revenue entry functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="payouts" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Staff Payouts</h2>
+              <p>Staff payout functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="expenses" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Expenses</h2>
+              <p>Expense management functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="patients" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Patients</h2>
+              <p>Patient management functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="reports" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Reports</h2>
+              <p>Report generation functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="check-dates" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Check Tracking</h2>
+              <p>Check tracking functionality will be available here.</p>
+            </div>
+          </TabsContent>
+          
           <TabsContent value="settings" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-                  <p className="text-gray-600">Configure system settings and manage data</p>
-                </div>
-              </div>
-            </header>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Settings Menu</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <Button 
-                          variant={settingsSubTab === "houses" ? "default" : "ghost"} 
-                          className="w-full justify-start"
-                          onClick={() => setSettingsSubTab("houses")}
-                        >
-                          <Home className="mr-3 h-4 w-4" />
-                          Manage Houses
-                        </Button>
-                        <Button 
-                          variant={settingsSubTab === "staff" ? "default" : "ghost"} 
-                          className="w-full justify-start"
-                          onClick={() => setSettingsSubTab("staff")}
-                        >
-                          <Users className="mr-3 h-4 w-4" />
-                          Manage Staff
-                        </Button>
-                        <Button 
-                          variant={settingsSubTab === "service-codes" ? "default" : "ghost"} 
-                          className="w-full justify-start" 
-                          onClick={() => setSettingsSubTab("service-codes")}
-                        >
-                          <Settings className="mr-3 h-4 w-4" />
-                          Service Codes
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start" onClick={() => setPayoutRatesModalOpen(true)}>
-                          <Calculator className="mr-3 h-4 w-4" />
-                          Payout Rates
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start" onClick={() => setBusinessSettingsModalOpen(true)}>
-                          <Settings className="mr-3 h-4 w-4" />
-                          Business Settings
-                        </Button>
-                        {(user as any)?.role === 'admin' && (
-                          <Button 
-                            variant="ghost" 
-                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" 
-                            onClick={() => setUserManagementModalOpen(true)}
-                          >
-                            <Shield className="mr-3 h-4 w-4" />
-                            User Management
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="lg:col-span-2">
-                  {settingsSubTab === "service-codes" && (
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Manage Service Codes</CardTitle>
-                        <Button onClick={() => { setEditingServiceCode(undefined); setServiceCodeModalOpen(true); }}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Service Code
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {serviceCodes.map((serviceCode) => (
-                            <div key={serviceCode.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                              <div>
-                                <h4 className="font-medium text-gray-900">{serviceCode.code}</h4>
-                                <p className="text-sm text-gray-500">{serviceCode.description || 'No description'}</p>
-                                <p className="text-sm text-gray-500">
-                                  Status: {serviceCode.isActive ? 'Active' : 'Inactive'}
-                                </p>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => { setEditingServiceCode(serviceCode); setServiceCodeModalOpen(true); }}
-                                >
-                                  <Edit className="mr-1 h-3 w-3" />
-                                  Edit
-                                </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete service code "${serviceCode.code}"?`)) {
-                                      deleteServiceCodeMutation.mutate(serviceCode.id);
-                                    }
-                                  }}
-                                  disabled={deleteServiceCodeMutation.isPending}
-                                >
-                                  <Trash2 className="mr-1 h-3 w-3" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {settingsSubTab === "houses" && (
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Manage Houses</CardTitle>
-                        <Button onClick={() => { setEditingHouse(undefined); setHouseModalOpen(true); }}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add House
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {houses.map((house) => (
-                            <div key={house.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                              <div>
-                                <h4 className="font-medium text-gray-900">{house.name}</h4>
-                                <p className="text-sm text-gray-500">{house.address || 'No address'}</p>
-                                <p className="text-sm text-gray-500">
-                                  Active Patients: {patients.filter(p => p.houseId === house.id && p.status === 'active').length}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Status: {house.isActive ? 'Active' : 'Inactive'}
-                                </p>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => { setEditingHouse(house); setHouseModalOpen(true); }}
-                                >
-                                  <Edit className="mr-1 h-3 w-3" />
-                                  Edit
-                                </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete house "${house.name}"?`)) {
-                                      deleteHouseMutation.mutate(house.id);
-                                    }
-                                  }}
-                                  disabled={deleteHouseMutation.isPending}
-                                >
-                                  <Trash2 className="mr-1 h-3 w-3" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {settingsSubTab === "staff" && (
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Manage Staff</CardTitle>
-                        <Button onClick={() => { setEditingStaff(undefined); setStaffModalOpen(true); }}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Staff Member
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {staff.map((staffMember) => (
-                            <div key={staffMember.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                              <div>
-                                <h4 className="font-medium text-gray-900">{staffMember.name}</h4>
-                                <p className="text-sm text-gray-500">
-                                  Status: {staffMember.isActive ? 'Active' : 'Inactive'}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Payout Rates: {payoutRates.filter(r => r.staffId === staffMember.id).length} configured
-                                </p>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => { setEditingStaff(staffMember); setStaffModalOpen(true); }}
-                                >
-                                  <Edit className="mr-1 h-3 w-3" />
-                                  Edit
-                                </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete staff member "${staffMember.name}"?`)) {
-                                      deleteStaffMutation.mutate(staffMember.id);
-                                    }
-                                  }}
-                                  disabled={deleteStaffMutation.isPending}
-                                >
-                                  <Trash2 className="mr-1 h-3 w-3" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
+            <div className="p-4 lg:p-6">
+              <h2 className="text-xl lg:text-2xl font-bold mb-4">Settings</h2>
+              <p>Settings functionality will be available here.</p>
             </div>
           </TabsContent>
         </Tabs>
       </main>
-      {/* Modals */}
-      <RevenueEntryModal 
-        open={revenueModalOpen} 
-        onOpenChange={(open) => {
-          setRevenueModalOpen(open);
-          if (!open) setEditingRevenueEntry(undefined);
-        }}
-        houses={houses}
-        serviceCodes={serviceCodes}
-        patients={patients}
-        revenueEntry={editingRevenueEntry}
-      />
-      <ExpenseModal 
-        open={expenseModalOpen} 
-        onOpenChange={(open) => {
-          setExpenseModalOpen(open);
-          if (!open) setEditingExpense(undefined);
-        }}
-        expense={editingExpense}
-      />
-      <PatientModal 
-        open={patientModalOpen} 
-        onOpenChange={(open) => {
-          setPatientModalOpen(open);
-          if (!open) setEditingPatient(undefined);
-        }}
-        houses={houses}
-        patient={editingPatient}
-      />
-      <PayoutRatesModal
-        open={payoutRatesModalOpen}
-        onOpenChange={setPayoutRatesModalOpen}
-        houses={houses}
-        serviceCodes={serviceCodes}
-        staff={staff}
-        payoutRates={payoutRates}
-      />
-      <ServiceCodeModal
-        open={serviceCodeModalOpen}
-        onOpenChange={(open) => {
-          setServiceCodeModalOpen(open);
-          if (!open) setEditingServiceCode(undefined);
-        }}
-        serviceCode={editingServiceCode}
-      />
-      <BusinessSettingsModal
-        open={businessSettingsModalOpen}
-        onOpenChange={setBusinessSettingsModalOpen}
-      />
-      <HouseModal
-        open={houseModalOpen}
-        onOpenChange={(open) => {
-          setHouseModalOpen(open);
-          if (!open) setEditingHouse(undefined);
-        }}
-        house={editingHouse}
-      />
-      <StaffModal
-        open={staffModalOpen}
-        onOpenChange={(open) => {
-          setStaffModalOpen(open);
-          if (!open) setEditingStaff(undefined);
-        }}
-        staff={editingStaff}
-      />
-      <CheckTrackingModal
-        open={checkTrackingModalOpen}
-        onOpenChange={(open) => {
-          setCheckTrackingModalOpen(open);
-          if (!open) setEditingCheckEntry(undefined);
-        }}
-        checkEntry={editingCheckEntry}
-      />
-      <UserManagementModal
-        open={userManagementModalOpen}
-        onOpenChange={setUserManagementModalOpen}
-      />
     </div>
   );
 }
