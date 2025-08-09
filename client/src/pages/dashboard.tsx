@@ -866,22 +866,79 @@ export default function Dashboard() {
     const currentDate = new Date().toLocaleDateString();
     const periodTitle = period === 'monthly' ? 'Monthly' : 'Quarterly';
     
+    // Calculate period-specific data
+    let dataToUse = revenueEntries;
+    let expensesToUse = expenses;
+    let periodDescription = '';
+    
+    if (period === 'monthly') {
+      // Filter for current month
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      periodDescription = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      
+      dataToUse = revenueEntries.filter(entry => {
+        if (!entry.checkDate) return false;
+        const date = new Date(entry.checkDate);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      });
+      
+      expensesToUse = expenses.filter(expense => {
+        const date = new Date(expense.date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      });
+    } else if (period === 'quarterly') {
+      // Filter for current quarter
+      const now = new Date();
+      const currentQuarter = Math.floor(now.getMonth() / 3);
+      const currentYear = now.getFullYear();
+      
+      periodDescription = `Q${currentQuarter + 1} ${currentYear}`;
+      
+      dataToUse = revenueEntries.filter(entry => {
+        if (!entry.checkDate) return false;
+        const date = new Date(entry.checkDate);
+        const entryQuarter = Math.floor(date.getMonth() / 3);
+        return entryQuarter === currentQuarter && date.getFullYear() === currentYear;
+      });
+      
+      expensesToUse = expenses.filter(expense => {
+        const date = new Date(expense.date);
+        const entryQuarter = Math.floor(date.getMonth() / 3);
+        return entryQuarter === currentQuarter && date.getFullYear() === currentYear;
+      });
+    }
+    
+    // Calculate totals for the filtered period
+    const periodRevenue = dataToUse.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+    const periodExpenses = expensesToUse.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+    const georgeStaffMember = staff.find(s => s.name === "George");
+    const georgePayout = georgeStaffMember ? 
+      payouts
+        .filter(p => p.staffId === georgeStaffMember.id && 
+          dataToUse.some(entry => entry.id === p.revenueEntryId))
+        .reduce((sum, payout) => sum + parseFloat(payout.amount), 0) : 0;
+    const periodNetProfit = periodRevenue - periodExpenses - georgePayout;
+    
     // Header
     doc.setFontSize(20);
     doc.text(`${periodTitle} Revenue Report`, 20, 30);
     doc.setFontSize(12);
     doc.text(`Generated on: ${currentDate}`, 20, 40);
+    doc.text(`Period: ${periodDescription}`, 20, 50);
     
     // Summary
     doc.setFontSize(14);
-    doc.text('Revenue Summary', 20, 60);
+    doc.text('Revenue Summary', 20, 70);
     doc.setFontSize(10);
-    doc.text(`Total Revenue: ${formatCurrency(totalRevenue)}`, 20, 70);
-    doc.text(`Total Expenses: ${formatCurrency(totalExpenses)}`, 20, 80);
-    doc.text(`Net Profit (George's Share): ${formatCurrency(netProfit)}`, 20, 90);
+    doc.text(`Total Revenue: ${formatCurrency(periodRevenue)}`, 20, 80);
+    doc.text(`Total Expenses: ${formatCurrency(periodExpenses)}`, 20, 90);
+    doc.text(`Net Profit (George's Share): ${formatCurrency(periodNetProfit)}`, 20, 100);
     
     // Revenue entries table
-    const revenueTableData = revenueEntries.map(entry => {
+    const revenueTableData = dataToUse.map(entry => {
       const house = houses.find(h => h.id === entry.houseId);
       const service = serviceCodes.find(sc => sc.id === entry.serviceCodeId);
       const patient = patients.find(p => p.id === entry.patientId);
@@ -898,7 +955,7 @@ export default function Dashboard() {
     autoTable(doc, {
       head: [['Payment Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
       body: revenueTableData,
-      startY: 100,
+      startY: 120,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [66, 139, 202] }
     });
