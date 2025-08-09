@@ -74,7 +74,7 @@ export default function Dashboard() {
     houseId: 'all',
     serviceCodeId: 'all'
   });
-
+  
   // Dashboard date filter
   const [dashboardDateFilter, setDashboardDateFilter] = useState('all');
   
@@ -1344,57 +1344,900 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Other tabs - temporarily simplified for mobile implementation */}
+          {/* Revenue Entry Tab */}
           <TabsContent value="revenue" className="m-0">
             <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Revenue Entry</h2>
-              <p>Revenue entry functionality will be available here.</p>
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Revenue Entry</h2>
+                  <p className="text-gray-600">Manage revenue entries and track income</p>
+                </div>
+                <Button onClick={() => setRevenueModalOpen(true)} className="w-full lg:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Revenue Entry
+                </Button>
+              </div>
+
+              {/* Revenue Filters */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3">Filters</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="revenue-date-range">Date Range</Label>
+                    <Select value={revenueFilters.dateRange} onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                        <SelectItem value="last-month">Last Month</SelectItem>
+                        <SelectItem value="this-quarter">This Quarter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="revenue-house">House</Label>
+                    <Select value={revenueFilters.houseId} onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, houseId: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Houses</SelectItem>
+                        {houses.map((house) => (
+                          <SelectItem key={house.id} value={house.id}>
+                            {house.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="revenue-service">Service Code</Label>
+                    <Select value={revenueFilters.serviceCodeId} onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, serviceCodeId: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Services</SelectItem>
+                        {serviceCodes.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.code} - {service.description}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Revenue Entries Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Entries ({filteredRevenueEntries.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Patient</TableHead>
+                          <TableHead>House</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Check Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRevenueEntries.map((entry) => {
+                          const patient = patients.find(p => p.id === entry.patientId);
+                          const house = houses.find(h => h.id === entry.houseId);
+                          const service = serviceCodes.find(s => s.id === entry.serviceCodeId);
+                          return (
+                            <TableRow key={entry.id}>
+                              <TableCell>{formatDate(entry.date)}</TableCell>
+                              <TableCell>{patient?.name || 'Unknown'}</TableCell>
+                              <TableCell>{house?.name || 'N/A'}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {service?.code || 'N/A'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium text-green-600">
+                                {formatCurrency(parseFloat(entry.amount))}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={entry.status === 'paid' ? 'default' : 'secondary'}>
+                                  {entry.status || 'pending'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {entry.checkDate ? formatDate(entry.checkDate) : 'Not set'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingRevenueEntry(entry);
+                                      setRevenueModalOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => deleteRevenueMutation.mutate(entry.id)}
+                                    disabled={deleteRevenueMutation.isPending}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
-          
-          <TabsContent value="payouts" className="m-0">
-            <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Staff Payouts</h2>
-              <p>Staff payout functionality will be available here.</p>
-            </div>
-          </TabsContent>
-          
+
+          {/* Expenses Tab */}
           <TabsContent value="expenses" className="m-0">
             <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Expenses</h2>
-              <p>Expense management functionality will be available here.</p>
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Expenses</h2>
+                  <p className="text-gray-600">Track business expenses and costs</p>
+                </div>
+                <Button onClick={() => setExpenseModalOpen(true)} className="w-full lg:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Expense
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Expenses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Vendor</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {expenses.map((expense) => (
+                          <TableRow key={expense.id}>
+                            <TableCell>{formatDate(expense.date)}</TableCell>
+                            <TableCell>{expense.vendor || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {expense.category || 'Uncategorized'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{expense.description || '-'}</TableCell>
+                            <TableCell className="font-medium text-red-600">
+                              {formatCurrency(parseFloat(expense.amount))}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingExpense(expense);
+                                    setExpenseModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deleteExpenseMutation.mutate(expense.id)}
+                                  disabled={deleteExpenseMutation.isPending}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
-          
-          <TabsContent value="patients" className="m-0">
-            <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Patients</h2>
-              <p>Patient management functionality will be available here.</p>
-            </div>
-          </TabsContent>
-          
+
+          {/* Reports Tab */}
           <TabsContent value="reports" className="m-0">
             <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Reports</h2>
-              <p>Report generation functionality will be available here.</p>
+              <div className="mb-6">
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Reports & Analytics</h2>
+                <p className="text-gray-600">Generate detailed reports and view daily summaries</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Quick Reports */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Quick Reports
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button 
+                      onClick={() => generateRevenueReport('monthly')} 
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Monthly Revenue Report
+                    </Button>
+                    <Button 
+                      onClick={() => generateRevenueReport('quarterly')} 
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Quarterly Revenue Report
+                    </Button>
+                    <Button 
+                      onClick={() => generatePayoutReport('current')} 
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Current Staff Payout Report
+                    </Button>
+                    <Button 
+                      onClick={() => generatePayoutReport('historical')} 
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Historical Payout Report
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Interactive Calendar */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Daily Reports Calendar
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <InteractiveCalendar 
+                      revenueEntries={revenueEntries}
+                      onDateSelect={(date) => {
+                        setSelectedReportDate(date);
+                        setCalendarSelectedDate(date);
+                      }}
+                      selectedDate={calendarSelectedDate}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Daily Report */}
+              {selectedReportDate && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Receipt className="h-5 w-5" />
+                      Daily Report - {formatDate(selectedReportDate)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isDailyReportLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="ml-2">Loading report...</span>
+                      </div>
+                    ) : dailyReport ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <p className="text-2xl font-bold text-green-600">
+                              {formatCurrency(dailyReport.totalRevenue)}
+                            </p>
+                            <p className="text-sm text-green-700">Total Revenue</p>
+                          </div>
+                          <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <p className="text-2xl font-bold text-blue-600">
+                              {dailyReport.entryCount}
+                            </p>
+                            <p className="text-sm text-blue-700">Revenue Entries</p>
+                          </div>
+                          <div className="text-center p-4 bg-orange-50 rounded-lg">
+                            <p className="text-2xl font-bold text-orange-600">
+                              {formatCurrency(dailyReport.totalPayouts)}
+                            </p>
+                            <p className="text-sm text-orange-700">Staff Payouts</p>
+                          </div>
+                        </div>
+                        
+                        {dailyReport.revenueEntries.length > 0 && (
+                          <div>
+                            <h4 className="text-lg font-semibold mb-3">Revenue Entries</h4>
+                            <div className="overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Patient</TableHead>
+                                    <TableHead>Service</TableHead>
+                                    <TableHead>House</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {dailyReport.revenueEntries.map((entry) => {
+                                    const patient = patients.find(p => p.id === entry.patientId);
+                                    const service = serviceCodes.find(s => s.id === entry.serviceCodeId);
+                                    const house = houses.find(h => h.id === entry.houseId);
+                                    return (
+                                      <TableRow key={entry.id}>
+                                        <TableCell>{patient?.name || 'Unknown'}</TableCell>
+                                        <TableCell>{service?.code || 'N/A'}</TableCell>
+                                        <TableCell>{house?.name || 'N/A'}</TableCell>
+                                        <TableCell className="font-medium text-green-600">
+                                          {formatCurrency(parseFloat(entry.amount))}
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No data available for this date</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
-          
+
+          {/* Staff Payouts Tab */}
+          <TabsContent value="payouts" className="m-0">
+            <div className="p-4 lg:p-6">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Staff Payouts</h2>
+              <p className="text-gray-600 mb-4">Manage staff payout calculations and tracking</p>
+            </div>
+          </TabsContent>
+
+          {/* Patients Tab */}
+          <TabsContent value="patients" className="m-0">
+            <div className="p-4 lg:p-6">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Patients</h2>
+                  <p className="text-gray-600">Manage patient records and information</p>
+                </div>
+                <Button onClick={() => setPatientModalOpen(true)} className="w-full lg:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Patient
+                </Button>
+              </div>
+
+              {/* Patient Filters */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3">Filters</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="patient-search">Search Patients</Label>
+                    <Input
+                      id="patient-search"
+                      placeholder="Search by name..."
+                      value={patientSearchTerm}
+                      onChange={(e) => setPatientSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="house-filter">House</Label>
+                    <Select value={selectedHouseFilter} onValueChange={setSelectedHouseFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Houses</SelectItem>
+                        {houses.map((house) => (
+                          <SelectItem key={house.id} value={house.id}>
+                            {house.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="status-filter">Status</Label>
+                    <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Patients Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Patient Records</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>House</TableHead>
+                          <TableHead>Program</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {patients
+                          .filter(patient => {
+                            const matchesSearch = patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase());
+                            const matchesHouse = selectedHouseFilter === 'all' || patient.houseId === selectedHouseFilter;
+                            const matchesStatus = selectedStatusFilter === 'all' || patient.status === selectedStatusFilter;
+                            return matchesSearch && matchesHouse && matchesStatus;
+                          })
+                          .map((patient) => {
+                            const house = houses.find(h => h.id === patient.houseId);
+                            return (
+                              <TableRow key={patient.id}>
+                                <TableCell className="font-medium">{patient.name}</TableCell>
+                                <TableCell>{house?.name || 'N/A'}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">
+                                    {patient.program || 'No Program'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
+                                    {patient.status || 'unknown'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setEditingPatient(patient);
+                                        setPatientModalOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Check Tracking Tab */}
           <TabsContent value="check-dates" className="m-0">
             <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Check Tracking</h2>
-              <p>Check tracking functionality will be available here.</p>
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Check Tracking</h2>
+                  <p className="text-gray-600">Track processed checks and amounts</p>
+                </div>
+                <Button onClick={() => setCheckTrackingModalOpen(true)} className="w-full lg:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Check Entry
+                </Button>
+              </div>
+
+              {/* Check Tracking Filters */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3">Filters</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="check-filter">Filter Period</Label>
+                    <Select value={checkTrackingFilter} onValueChange={(value: any) => setCheckTrackingFilter(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                        <SelectItem value="last-month">Last Month</SelectItem>
+                        <SelectItem value="custom-date">Custom Date</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {checkTrackingFilter === 'custom-date' && (
+                    <div>
+                      <Label htmlFor="check-custom-date">Custom Date</Label>
+                      <Input
+                        id="check-custom-date"
+                        type="date"
+                        value={checkTrackingCustomDate}
+                        onChange={(e) => setCheckTrackingCustomDate(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Current Month Total</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(currentMonthCheckTotal)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Filtered Entries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {filteredCheckTrackingEntries.length}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Check Tracking Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Check Tracking Entries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Processed Date</TableHead>
+                          <TableHead>Check Amount</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredCheckTrackingEntries.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell>{formatDate(entry.processedDate)}</TableCell>
+                            <TableCell className="font-medium text-green-600">
+                              {formatCurrency(parseFloat(entry.checkAmount))}
+                            </TableCell>
+                            <TableCell>{entry.description || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingCheckEntry(entry);
+                                    setCheckTrackingModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
-          
+
+          {/* Settings Tab */}
           <TabsContent value="settings" className="m-0">
             <div className="p-4 lg:p-6">
-              <h2 className="text-xl lg:text-2xl font-bold mb-4">Settings</h2>
-              <p>Settings functionality will be available here.</p>
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Settings</h2>
+              
+              <Tabs value={settingsSubTab} onValueChange={setSettingsSubTab}>
+                <TabsList className="grid grid-cols-2 lg:grid-cols-4 mb-6">
+                  <TabsTrigger value="service-codes">Service Codes</TabsTrigger>
+                  <TabsTrigger value="houses">Houses</TabsTrigger>
+                  <TabsTrigger value="staff">Staff</TabsTrigger>
+                  <TabsTrigger value="business">Business</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="service-codes">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Service Codes</h3>
+                    <Button onClick={() => setServiceCodeModalOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Service Code
+                    </Button>
+                  </div>
+                  <Card>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Code</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {serviceCodes.map((service) => (
+                            <TableRow key={service.id}>
+                              <TableCell className="font-medium">{service.code}</TableCell>
+                              <TableCell>{service.description}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingServiceCode(service);
+                                    setServiceCodeModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="houses">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Houses</h3>
+                    <Button onClick={() => setHouseModalOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add House
+                    </Button>
+                  </div>
+                  <Card>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Address</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {houses.map((house) => (
+                            <TableRow key={house.id}>
+                              <TableCell className="font-medium">{house.name}</TableCell>
+                              <TableCell>{house.address || 'No address'}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingHouse(house);
+                                    setHouseModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="staff">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Staff Members</h3>
+                    <Button onClick={() => setStaffModalOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Staff Member
+                    </Button>
+                  </div>
+                  <Card>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {staff.map((member) => (
+                            <TableRow key={member.id}>
+                              <TableCell className="font-medium">{member.name}</TableCell>
+                              <TableCell>{member.role || 'Staff Member'}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingStaff(member);
+                                    setStaffModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="business">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Business Settings</h3>
+                      <Button onClick={() => setBusinessSettingsModalOpen(true)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configure Settings
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Payout Rates</h3>
+                      <Button onClick={() => setPayoutRatesModalOpen(true)}>
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Manage Rates
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">User Management</h3>
+                      <Button onClick={() => setUserManagementModalOpen(true)}>
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        Manage Users
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Modals */}
+      <RevenueEntryModal
+        open={revenueModalOpen}
+        onOpenChange={setRevenueModalOpen}
+        editingEntry={editingRevenueEntry}
+        onClose={() => {
+          setRevenueModalOpen(false);
+          setEditingRevenueEntry(undefined);
+        }}
+      />
+
+      <ExpenseModal
+        open={expenseModalOpen}
+        onOpenChange={setExpenseModalOpen}
+        editingExpense={editingExpense}
+        onClose={() => {
+          setExpenseModalOpen(false);
+          setEditingExpense(undefined);
+        }}
+      />
+
+      <PatientModal
+        open={patientModalOpen}
+        onOpenChange={setPatientModalOpen}
+        editingPatient={editingPatient}
+        onClose={() => {
+          setPatientModalOpen(false);
+          setEditingPatient(undefined);
+        }}
+      />
+
+      <ServiceCodeModal
+        open={serviceCodeModalOpen}
+        onOpenChange={setServiceCodeModalOpen}
+        editingServiceCode={editingServiceCode}
+        onClose={() => {
+          setServiceCodeModalOpen(false);
+          setEditingServiceCode(undefined);
+        }}
+      />
+
+      <HouseModal
+        open={houseModalOpen}
+        onOpenChange={setHouseModalOpen}
+        editingHouse={editingHouse}
+        onClose={() => {
+          setHouseModalOpen(false);
+          setEditingHouse(undefined);
+        }}
+      />
+
+      <StaffModal
+        open={staffModalOpen}
+        onOpenChange={setStaffModalOpen}
+        editingStaff={editingStaff}
+        onClose={() => {
+          setStaffModalOpen(false);
+          setEditingStaff(undefined);
+        }}
+      />
+
+      <PayoutRatesModal
+        open={payoutRatesModalOpen}
+        onOpenChange={setPayoutRatesModalOpen}
+        onClose={() => setPayoutRatesModalOpen(false)}
+      />
+
+      <BusinessSettingsModal
+        open={businessSettingsModalOpen}
+        onOpenChange={setBusinessSettingsModalOpen}
+        onClose={() => setBusinessSettingsModalOpen(false)}
+      />
+
+      <CheckTrackingModal
+        open={checkTrackingModalOpen}
+        onOpenChange={setCheckTrackingModalOpen}
+        editingEntry={editingCheckEntry}
+        onClose={() => {
+          setCheckTrackingModalOpen(false);
+          setEditingCheckEntry(undefined);
+        }}
+      />
+
+      <UserManagementModal
+        open={userManagementModalOpen}
+        onOpenChange={setUserManagementModalOpen}
+        onClose={() => setUserManagementModalOpen(false)}
+      />
+
+      {/* Onboarding */}
+      <OnboardingWalkthrough />
     </div>
   );
 }
