@@ -28,6 +28,7 @@ The application features a React frontend with shadcn/ui components, an Express.
   - Fixed missing type exports in schema for `Payout`, `BusinessSettings`, and `CheckTracking`
   - **Mobile UX Enhancement (August 9, 2025):** Added hamburger menu auto-close functionality when navigating tabs for improved mobile experience
 - **Console Error Fixes (August 9, 2025):** Resolved dashboard filter console errors by improving date parsing logic to handle full ISO timestamp strings, removing excessive debug logging, and enhancing date validation in all filtering functions
+- **Dashboard Optimization (August 9, 2025):** Fixed dashboard statistics calculations with dynamic month-over-month comparisons, removed Total Staff card to save space, and optimized remaining 4 cards layout with improved grid spacing for better visual balance
 
 ## User Preferences
 
