@@ -393,6 +393,11 @@ export class MemStorage implements IStorage {
   }
 
   async deleteRevenueEntry(id: string): Promise<boolean> {
+    // First delete all related payouts
+    const relatedPayouts = Array.from(this.payouts.values()).filter(payout => payout.revenueEntryId === id);
+    relatedPayouts.forEach(payout => this.payouts.delete(payout.id));
+    
+    // Then delete the revenue entry
     return this.revenueEntries.delete(id);
   }
 
@@ -819,8 +824,17 @@ export class DbStorage implements IStorage {
   }
 
   async deleteRevenueEntry(id: string): Promise<boolean> {
-    const result = await this.db.delete(revenueEntries).where(eq(revenueEntries.id, id));
-    return result.rowCount > 0;
+    try {
+      // First delete all related payouts
+      await this.db.delete(payouts).where(eq(payouts.revenueEntryId, id));
+      
+      // Then delete the revenue entry
+      const result = await this.db.delete(revenueEntries).where(eq(revenueEntries.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting revenue entry:', error);
+      throw error;
+    }
   }
 
   // Expenses

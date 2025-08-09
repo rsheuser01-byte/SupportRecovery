@@ -427,7 +427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete revenue entry" });
+      console.error('Error deleting revenue entry:', error);
+      res.status(500).json({ message: "Failed to delete revenue entry", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
