@@ -184,7 +184,7 @@ export default function RevenueEntryModal({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="date">Service Date</Label>
+              <Label htmlFor="date">Payment Date</Label>
               <Input 
                 id="date"
                 type="date" 
@@ -196,7 +196,7 @@ export default function RevenueEntryModal({
               )}
             </div>
             <div>
-              <Label htmlFor="checkDate">Check Processed Date</Label>
+              <Label htmlFor="checkDate">Check Entry Date</Label>
               <Input 
                 id="checkDate"
                 type="date" 

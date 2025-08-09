@@ -795,7 +795,7 @@ export default function Dashboard() {
       });
       
       autoTable(doc, {
-        head: [['Service Date', 'Check Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
+        head: [['Payment Date', 'Check Entry Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
         body: revenueTableData,
         startY: 130,
         styles: { fontSize: 8 },
@@ -868,7 +868,7 @@ export default function Dashboard() {
     });
     
     autoTable(doc, {
-      head: [['Service Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
+      head: [['Payment Date', 'Patient', 'House', 'Service', 'Amount', 'Status']],
       body: revenueTableData,
       startY: 100,
       styles: { fontSize: 8 },
@@ -954,7 +954,7 @@ export default function Dashboard() {
     });
     
     autoTable(doc, {
-      head: [['Staff', 'House', 'Service', 'Service Date', 'Payout', 'Revenue', 'Check Date']],
+      head: [['Staff', 'House', 'Service', 'Payment Date', 'Payout', 'Revenue', 'Check Entry Date']],
       body: payoutTableData,
       startY: yPosition + 10,
       styles: { fontSize: 8 },
@@ -1481,9 +1481,9 @@ export default function Dashboard() {
                             <div className="text-right">
                               <p className="font-bold text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formatCurrency(parseFloat(entry.amount))}</p>
                               <p className="text-sm text-gray-500">
-                                Service: {formatDate(entry.date)}
+                                Payment: {formatDate(entry.date)}
                                 {entry.checkDate && (
-                                  <span className="ml-2 text-blue-600">• Check: {formatDate(entry.checkDate)}</span>
+                                  <span className="ml-2 text-blue-600">• Check Entry: {formatDate(entry.checkDate)}</span>
                                 )}
                               </p>
                             </div>
@@ -1603,8 +1603,8 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Service Date</TableHead>
-                        <TableHead>Check Date</TableHead>
+                        <TableHead>Payment Date</TableHead>
+                        <TableHead>Check Entry Date</TableHead>
                         <TableHead>Patient</TableHead>
                         <TableHead>House</TableHead>
                         <TableHead>Service</TableHead>
