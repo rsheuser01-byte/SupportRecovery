@@ -590,7 +590,25 @@ export default function Dashboard() {
       
       // Specific payment date filter
       if (revenueFilters.paymentDate) {
-        const paymentDateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+        let paymentDateStr: string = '';
+        
+        try {
+          const dateValue = entry.date as any;
+          if (typeof dateValue === 'string') {
+            // If it's already a string, extract just the date part if it's a full ISO string
+            paymentDateStr = dateValue.includes('T') ? dateValue.split('T')[0] : dateValue;
+          } else if (dateValue instanceof Date) {
+            // If it's a Date object, convert to ISO string and extract date part
+            paymentDateStr = dateValue.toISOString().split('T')[0];
+          } else {
+            // Fallback for any other format
+            paymentDateStr = String(dateValue).split('T')[0];
+          }
+        } catch (error) {
+          console.warn('Date parsing error for payment date filter:', error, 'entry:', entry);
+          return false;
+        }
+        
         if (paymentDateStr !== revenueFilters.paymentDate) {
           return false;
         }
@@ -1710,7 +1728,7 @@ export default function Dashboard() {
                               <Button 
                                 className="mt-2" 
                                 variant="outline" 
-                                onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all' })}
+                                onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all', paymentDate: '' })}
                               >
                                 Clear Filters
                               </Button>
