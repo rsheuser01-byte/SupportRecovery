@@ -570,15 +570,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [year, month, day] = date.split('-').map(Number);
       const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
-      // Get revenue entries for the date
+      // Get revenue entries for the processing date (not service date)
       const allRevenueEntries = await storage.getRevenueEntries();
       const revenueEntries = allRevenueEntries.filter(entry => {
-        // Compare date strings directly to avoid timezone issues
-        const entryDate = entry.date;
-        const entryDateStr = entryDate instanceof Date 
-          ? entryDate.toISOString().split('T')[0] 
-          : String(entryDate).split('T')[0];
-        return entryDateStr === targetDateStr;
+        // Filter by checkDate (processing date) instead of service date
+        const entryProcessedDate = entry.checkDate;
+        const entryProcessedDateStr = entryProcessedDate instanceof Date 
+          ? entryProcessedDate.toISOString().split('T')[0] 
+          : String(entryProcessedDate).split('T')[0];
+        return entryProcessedDateStr === targetDateStr;
       });
 
       // Get expenses for the date
