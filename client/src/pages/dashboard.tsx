@@ -1742,13 +1742,13 @@ export default function Dashboard() {
                                   size="sm"
                                   onClick={() => {
                                     // Create a copy of the entry with new dates
+                                    const { id, ...entryWithoutId } = entry;
                                     const copyEntry = {
-                                      ...entry,
-                                      id: undefined, // Remove ID so it creates a new entry
-                                      date: new Date().toISOString().split('T')[0], // Use today's date
-                                      checkDate: new Date().toISOString().split('T')[0], // Use today's date
+                                      ...entryWithoutId,
+                                      date: new Date(), // Use today's date as Date object
+                                      checkDate: new Date(), // Use today's date as Date object
                                     };
-                                    setEditingRevenueEntry(copyEntry as RevenueEntry);
+                                    setEditingRevenueEntry(copyEntry as any);
                                     setRevenueModalMode('copy');
                                     setRevenueModalOpen(true);
                                   }}

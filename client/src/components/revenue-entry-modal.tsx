@@ -172,7 +172,6 @@ export default function RevenueEntryModal({
   }, [watchedValues[0], watchedValues[1], watchedValues[2]]); // Watch amount, houseId, serviceCodeId
 
   const onSubmit = (data: RevenueEntryForm) => {
-    console.log("Form data before processing:", data);
     const submitData = {
       ...data,
       date: new Date(data.date).toISOString(),
@@ -180,7 +179,6 @@ export default function RevenueEntryModal({
       amount: parseFloat(data.amount).toFixed(2),
       patientId: data.patientId === "none" || !data.patientId ? null : data.patientId,
     };
-    console.log("Processed submit data:", submitData);
     
     if (isEdit) {
       updateRevenueMutation.mutate(submitData);

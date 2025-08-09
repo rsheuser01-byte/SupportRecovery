@@ -93,7 +93,6 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
       status: data.status || "paid",
     };
     
-    console.log("Submitting expense data:", submitData);
     if (isEdit) {
       updateExpenseMutation.mutate(submitData);
     } else {
