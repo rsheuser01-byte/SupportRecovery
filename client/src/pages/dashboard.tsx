@@ -432,6 +432,19 @@ export default function Dashboard() {
   const totalRevenue = dashboardRevenue.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
   const totalExpenses = dashboardExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
   
+  // Debug logging for dashboard statistics
+  console.log('Dashboard Statistics Debug:', {
+    dashboardDateFilter,
+    revenueEntriesCount: revenueEntries.length,
+    expensesCount: expenses.length,
+    filteredRevenueCount: dashboardRevenue.length,
+    filteredExpensesCount: dashboardExpenses.length,
+    totalRevenue,
+    totalExpenses,
+    sampleRevenue: dashboardRevenue.slice(0, 2),
+    sampleExpenses: dashboardExpenses.slice(0, 2)
+  });
+  
   // Calculate George's portion (business owner's share) for profit calculation using filtered data
   const georgeStaff = staff.find(s => s.name === "George");
   const georgeRevenue = georgeStaff ? 
