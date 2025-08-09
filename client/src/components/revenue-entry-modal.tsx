@@ -196,7 +196,7 @@ export default function RevenueEntryModal({
               )}
             </div>
             <div>
-              <Label htmlFor="checkDate">Check Date</Label>
+              <Label htmlFor="checkDate">Check Processed Date</Label>
               <Input 
                 id="checkDate"
                 type="date" 
