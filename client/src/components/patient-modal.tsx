@@ -155,7 +155,7 @@ export default function PatientModal({ open, onOpenChange, houses, patient }: Pa
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No house assigned</SelectItem>
-                {houses.map(house => (
+                {(houses || []).map(house => (
                   <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
                 ))}
               </SelectContent>

@@ -2152,6 +2152,11 @@ export default function Dashboard() {
         open={revenueModalOpen}
         onOpenChange={setRevenueModalOpen}
         editingEntry={editingRevenueEntry}
+        houses={houses}
+        patients={patients}
+        serviceCodes={serviceCodes}
+        staff={staff}
+        payoutRates={payoutRates}
         onClose={() => {
           setRevenueModalOpen(false);
           setEditingRevenueEntry(undefined);
@@ -2172,6 +2177,7 @@ export default function Dashboard() {
         open={patientModalOpen}
         onOpenChange={setPatientModalOpen}
         editingPatient={editingPatient}
+        houses={houses}
         onClose={() => {
           setPatientModalOpen(false);
           setEditingPatient(undefined);
@@ -2211,6 +2217,10 @@ export default function Dashboard() {
       <PayoutRatesModal
         open={payoutRatesModalOpen}
         onOpenChange={setPayoutRatesModalOpen}
+        houses={houses}
+        serviceCodes={serviceCodes}
+        staff={staff}
+        payoutRates={payoutRates}
         onClose={() => setPayoutRatesModalOpen(false)}
       />
 
