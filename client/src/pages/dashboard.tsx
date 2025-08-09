@@ -1903,7 +1903,19 @@ export default function Dashboard() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => deleteExpenseMutation.mutate(expense.id)}
+                                onClick={() => {
+                                  const confirmed = window.confirm(
+                                    `Are you sure you want to delete this expense?\n\n` +
+                                    `Vendor: ${expense.vendor}\n` +
+                                    `Category: ${expense.category}\n` +
+                                    `Amount: ${formatCurrency(parseFloat(expense.amount))}\n` +
+                                    `Date: ${formatDate(expense.date)}\n\n` +
+                                    `This action cannot be undone.`
+                                  );
+                                  if (confirmed) {
+                                    deleteExpenseMutation.mutate(expense.id);
+                                  }
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

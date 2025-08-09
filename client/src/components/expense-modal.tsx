@@ -25,7 +25,7 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
 
   const form = useForm({
     defaultValues: {
-      date: new Date().toISOString().slice(0, 16),
+      date: new Date().toISOString().slice(0, 10),
       amount: "0.00",
       vendor: "",
       category: "",
@@ -37,7 +37,7 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
   useEffect(() => {
     if (expense) {
       form.reset({
-        date: new Date(expense.date).toISOString().slice(0, 16),
+        date: new Date(expense.date).toISOString().slice(0, 10),
         amount: expense.amount,
         vendor: expense.vendor,
         category: expense.category,
@@ -46,7 +46,7 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
       });
     } else {
       form.reset({
-        date: new Date().toISOString().slice(0, 16),
+        date: new Date().toISOString().slice(0, 10),
         amount: "0.00",
         vendor: "",
         category: "",
@@ -83,7 +83,7 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
 
   const onSubmit = (data: any) => {
     const submitData = {
-      date: new Date(data.date),
+      date: new Date(data.date + 'T12:00:00'),
       amount: data.amount,
       vendor: data.vendor,
       category: data.category,
@@ -115,11 +115,11 @@ export default function ExpenseModal({ open, onOpenChange, expense }: ExpenseMod
               <Label htmlFor="date">Date</Label>
               <Input 
                 id="date"
-                type="datetime-local" 
+                type="date" 
                 {...form.register("date", {
-                  setValueAs: (value) => new Date(value)
+                  setValueAs: (value) => new Date(value + 'T12:00:00')
                 })}
-                defaultValue={new Date().toISOString().slice(0, 16)}
+                defaultValue={new Date().toISOString().slice(0, 10)}
                 className="mt-1"
               />
               {form.formState.errors.date && (
