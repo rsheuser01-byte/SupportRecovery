@@ -1551,75 +1551,124 @@ export default function Dashboard() {
 
             <div className="p-6">
               <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Filter Revenue Entries</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold text-gray-900">Filter Revenue Entries</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <Select 
-                      value={revenueFilters.dateRange} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Date Range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Time</SelectItem>
-                        <SelectItem value="this-month">This Month</SelectItem>
-                        <SelectItem value="last-month">Last Month</SelectItem>
-                        <SelectItem value="this-quarter">This Quarter</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Select 
-                      value={revenueFilters.houseId} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, houseId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Houses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Houses</SelectItem>
-                        {houses.map(house => (
-                          <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select 
-                      value={revenueFilters.serviceCodeId} 
-                      onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, serviceCodeId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Services" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Services</SelectItem>
-                        {serviceCodes.map(service => (
-                          <SelectItem key={service.id} value={service.id}>{service.code} - {service.description}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
+                  <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {/* Date Range Filter */}
                     <div className="space-y-2">
-                      <Label htmlFor="paymentDate">Specific Payment Date</Label>
+                      <Label className="text-sm font-medium text-gray-700">Date Range</Label>
+                      <Select 
+                        value={revenueFilters.dateRange} 
+                        onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, dateRange: value }))}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="All Time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Time</SelectItem>
+                          <SelectItem value="this-month">This Month</SelectItem>
+                          <SelectItem value="last-month">Last Month</SelectItem>
+                          <SelectItem value="this-quarter">This Quarter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* House Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">House</Label>
+                      <Select 
+                        value={revenueFilters.houseId} 
+                        onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, houseId: value }))}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="All Houses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Houses</SelectItem>
+                          {houses.map(house => (
+                            <SelectItem key={house.id} value={house.id}>{house.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Service Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Service</Label>
+                      <Select 
+                        value={revenueFilters.serviceCodeId} 
+                        onValueChange={(value) => setRevenueFilters(prev => ({ ...prev, serviceCodeId: value }))}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="All Services" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Services</SelectItem>
+                          {serviceCodes.map(service => (
+                            <SelectItem key={service.id} value={service.id}>{service.code} - {service.description}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Payment Date Filter */}
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentDate" className="text-sm font-medium text-gray-700">Payment Date</Label>
                       <Input
                         id="paymentDate"
                         type="date"
                         value={revenueFilters.paymentDate}
                         onChange={(e) => setRevenueFilters(prev => ({ ...prev, paymentDate: e.target.value }))}
-                        className="w-full"
+                        className="h-10"
+                        placeholder="Select date..."
                       />
                     </div>
 
-                    <Button 
-                      variant="secondary"
-                      onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all', paymentDate: '' })}
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      Clear Filters
-                    </Button>
+                    {/* Clear Filters Button */}
+                    <div className="flex items-end">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setRevenueFilters({ dateRange: 'all', houseId: 'all', serviceCodeId: 'all', paymentDate: '' })}
+                        className="h-10 w-full"
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        Clear All
+                      </Button>
+                    </div>
                   </div>
+                  
+                  {/* Active Filters Indicator */}
+                  {(revenueFilters.dateRange !== 'all' || revenueFilters.houseId !== 'all' || revenueFilters.serviceCodeId !== 'all' || revenueFilters.paymentDate) && (
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span className="font-medium">Active filters:</span>
+                        {revenueFilters.dateRange !== 'all' && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">
+                            {revenueFilters.dateRange === 'this-month' ? 'This Month' : 
+                             revenueFilters.dateRange === 'last-month' ? 'Last Month' : 
+                             revenueFilters.dateRange === 'this-quarter' ? 'This Quarter' : revenueFilters.dateRange}
+                          </span>
+                        )}
+                        {revenueFilters.houseId !== 'all' && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                            {houses.find(h => h.id === revenueFilters.houseId)?.name || 'House'}
+                          </span>
+                        )}
+                        {revenueFilters.serviceCodeId !== 'all' && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">
+                            {serviceCodes.find(s => s.id === revenueFilters.serviceCodeId)?.code || 'Service'}
+                          </span>
+                        )}
+                        {revenueFilters.paymentDate && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs font-medium">
+                            {formatDate(revenueFilters.paymentDate)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
