@@ -1367,24 +1367,6 @@ export default function Dashboard() {
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card className="stat-card hover-lift border-0 shadow-xl">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Total Staff</p>
-                        <p className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">{staff.length}</p>
-                        <p className="text-sm text-orange-600 mt-2 flex items-center">
-                          <Users className="mr-1 h-3 w-3" />
-                          Team members
-                        </p>
-                      </div>
-                      <div className="p-4 gradient-warning rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 pl-[6px] pr-[6px] pt-[6px] pb-[6px]">
-                        <Users className="h-8 w-8 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Payouts Row */}
