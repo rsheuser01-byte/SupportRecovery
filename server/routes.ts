@@ -16,13 +16,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const isIPhone = /iPhone/i.test(userAgent);
+      
+      console.log(`Auth user request from ${isIPhone ? 'iPhone' : 'device'}, User Agent: ${userAgent}`);
+      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
+      
+      console.log(`User lookup for ${userId}: ${user ? 'found' : 'not found'} (${isIPhone ? 'iPhone' : 'device'})`);
       
       if (!user) {
         // Check if this is the first user in the system - make them admin
         const allUsers = await storage.getAllUsers();
         const isFirstUser = allUsers.length === 0;
+        
+        console.log(`Creating new user ${userId}, first user: ${isFirstUser} (${isIPhone ? 'iPhone' : 'device'})`);
         
         // Create user
         const userData = {
@@ -35,13 +44,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isApproved: isFirstUser, // First user is auto-approved
         };
         const newUser = await storage.upsertUser(userData);
+        
+        console.log(`New user created successfully for ${userId} (${isIPhone ? 'iPhone' : 'device'})`);
         res.json(newUser);
       } else {
+        console.log(`Existing user found for ${userId} (${isIPhone ? 'iPhone' : 'device'})`);
         res.json(user);
       }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+    } catch (error: any) {
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const isIPhone = /iPhone/i.test(userAgent);
+      
+      console.error(`Error fetching user (${isIPhone ? 'iPhone' : 'device'}):`, {
+        error: error.message,
+        userAgent,
+        url: req.url,
+        claims: req.user?.claims ? {
+          sub: req.user.claims.sub,
+          email: req.user.claims.email
+        } : 'no claims',
+        stack: error.stack
+      });
+      
+      res.status(500).json({ 
+        message: "Failed to fetch user",
+        details: isIPhone ? "iPhone user fetch error" : "General user fetch error"
+      });
     }
   });
   // User management routes

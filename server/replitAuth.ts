@@ -45,7 +45,11 @@ export function getSession() {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: inactivityTimeout, // Cookie expires after inactivity period
+      // iPhone-specific cookie settings
+      domain: undefined, // Let browser determine domain automatically for mobile compatibility
     },
+    // Enhanced session handling for mobile devices
+    name: "healthcare.session", // Explicit session name for better mobile handling
   });
 }
 
@@ -84,10 +88,20 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      console.log(`User verification successful for: ${tokens.claims()?.email || 'unknown'}`);
+      verified(null, user);
+    } catch (error: any) {
+      console.error('User verification failed:', {
+        error: error.message,
+        stack: error.stack,
+        email: tokens.claims()?.email
+      });
+      verified(error, null);
+    }
   };
 
   for (const domain of process.env
@@ -108,7 +122,12 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const isIPhone = /iPhone/i.test(userAgent);
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
+    
     console.log(`Login attempt from hostname: ${req.hostname}, available domains: ${process.env.REPLIT_DOMAINS}`);
+    console.log(`User-Agent: ${userAgent}, iPhone: ${isIPhone}, Mobile: ${isMobile}`);
     
     // Use the first available domain if hostname doesn't match (for development)
     const availableDomains = process.env.REPLIT_DOMAINS!.split(",");
@@ -116,21 +135,114 @@ export async function setupAuth(app: Express) {
     
     console.log(`Using domain for auth: ${targetDomain}`);
     
-    passport.authenticate(`replitauth:${targetDomain}`, {
+    // Enhanced error handling for authentication
+    const authMiddleware = passport.authenticate(`replitauth:${targetDomain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    });
+    
+    // Wrap authentication with error handling
+    try {
+      authMiddleware(req, res, (error: any) => {
+        if (error) {
+          console.error(`Authentication error for ${isIPhone ? 'iPhone' : 'device'}:`, {
+            error: error.message,
+            userAgent,
+            hostname: req.hostname,
+            url: req.url,
+            stack: error.stack
+          });
+          return res.status(500).json({ 
+            message: "Authentication failed", 
+            details: isIPhone ? "iPhone authentication issue detected" : "General authentication error",
+            userAgent: isIPhone ? "iPhone" : "Other"
+          });
+        }
+        next(error);
+      });
+    } catch (error: any) {
+      console.error(`Login route error for ${isIPhone ? 'iPhone' : 'device'}:`, {
+        error: error.message,
+        userAgent,
+        stack: error.stack
+      });
+      res.status(500).json({ 
+        message: "Login initialization failed",
+        details: isIPhone ? "iPhone-specific error detected" : "General login error"
+      });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const isIPhone = /iPhone/i.test(userAgent);
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
+    
+    console.log(`Callback received from ${isIPhone ? 'iPhone' : 'device'}: ${req.url}`);
+    console.log(`Callback User-Agent: ${userAgent}`);
+    console.log(`Callback query params:`, req.query);
+    
     // Use the first available domain if hostname doesn't match (for development)
     const availableDomains = process.env.REPLIT_DOMAINS!.split(",");
     const targetDomain = availableDomains.includes(req.hostname) ? req.hostname : availableDomains[0];
     
-    passport.authenticate(`replitauth:${targetDomain}`, {
+    console.log(`Callback using domain: ${targetDomain}`);
+    
+    // Enhanced callback handling with better error logging
+    const callbackMiddleware = passport.authenticate(`replitauth:${targetDomain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    });
+    
+    try {
+      callbackMiddleware(req, res, (error: any) => {
+        if (error) {
+          console.error(`Callback error for ${isIPhone ? 'iPhone' : 'device'}:`, {
+            error: error.message,
+            userAgent,
+            hostname: req.hostname,
+            url: req.url,
+            query: req.query,
+            headers: isIPhone ? {
+              'accept': req.headers.accept,
+              'accept-language': req.headers['accept-language'],
+              'accept-encoding': req.headers['accept-encoding']
+            } : {},
+            stack: error.stack
+          });
+          
+          // For mobile devices, try a manual redirect instead of middleware redirect
+          if (isMobile) {
+            console.log(`Attempting manual redirect for mobile device`);
+            return res.redirect('/api/login');
+          }
+          
+          return res.status(500).json({ 
+            message: "Callback authentication failed",
+            details: isIPhone ? "iPhone callback processing failed" : "General callback error"
+          });
+        }
+        next(error);
+      });
+    } catch (error: any) {
+      console.error(`Callback route error for ${isIPhone ? 'iPhone' : 'device'}:`, {
+        error: error.message,
+        userAgent,
+        url: req.url,
+        stack: error.stack
+      });
+      
+      // Fallback redirect for mobile devices
+      if (isMobile) {
+        console.log(`Manual fallback redirect for mobile device`);
+        return res.redirect('/');
+      }
+      
+      res.status(500).json({ 
+        message: "Callback processing failed",
+        details: isIPhone ? "iPhone callback initialization error" : "General callback error"
+      });
+    }
   });
 
   app.get("/api/logout", (req, res) => {
