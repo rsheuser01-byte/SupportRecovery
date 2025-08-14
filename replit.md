@@ -23,6 +23,7 @@ The application features a React frontend with shadcn/ui components, an Express.
   - Added delete functionality for individual time entries with edit and delete buttons in Actions column
   - **Mobile Authentication Fix:** Fixed iPhone internal server error by making session cookies environment-dependent (secure: false in development, secure: true in production) and added SameSite configuration for cross-origin compatibility
   - **Enhanced Error Logging:** Added detailed error logging with user agent and request details for debugging mobile-specific issues
+  - **Pre-approved User ID Mismatch Fix (August 14, 2025):** Resolved iPhone authentication issue for gclemons22@gmail.com caused by pre-approved user record having custom ID instead of actual Replit user ID. Added automatic migration logic to detect email-based pre-approved records and update them with correct Replit user IDs during login.
   - **Dialog Accessibility:** Fixed missing DialogDescription warnings by adding proper accessibility descriptions to time entry and hourly employee modals
 - **UI/UX Improvements (August 5 & 14, 2025):**
   - Enhanced header visibility with high-contrast design for improved readability

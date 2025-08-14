@@ -129,6 +129,17 @@ export async function setupAuth(app: Express) {
     console.log(`Login attempt from hostname: ${req.hostname}, available domains: ${process.env.REPLIT_DOMAINS}`);
     console.log(`User-Agent: ${userAgent}, iPhone: ${isIPhone}, Mobile: ${isMobile}`);
     
+    // Special logging for specific problem user
+    if (userAgent.includes('gclemons22') || req.headers.referer?.includes('gclemons22')) {
+      console.log(`*** GCLEMONS22 LOGIN ATTEMPT DETECTED ***`);
+      console.log(`Full headers for gclemons22:`, req.headers);
+      console.log(`Session state:`, {
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'unknown'
+      });
+    }
+    
     // Use the first available domain if hostname doesn't match (for development)
     const availableDomains = process.env.REPLIT_DOMAINS!.split(",");
     const targetDomain = availableDomains.includes(req.hostname) ? req.hostname : availableDomains[0];
@@ -181,6 +192,14 @@ export async function setupAuth(app: Express) {
     console.log(`Callback received from ${isIPhone ? 'iPhone' : 'device'}: ${req.url}`);
     console.log(`Callback User-Agent: ${userAgent}`);
     console.log(`Callback query params:`, req.query);
+    
+    // Special logging for gclemons22 callback
+    if (req.query.code && (req.headers.referer?.includes('gclemons22') || req.url.includes('gclemons22'))) {
+      console.log(`*** GCLEMONS22 CALLBACK DETECTED ***`);
+      console.log(`Full callback URL: ${req.url}`);
+      console.log(`Query params:`, req.query);
+      console.log(`Headers:`, req.headers);
+    }
     
     // Use the first available domain if hostname doesn't match (for development)
     const availableDomains = process.env.REPLIT_DOMAINS!.split(",");

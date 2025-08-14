@@ -22,9 +22,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Auth user request from ${isIPhone ? 'iPhone' : 'device'}, User Agent: ${userAgent}`);
       
       const userId = req.user.claims.sub;
+      const userEmail = req.user.claims.email;
+      
+      // Special logging for gclemons22
+      if (userEmail === 'gclemons22@gmail.com') {
+        console.log(`*** GCLEMONS22 AUTH REQUEST ***`);
+        console.log(`User ID: ${userId}`);
+        console.log(`Email: ${userEmail}`);
+        console.log(`Claims:`, req.user.claims);
+        console.log(`Session authenticated:`, req.isAuthenticated());
+      }
+      
       const user = await storage.getUser(userId);
       
       console.log(`User lookup for ${userId}: ${user ? 'found' : 'not found'} (${isIPhone ? 'iPhone' : 'device'})`);
+      
+      // Special handling for gclemons22 - check if there's a pre-approved record by email
+      if (!user && userEmail === 'gclemons22@gmail.com') {
+        console.log(`*** GCLEMONS22 NO USER FOUND - CHECKING FOR PRE-APPROVED RECORD ***`);
+        const allUsers = await storage.getAllUsers();
+        const preApprovedUser = allUsers.find(u => u.email === 'gclemons22@gmail.com');
+        
+        if (preApprovedUser) {
+          console.log(`Found pre-approved gclemons22 record with ID: ${preApprovedUser.id}, updating to correct Replit ID: ${userId}`);
+          
+          // Update the pre-approved user with the correct Replit user ID
+          const updatedUserData = {
+            id: userId,
+            email: userEmail,
+            firstName: req.user.claims.given_name || preApprovedUser.firstName,
+            lastName: req.user.claims.family_name || preApprovedUser.lastName,
+            profileImageUrl: req.user.claims.picture,
+            role: preApprovedUser.role || "user",
+            isApproved: true,
+          };
+          
+          // Delete the old pre-approved record and create the new one with correct ID
+          await storage.deleteUser(preApprovedUser.id);
+          const correctedUser = await storage.upsertUser(updatedUserData);
+          
+          console.log(`Successfully migrated gclemons22 to correct user ID: ${userId}`);
+          res.json(correctedUser);
+          return;
+        }
+      }
       
       if (!user) {
         // Check if this is the first user in the system - make them admin
