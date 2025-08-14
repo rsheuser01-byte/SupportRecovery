@@ -30,7 +30,13 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
   // Fetch hourly employees
   const { data: hourlyEmployees = [] } = useQuery({
     queryKey: ["/api/hourly-employees"],
-    queryFn: () => apiRequest("/api/hourly-employees"),
+    queryFn: async () => {
+      const response = await fetch("/api/hourly-employees");
+      if (!response.ok) {
+        throw new Error("Failed to fetch hourly employees");
+      }
+      return response.json();
+    },
   });
 
   const mutation = useMutation({
