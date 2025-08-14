@@ -4,13 +4,14 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { InactivityWarning } from "@/components/inactivity-warning";
 import Dashboard from "@/pages/dashboard";
 import Landing from "@/pages/landing";
 import PendingApproval from "@/pages/pending-approval";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -25,16 +26,21 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : !user || !(user as any).isApproved ? (
-        <Route path="/" component={PendingApproval} />
-      ) : (
-        <Route path="/" component={Dashboard} />
+    <>
+      {isAuthenticated && user && (user as any).isApproved && (
+        <InactivityWarning onLogout={logout} />
       )}
-      <Route component={NotFound} />
-    </Switch>
+      <Switch>
+        {!isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : !user || !(user as any).isApproved ? (
+          <Route path="/" component={PendingApproval} />
+        ) : (
+          <Route path="/" component={Dashboard} />
+        )}
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

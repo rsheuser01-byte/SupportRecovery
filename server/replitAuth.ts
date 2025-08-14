@@ -23,7 +23,10 @@ const getOidcConfig = memoize(
 );
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  // Configurable session timeouts for security
+  const sessionTtl = 8 * 60 * 60 * 1000; // 8 hours total session life
+  const inactivityTimeout = 2 * 60 * 60 * 1000; // 2 hours of inactivity before auto-logout
+  
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -36,11 +39,12 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Reset expiry on each request (for inactivity tracking)
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: sessionTtl,
+      maxAge: inactivityTimeout, // Cookie expires after inactivity period
     },
   });
 }
@@ -53,6 +57,7 @@ function updateUserSession(
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
   user.expires_at = user.claims?.exp;
+  user.last_activity = Date.now(); // Track last activity for inactivity detection
 }
 
 async function upsertUser(
@@ -147,8 +152,23 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
+  const now = Date.now();
+  const tokenExpiry = user.expires_at * 1000; // Convert to milliseconds
+  const lastActivity = user.last_activity || now;
+  const inactivityLimit = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+  // Check for inactivity timeout
+  if (now - lastActivity > inactivityLimit) {
+    console.log(`User session expired due to inactivity: ${user.claims?.email}`);
+    req.logout(() => {});
+    return res.status(401).json({ message: "Session expired due to inactivity", reason: "inactivity" });
+  }
+
+  // Update last activity timestamp
+  user.last_activity = now;
+
+  // Check token expiry
+  if (now <= tokenExpiry) {
     return next();
   }
 
