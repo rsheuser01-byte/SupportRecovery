@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Clock, DollarSign, Calendar, User, Settings, CheckCircle } from "lucide-react";
+import { Plus, Clock, DollarSign, Calendar, User, Settings, CheckCircle, Trash2, Edit } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { HourlyEmployeeModal } from "./hourly-employee-modal";
@@ -75,6 +75,34 @@ export function HourlyTimeTracker() {
       toast({
         title: "Error processing payment",
         description: error.message || "Failed to process payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete time entry mutation
+  const deleteTimeEntryMutation = useMutation({
+    mutationFn: async (timeEntryId: string) => {
+      const response = await fetch(`/api/time-entries/${timeEntryId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete time entry");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
+      toast({
+        title: "Time entry deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting time entry",
+        description: error.message || "Failed to delete time entry",
         variant: "destructive",
       });
     },
@@ -299,6 +327,7 @@ export function HourlyTimeTracker() {
                     <TableHead>Rate</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead className="w-24">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -325,6 +354,28 @@ export function HourlyTimeTracker() {
                         </TableCell>
                         <TableCell className="max-w-xs truncate">
                           {entry.description || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingTimeEntry(entry);
+                                setTimeEntryModalOpen(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteTimeEntryMutation.mutate(entry.id)}
+                              disabled={deleteTimeEntryMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
