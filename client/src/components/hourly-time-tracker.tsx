@@ -193,18 +193,19 @@ export function HourlyTimeTracker() {
       return acc;
     }, {});
 
-    // Process payment for the first employee (you could modify this to handle multiple employees)
+    // Process payment for each employee separately
     const employeePayments = Object.values(entriesByEmployee);
-    if (employeePayments.length > 0) {
-      const payment = employeePayments[0] as any;
-      
-      payTimeEntriesMutation.mutate({
-        timeEntryIds: selectedTimeEntries,
-        totalAmount: totalAmount,
+    
+    // Send all employee payments to backend to process separately
+    payTimeEntriesMutation.mutate({
+      employeePayments: employeePayments.map((payment: any) => ({
+        timeEntryIds: payment.entries.map((entry: TimeEntry) => entry.id),
+        totalAmount: payment.totalAmount,
         employeeName: payment.employee.name,
-        description: `Payment for ${totalHours.toFixed(2)} hours of work`,
-      });
-    }
+        totalHours: payment.totalHours,
+        description: `Payment for ${payment.totalHours.toFixed(2)} hours of work`,
+      }))
+    });
   };
 
   return (

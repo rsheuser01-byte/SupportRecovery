@@ -621,28 +621,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mark time entries as paid and create expense
   app.post("/api/time-entries/pay", isAuthenticated, async (req, res) => {
     try {
-      const { timeEntryIds, totalAmount, employeeName, description } = req.body;
+      const { employeePayments } = req.body;
       
-      // Create expense first
-      const expenseData = {
-        date: new Date(),
-        amount: totalAmount.toString(),
-        vendor: employeeName,
-        category: "Hourly Employee Payment",
-        description: description || `Payment for ${timeEntryIds.length} time entries`,
-        status: "paid"
-      };
-      
-      const expense = await storage.createExpense(expenseData);
-      
-      // Mark time entries as paid
-      const success = await storage.markTimeEntriesAsPaid(timeEntryIds, expense.id);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Failed to mark time entries as paid" });
+      if (!employeePayments || !Array.isArray(employeePayments)) {
+        return res.status(400).json({ message: "Invalid payment data structure" });
       }
       
-      res.json({ expense, success: true });
+      const createdExpenses = [];
+      
+      // Process each employee payment separately
+      for (const payment of employeePayments) {
+        const { timeEntryIds, totalAmount, employeeName, description } = payment;
+        
+        // Create expense for this employee
+        const expenseData = {
+          date: new Date(),
+          amount: totalAmount.toString(),
+          vendor: employeeName,
+          category: "Hourly Employee Payment",
+          description: description || `Payment for ${timeEntryIds.length} time entries`,
+          status: "paid"
+        };
+        
+        const expense = await storage.createExpense(expenseData);
+        createdExpenses.push(expense);
+        
+        // Mark time entries as paid for this employee
+        const success = await storage.markTimeEntriesAsPaid(timeEntryIds, expense.id);
+        
+        if (!success) {
+          return res.status(500).json({ message: `Failed to mark time entries as paid for ${employeeName}` });
+        }
+      }
+      
+      res.json({ expenses: createdExpenses, success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to process payment", error: error.message });
     }
