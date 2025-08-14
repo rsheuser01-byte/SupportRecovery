@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,6 +93,9 @@ export function HourlyEmployeeModal({ isOpen, onClose, employee }: HourlyEmploye
           <DialogTitle>
             {employee ? "Edit Hourly Employee" : "Add New Hourly Employee"}
           </DialogTitle>
+          <DialogDescription>
+            {employee ? "Update the employee's information below." : "Add a new hourly employee to track time and payments."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

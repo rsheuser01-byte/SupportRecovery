@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -137,6 +137,9 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
           <DialogTitle>
             {timeEntry ? "Edit Time Entry" : "Add New Time Entry"}
           </DialogTitle>
+          <DialogDescription>
+            {timeEntry ? "Modify the time entry details below." : "Record hours worked for an hourly employee."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
