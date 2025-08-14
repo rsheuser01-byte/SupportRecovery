@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertCheckTrackingSchema, type InsertCheckTracking, type CheckTracking } from "@shared/schema";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,11 +22,7 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch existing check tracking entries to get the last entry's date
-  const { data: checkTrackingEntries = [] } = useQuery<CheckTracking[]>({
-    queryKey: ['/api/check-tracking'],
-    enabled: open && !checkEntry, // Only fetch when creating new entry
-  });
+
 
   const form = useForm<InsertCheckTracking>({
     resolver: zodResolver(insertCheckTrackingSchema),
@@ -40,10 +36,9 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
     },
   });
 
-  // Update form when checkEntry changes or when creating new entry
+  // Update form when checkEntry changes
   useEffect(() => {
     if (checkEntry) {
-      // Editing existing entry
       form.reset({
         serviceProvider: checkEntry.serviceProvider,
         checkNumber: checkEntry.checkNumber,
@@ -53,20 +48,16 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
         notes: checkEntry.notes || "",
       });
     } else {
-      // Creating new entry - use last entry's check date if available
-      const lastEntry = checkTrackingEntries?.[0]; // Already sorted by processedDate desc
-      const lastCheckDate = lastEntry?.checkDate || "";
-      
       form.reset({
         serviceProvider: "",
         checkNumber: "",
         checkAmount: "",
-        checkDate: lastCheckDate,
+        checkDate: "",
         processedDate: "",
         notes: "",
       });
     }
-  }, [checkEntry, checkTrackingEntries, form]);
+  }, [checkEntry, form]);
 
   const createMutation = useMutation({
     mutationFn: (data: InsertCheckTracking) => apiRequest('POST', '/api/check-tracking', data),

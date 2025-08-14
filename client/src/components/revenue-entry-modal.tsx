@@ -59,11 +59,17 @@ export default function RevenueEntryModal({
     return lastDate || new Date().toISOString().split('T')[0];
   };
 
+  // Get last check entry date from localStorage
+  const getLastCheckEntryDate = () => {
+    const lastDate = localStorage.getItem('lastCheckEntryDate');
+    return lastDate || new Date().toISOString().split('T')[0];
+  };
+
   const form = useForm<RevenueEntryForm>({
     resolver: zodResolver(revenueEntrySchema),
     defaultValues: {
       date: getLastPaymentDate(),
-      checkDate: new Date().toISOString().split('T')[0],
+      checkDate: getLastCheckEntryDate(),
       amount: "",
       patientId: "",
       houseId: "",
@@ -76,7 +82,7 @@ export default function RevenueEntryModal({
     if (revenueEntry && (isEdit || isCopy)) {
       form.reset({
         date: isCopy ? getLastPaymentDate() : new Date(revenueEntry.date).toISOString().split('T')[0],
-        checkDate: isCopy ? new Date().toISOString().split('T')[0] : (revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+        checkDate: isCopy ? getLastCheckEntryDate() : (revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : getLastCheckEntryDate()),
         amount: revenueEntry.amount,
         patientId: revenueEntry.patientId || "",
         houseId: revenueEntry.houseId,
@@ -86,7 +92,7 @@ export default function RevenueEntryModal({
     } else {
       form.reset({
         date: getLastPaymentDate(),
-        checkDate: new Date().toISOString().split('T')[0],
+        checkDate: getLastCheckEntryDate(),
         amount: "",
         patientId: "",
         houseId: "",
@@ -104,13 +110,15 @@ export default function RevenueEntryModal({
       queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
       toast({ title: "Revenue entry created successfully" });
       
-      // Save the payment date to localStorage for next time
+      // Save the payment date and check entry date to localStorage for next time
       const currentDate = form.getValues('date');
+      const currentCheckDate = form.getValues('checkDate');
       localStorage.setItem('lastPaymentDate', currentDate);
+      localStorage.setItem('lastCheckEntryDate', currentCheckDate);
       
       form.reset({
         date: getLastPaymentDate(),
-        checkDate: new Date().toISOString().split('T')[0],
+        checkDate: getLastCheckEntryDate(),
         amount: "",
         patientId: "",
         houseId: "",
