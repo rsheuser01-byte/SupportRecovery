@@ -17,7 +17,7 @@ import {
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, desc, and, like } from "drizzle-orm";
+import { eq, desc, and, like, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Houses
@@ -1126,15 +1126,20 @@ export class DbStorage implements IStorage {
   }
 
   async markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean> {
-    const result = await this.db
-      .update(timeEntries)
-      .set({ 
-        isPaid: true, 
-        paidAt: new Date(),
-        expenseId: expenseId 
-      })
-      .where(and(...timeEntryIds.map(id => eq(timeEntries.id, id))));
-    return result.rowCount > 0;
+    try {
+      const result = await this.db
+        .update(timeEntries)
+        .set({ 
+          isPaid: true, 
+          paidAt: new Date(),
+          expenseId: expenseId 
+        })
+        .where(inArray(timeEntries.id, timeEntryIds));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error marking time entries as paid:', error);
+      throw error;
+    }
   }
 }
 
