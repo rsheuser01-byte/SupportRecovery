@@ -12,7 +12,8 @@ import {
   type User, type UpsertUser,
   type HourlyEmployee, type InsertHourlyEmployee,
   type TimeEntry, type InsertTimeEntry,
-  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking, users, hourlyEmployees, timeEntries
+  type StaffPayment, type InsertStaffPayment,
+  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking, users, hourlyEmployees, timeEntries, staffPayments
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -109,6 +110,14 @@ export interface IStorage {
   updateTimeEntry(id: string, timeEntry: Partial<InsertTimeEntry>): Promise<TimeEntry | undefined>;
   deleteTimeEntry(id: string): Promise<boolean>;
   markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean>;
+
+  // Staff Payments
+  getStaffPayments(): Promise<StaffPayment[]>;
+  getStaffPaymentsByStaff(staffId: string): Promise<StaffPayment[]>;
+  getStaffPayment(id: string): Promise<StaffPayment | undefined>;
+  createStaffPayment(payment: InsertStaffPayment): Promise<StaffPayment>;
+  updateStaffPayment(id: string, payment: Partial<InsertStaffPayment>): Promise<StaffPayment | undefined>;
+  deleteStaffPayment(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -620,6 +629,14 @@ export class MemStorage implements IStorage {
   async updateTimeEntry(id: string, timeEntry: Partial<InsertTimeEntry>): Promise<TimeEntry | undefined> { return undefined; }
   async deleteTimeEntry(id: string): Promise<boolean> { return false; }
   async markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean> { return false; }
+
+  // Staff Payments - stub implementations since we use DbStorage
+  async getStaffPayments(): Promise<StaffPayment[]> { return []; }
+  async getStaffPaymentsByStaff(staffId: string): Promise<StaffPayment[]> { return []; }
+  async getStaffPayment(id: string): Promise<StaffPayment | undefined> { return undefined; }
+  async createStaffPayment(payment: InsertStaffPayment): Promise<StaffPayment> { throw new Error("Not implemented"); }
+  async updateStaffPayment(id: string, payment: Partial<InsertStaffPayment>): Promise<StaffPayment | undefined> { return undefined; }
+  async deleteStaffPayment(id: string): Promise<boolean> { return false; }
 }
 
 // Database Storage Implementation
@@ -1157,6 +1174,35 @@ export class DbStorage implements IStorage {
       console.error('Error marking time entries as paid:', error);
       throw error;
     }
+  }
+
+  // Staff Payments
+  async getStaffPayments(): Promise<StaffPayment[]> {
+    return await this.db.select().from(staffPayments).orderBy(desc(staffPayments.paymentDate));
+  }
+
+  async getStaffPaymentsByStaff(staffId: string): Promise<StaffPayment[]> {
+    return await this.db.select().from(staffPayments).where(eq(staffPayments.staffId, staffId)).orderBy(desc(staffPayments.paymentDate));
+  }
+
+  async getStaffPayment(id: string): Promise<StaffPayment | undefined> {
+    const result = await this.db.select().from(staffPayments).where(eq(staffPayments.id, id));
+    return result[0];
+  }
+
+  async createStaffPayment(payment: InsertStaffPayment): Promise<StaffPayment> {
+    const result = await this.db.insert(staffPayments).values(payment).returning();
+    return result[0];
+  }
+
+  async updateStaffPayment(id: string, payment: Partial<InsertStaffPayment>): Promise<StaffPayment | undefined> {
+    const result = await this.db.update(staffPayments).set(payment).where(eq(staffPayments.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteStaffPayment(id: string): Promise<boolean> {
+    const result = await this.db.delete(staffPayments).where(eq(staffPayments.id, id));
+    return result.rowCount > 0;
   }
 }
 

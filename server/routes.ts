@@ -6,7 +6,7 @@ import {
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
   insertExpenseSchema, insertBusinessSettingsSchema, insertCheckTrackingSchema,
-  insertHourlyEmployeeSchema, insertTimeEntrySchema
+  insertHourlyEmployeeSchema, insertTimeEntrySchema, insertStaffPaymentSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -640,6 +640,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete employee" });
+    }
+  });
+
+  // Staff Payments
+  app.get("/api/staff-payments", isAuthenticated, async (req, res) => {
+    try {
+      const payments = await storage.getStaffPayments();
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch staff payments" });
+    }
+  });
+
+  app.post("/api/staff-payments", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertStaffPaymentSchema.parse(req.body);
+      const payment = await storage.createStaffPayment(validatedData);
+      res.json(payment);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid data" });
+    }
+  });
+
+  app.put("/api/staff-payments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertStaffPaymentSchema.partial().parse(req.body);
+      const payment = await storage.updateStaffPayment(req.params.id, validatedData);
+      if (!payment) {
+        return res.status(404).json({ message: "Staff payment not found" });
+      }
+      res.json(payment);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid data" });
+    }
+  });
+
+  app.delete("/api/staff-payments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const success = await storage.deleteStaffPayment(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Staff payment not found" });
+      }
+      res.json({ message: "Staff payment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete staff payment" });
     }
   });
 

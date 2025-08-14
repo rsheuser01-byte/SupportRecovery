@@ -186,3 +186,23 @@ export type HourlyEmployee = typeof hourlyEmployees.$inferSelect;
 export type InsertHourlyEmployee = z.infer<typeof insertHourlyEmployeeSchema>;
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;
+
+// Staff Payment Tracking
+export const staffPayments = pgTable('staff_payments', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  staffId: text('staff_id').notNull().references(() => staff.id),
+  amount: text('amount').notNull(), // Amount paid to staff member
+  paymentDate: date('payment_date').notNull(), // When payment was made
+  notes: text('notes'), // Optional notes about the payment
+  isPaid: boolean('is_paid').default(false).notNull(), // Payment status
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const insertStaffPaymentSchema = createInsertSchema(staffPayments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertStaffPayment = z.infer<typeof insertStaffPaymentSchema>;
+export type StaffPayment = typeof staffPayments.$inferSelect;

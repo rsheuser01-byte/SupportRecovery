@@ -30,9 +30,10 @@ import { HouseModal } from "../components/house-modal";
 import { StaffModal } from "../components/staff-modal";
 import InteractiveCalendar from "../components/interactive-calendar";
 import type { 
-  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckTracking 
+  House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckTracking, StaffPayment
 } from "@shared/schema";
 import { CheckTrackingModal } from "@/components/check-tracking-modal";
+import { StaffPaymentModal } from "@/components/staff-payment-modal";
 import { UserManagementModal } from "@/components/user-management-modal";
 import { OnboardingWalkthrough } from "@/components/onboarding-walkthrough";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -68,6 +69,10 @@ export default function Dashboard() {
   const [patientSearchTerm, setPatientSearchTerm] = useState("");
   const [selectedHouseFilter, setSelectedHouseFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
+  
+  // Staff Payments state
+  const [staffPaymentModalOpen, setStaffPaymentModalOpen] = useState(false);
+  const [editingStaffPayment, setEditingStaffPayment] = useState<StaffPayment | undefined>(undefined);
   
   // Revenue entry filters
   const [revenueFilters, setRevenueFilters] = useState({
@@ -212,6 +217,10 @@ export default function Dashboard() {
     queryKey: ['/api/check-tracking'],
   });
 
+  const { data: staffPaymentsData = [] } = useQuery<StaffPayment[]>({
+    queryKey: ['/api/staff-payments'],
+  });
+
   // Daily report query
   const { data: dailyReport, isLoading: isDailyReportLoading } = useQuery({
     queryKey: ['/api/daily-report', selectedReportDate],
@@ -242,6 +251,59 @@ export default function Dashboard() {
       toast({ title: "Failed to delete expense", variant: "destructive" });
     },
   });
+
+  // Staff Payment Mutations
+  const createStaffPaymentMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/staff-payments', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/staff-payments'] });
+      toast({ title: "Staff payment added successfully" });
+      setStaffPaymentModalOpen(false);
+      setEditingStaffPayment(undefined);
+    },
+    onError: () => {
+      toast({ title: "Failed to add staff payment", variant: "destructive" });
+    },
+  });
+
+  const updateStaffPaymentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest('PUT', `/api/staff-payments/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/staff-payments'] });
+      toast({ title: "Staff payment updated successfully" });
+      setStaffPaymentModalOpen(false);
+      setEditingStaffPayment(undefined);
+    },
+    onError: () => {
+      toast({ title: "Failed to update staff payment", variant: "destructive" });
+    },
+  });
+
+  const deleteStaffPaymentMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/staff-payments/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/staff-payments'] });
+      toast({ title: "Staff payment deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete staff payment", variant: "destructive" });
+    },
+  });
+
+  // Handler functions for staff payments
+  const handleSaveStaffPayment = (paymentData: any) => {
+    if (editingStaffPayment) {
+      updateStaffPaymentMutation.mutate({ id: editingStaffPayment.id, data: paymentData });
+    } else {
+      createStaffPaymentMutation.mutate(paymentData);
+    }
+  };
+
+  const handleDeleteStaffPayment = (id: string) => {
+    if (confirm('Are you sure you want to delete this staff payment?')) {
+      deleteStaffPaymentMutation.mutate(id);
+    }
+  };
 
   // Get latest check date for "Last Check" filter option
   const getLatestCheckDate = () => {
@@ -1926,6 +1988,99 @@ export default function Dashboard() {
             </header>
 
             <div className="p-6">
+              {/* Staff Payment Tracking Section */}
+              <Card className="mb-6">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Staff Payment Tracking</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">Track actual payments made to staff from revenue received</p>
+                  </div>
+                  <Button onClick={() => setStaffPaymentModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Payment
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Staff Member</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Payment Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Notes</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {staffPaymentsData.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                              <p className="text-muted-foreground">No staff payments recorded yet.</p>
+                              <Button 
+                                className="mt-2" 
+                                variant="outline"
+                                onClick={() => setStaffPaymentModalOpen(true)}
+                              >
+                                Add First Payment
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          staffPaymentsData.map((payment) => {
+                            const staffMember = staff.find(s => s.id === payment.staffId);
+                            return (
+                              <TableRow key={payment.id}>
+                                <TableCell className="font-medium">
+                                  {staffMember?.name || 'Unknown Staff'}
+                                </TableCell>
+                                <TableCell>{formatCurrency(parseFloat(payment.amount))}</TableCell>
+                                <TableCell>{new Date(payment.paymentDate).toLocaleDateString()}</TableCell>
+                                <TableCell>
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    payment.isPaid 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {payment.isPaid ? 'Paid' : 'Pending'}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="max-w-xs truncate">
+                                  {payment.notes || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingStaffPayment(payment);
+                                        setStaffPaymentModalOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteStaffPayment(payment.id)}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="mb-6">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Payout Rate Configuration</CardTitle>
@@ -3056,6 +3211,19 @@ export default function Dashboard() {
         open={userManagementModalOpen}
         onOpenChange={setUserManagementModalOpen}
       />
+
+      {/* Staff Payment Modal */}
+      {staffPaymentModalOpen && (
+        <StaffPaymentModal
+          staff={staff}
+          payment={editingStaffPayment}
+          onSave={handleSaveStaffPayment}
+          onCancel={() => {
+            setStaffPaymentModalOpen(false);
+            setEditingStaffPayment(undefined);
+          }}
+        />
+      )}
     </div>
   );
 }
