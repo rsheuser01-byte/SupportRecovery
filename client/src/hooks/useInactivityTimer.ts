@@ -9,10 +9,10 @@ interface UseInactivityTimerOptions {
 }
 
 export function useInactivityTimer({
-  timeout = 2 * 60 * 60 * 1000, // 2 hours default
+  timeout = 30 * 60 * 1000, // 30 minutes default
   onTimeout,
   onWarning,
-  warningTime = 5 * 60 * 1000, // 5 minutes warning default
+  warningTime = 2 * 60 * 1000, // 2 minutes warning default
 }: UseInactivityTimerOptions = {}) {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isWarning, setIsWarning] = useState(false);

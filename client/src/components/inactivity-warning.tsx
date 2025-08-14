@@ -19,8 +19,8 @@ export function InactivityWarning({ onLogout }: InactivityWarningProps) {
   const [showDialog, setShowDialog] = useState(false);
 
   const { isWarning, timeLeftFormatted, extendSession } = useInactivityTimer({
-    timeout: 2 * 60 * 60 * 1000, // 2 hours
-    warningTime: 5 * 60 * 1000, // 5 minute warning
+    timeout: 30 * 60 * 1000, // 30 minutes
+    warningTime: 2 * 60 * 1000, // 2 minute warning
     onWarning: () => {
       setShowDialog(true);
     },
@@ -55,7 +55,7 @@ export function InactivityWarning({ onLogout }: InactivityWarningProps) {
               Your session will expire in <strong className="text-orange-600">{timeLeftFormatted}</strong> due to inactivity.
             </p>
             <p>
-              This is a security measure for protecting sensitive healthcare data.
+              This saves computing costs and protects sensitive healthcare data.
               Click "Stay Logged In" to continue your session.
             </p>
           </AlertDialogDescription>

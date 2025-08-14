@@ -23,9 +23,9 @@ const getOidcConfig = memoize(
 );
 
 export function getSession() {
-  // Configurable session timeouts for security
-  const sessionTtl = 8 * 60 * 60 * 1000; // 8 hours total session life
-  const inactivityTimeout = 2 * 60 * 60 * 1000; // 2 hours of inactivity before auto-logout
+  // Configurable session timeouts for security and cost optimization
+  const sessionTtl = 4 * 60 * 60 * 1000; // 4 hours total session life
+  const inactivityTimeout = 30 * 60 * 1000; // 30 minutes of inactivity before auto-logout
   
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -155,7 +155,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const now = Date.now();
   const tokenExpiry = user.expires_at * 1000; // Convert to milliseconds
   const lastActivity = user.last_activity || now;
-  const inactivityLimit = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+  const inactivityLimit = 30 * 60 * 1000; // 30 minutes in milliseconds
 
   // Check for inactivity timeout
   if (now - lastActivity > inactivityLimit) {
