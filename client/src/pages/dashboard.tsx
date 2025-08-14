@@ -1607,20 +1607,25 @@ export default function Dashboard() {
 
           {/* Revenue Tab */}
           <TabsContent value="revenue" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Revenue Entry</h2>
-                  <p className="text-gray-600">Add new service entries and track revenue</p>
+            <header className="bg-white border-b-4 border-green-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Revenue Entry</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Add new service entries and track revenue</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingRevenueEntry(undefined);
+                      setRevenueModalMode('create');
+                      setRevenueModalOpen(true);
+                    }}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Entry
+                  </Button>
                 </div>
-                <Button onClick={() => {
-                  setEditingRevenueEntry(undefined);
-                  setRevenueModalMode('create');
-                  setRevenueModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Entry
-                </Button>
               </div>
             </header>
 
@@ -1893,21 +1898,29 @@ export default function Dashboard() {
 
           {/* Payouts Tab */}
           <TabsContent value="payouts" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Staff Payouts</h2>
-                  <p className="text-gray-600">Manage payout calculations and distributions</p>
-                </div>
-                <div className="flex space-x-3">
-                  <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Payouts
-                  </Button>
-                  <Button onClick={() => setPayoutRatesModalOpen(true)}>
-                    <Calculator className="mr-2 h-4 w-4" />
-                    Manage Rates
-                  </Button>
+            <header className="bg-white border-b-4 border-orange-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Staff Payouts</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Manage payout calculations and distributions</p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button 
+                      variant="outline"
+                      className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Payouts
+                    </Button>
+                    <Button 
+                      onClick={() => setPayoutRatesModalOpen(true)}
+                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <Calculator className="mr-2 h-4 w-4" />
+                      Manage Rates
+                    </Button>
+                  </div>
                 </div>
               </div>
             </header>
@@ -2006,19 +2019,24 @@ export default function Dashboard() {
 
           {/* Expenses Tab */}
           <TabsContent value="expenses" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Expense Tracking</h2>
-                  <p className="text-gray-600">Manage business expenses and operational costs</p>
+            <header className="bg-white border-b-4 border-red-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Expense Tracking</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Manage business expenses and operational costs</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingExpense(undefined);
+                      setExpenseModalOpen(true);
+                    }}
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Expense
+                  </Button>
                 </div>
-                <Button onClick={() => {
-                  setEditingExpense(undefined);
-                  setExpenseModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Expense
-                </Button>
               </div>
             </header>
 
@@ -2161,19 +2179,24 @@ export default function Dashboard() {
 
           {/* Patients Tab */}
           <TabsContent value="patients" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Patient Management</h2>
-                  <p className="text-gray-600">Manage patient profiles and program assignments</p>
+            <header className="bg-white border-b-4 border-cyan-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Patient Management</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Manage patient profiles and program assignments</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingPatient(undefined);
+                      setPatientModalOpen(true);
+                    }}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Patient
+                  </Button>
                 </div>
-                <Button onClick={() => {
-                  setEditingPatient(undefined);
-                  setPatientModalOpen(true);
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Patient
-                </Button>
               </div>
             </header>
 
@@ -2295,16 +2318,21 @@ export default function Dashboard() {
 
           {/* Reports Tab */}
           <TabsContent value="reports" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
-                  <p className="text-gray-600">Generate comprehensive reports and analyze trends</p>
+            <header className="bg-white border-b-4 border-purple-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Reports & Analytics</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Generate comprehensive reports and analyze trends</p>
+                  </div>
+                  <Button 
+                    onClick={generateAllReports}
+                    className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export All Reports
+                  </Button>
                 </div>
-                <Button onClick={generateAllReports}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export All Reports
-                </Button>
               </div>
             </header>
 
@@ -2516,16 +2544,21 @@ export default function Dashboard() {
 
           {/* Check Tracking Tab */}
           <TabsContent value="check-dates" className="m-0">
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Check Tracking</h2>
-                  <p className="text-gray-600">Track check totals by service provider with cumulative reporting</p>
+            <header className="bg-white border-b-4 border-teal-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Check Tracking</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>Track check totals by service provider with cumulative reporting</p>
+                  </div>
+                  <Button 
+                    onClick={() => { setEditingCheckEntry(undefined); setCheckTrackingModalOpen(true); }}
+                    className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Check Entry
+                  </Button>
                 </div>
-                <Button onClick={() => { setEditingCheckEntry(undefined); setCheckTrackingModalOpen(true); }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Check Entry
-                </Button>
               </div>
             </header>
 
