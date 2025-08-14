@@ -5,7 +5,8 @@ import { setupAuth, isAuthenticated, isApproved, isAdmin } from "./replitAuth";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
-  insertExpenseSchema, insertBusinessSettingsSchema, insertCheckTrackingSchema 
+  insertExpenseSchema, insertBusinessSettingsSchema, insertCheckTrackingSchema,
+  insertHourlyEmployeeSchema, insertTimeEntrySchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -501,6 +502,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete expense" });
+    }
+  });
+
+  // Hourly Employees routes
+  app.get("/api/hourly-employees", isAuthenticated, async (req, res) => {
+    try {
+      const employees = await storage.getHourlyEmployees();
+      res.json(employees);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch hourly employees" });
+    }
+  });
+
+  app.post("/api/hourly-employees", isAuthenticated, async (req, res) => {
+    try {
+      const employeeData = insertHourlyEmployeeSchema.parse(req.body);
+      const employee = await storage.createHourlyEmployee(employeeData);
+      res.json(employee);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid employee data", error: error.message });
+    }
+  });
+
+  app.put("/api/hourly-employees/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const employeeData = insertHourlyEmployeeSchema.partial().parse(req.body);
+      const employee = await storage.updateHourlyEmployee(id, employeeData);
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      res.json(employee);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid employee data", error: error.message });
+    }
+  });
+
+  app.delete("/api/hourly-employees/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteHourlyEmployee(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete employee" });
+    }
+  });
+
+  // Time Entries routes
+  app.get("/api/time-entries", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, unpaidOnly } = req.query;
+      let timeEntries;
+      
+      if (unpaidOnly === 'true') {
+        timeEntries = await storage.getUnpaidTimeEntries();
+      } else if (employeeId) {
+        timeEntries = await storage.getTimeEntriesByEmployee(employeeId as string);
+      } else {
+        timeEntries = await storage.getTimeEntries();
+      }
+      
+      res.json(timeEntries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch time entries" });
+    }
+  });
+
+  app.post("/api/time-entries", isAuthenticated, async (req, res) => {
+    try {
+      const processedData = {
+        ...req.body,
+        date: new Date(req.body.date)
+      };
+      const timeEntryData = insertTimeEntrySchema.parse(processedData);
+      const timeEntry = await storage.createTimeEntry(timeEntryData);
+      res.json(timeEntry);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid time entry data", error: error.message });
+    }
+  });
+
+  app.put("/api/time-entries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const processedData = {
+        ...req.body,
+        ...(req.body.date && { date: new Date(req.body.date) }),
+        ...(req.body.paidAt && { paidAt: new Date(req.body.paidAt) })
+      };
+      const timeEntryData = insertTimeEntrySchema.partial().parse(processedData);
+      const timeEntry = await storage.updateTimeEntry(id, timeEntryData);
+      if (!timeEntry) {
+        return res.status(404).json({ message: "Time entry not found" });
+      }
+      res.json(timeEntry);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid time entry data", error: error.message });
+    }
+  });
+
+  app.delete("/api/time-entries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteTimeEntry(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Time entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete time entry" });
+    }
+  });
+
+  // Mark time entries as paid and create expense
+  app.post("/api/time-entries/pay", isAuthenticated, async (req, res) => {
+    try {
+      const { timeEntryIds, totalAmount, employeeName, description } = req.body;
+      
+      // Create expense first
+      const expenseData = {
+        date: new Date(),
+        amount: totalAmount.toString(),
+        vendor: employeeName,
+        category: "Hourly Employee Payment",
+        description: description || `Payment for ${timeEntryIds.length} time entries`,
+        status: "paid"
+      };
+      
+      const expense = await storage.createExpense(expenseData);
+      
+      // Mark time entries as paid
+      const success = await storage.markTimeEntriesAsPaid(timeEntryIds, expense.id);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to mark time entries as paid" });
+      }
+      
+      res.json({ expense, success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to process payment", error: error.message });
     }
   });
 

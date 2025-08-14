@@ -66,6 +66,28 @@ export const expenses = pgTable("expenses", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Hourly employees table
+export const hourlyEmployees = pgTable("hourly_employees", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  hourlyRate: numeric("hourly_rate", { precision: 8, scale: 2 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Time entries for hourly employees
+export const timeEntries = pgTable("time_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => hourlyEmployees.id),
+  date: timestamp("date").notNull(),
+  hours: numeric("hours", { precision: 5, scale: 2 }).notNull(),
+  description: text("description"),
+  isPaid: boolean("is_paid").default(false),
+  paidAt: timestamp("paid_at"),
+  expenseId: varchar("expense_id").references(() => expenses.id), // Links to expense when paid
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const payouts = pgTable("payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   revenueEntryId: varchar("revenue_entry_id").notNull().references(() => revenueEntries.id),
@@ -135,6 +157,8 @@ export const insertCheckTrackingSchema = createInsertSchema(checkTracking).omit(
   id: true,
   createdAt: true,
 });
+export const insertHourlyEmployeeSchema = createInsertSchema(hourlyEmployees).omit({ id: true, createdAt: true });
+export const insertTimeEntrySchema = createInsertSchema(timeEntries).omit({ id: true, createdAt: true });
 
 // Types
 export type House = typeof houses.$inferSelect;
@@ -158,3 +182,7 @@ export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
 export type CheckTracking = typeof checkTracking.$inferSelect;
 export type InsertCheckTracking = z.infer<typeof insertCheckTrackingSchema>;
+export type HourlyEmployee = typeof hourlyEmployees.$inferSelect;
+export type InsertHourlyEmployee = z.infer<typeof insertHourlyEmployeeSchema>;
+export type TimeEntry = typeof timeEntries.$inferSelect;
+export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;

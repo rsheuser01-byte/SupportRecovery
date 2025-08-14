@@ -10,7 +10,9 @@ import {
   type BusinessSettings, type InsertBusinessSettings,
   type CheckTracking, type InsertCheckTracking,
   type User, type UpsertUser,
-  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking, users
+  type HourlyEmployee, type InsertHourlyEmployee,
+  type TimeEntry, type InsertTimeEntry,
+  houses, serviceCodes, staff, payoutRates, patients, revenueEntries, expenses, payouts, businessSettings, checkTracking, users, hourlyEmployees, timeEntries
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -89,6 +91,23 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserRole(userId: string, role: string, approvedBy?: string): Promise<User | undefined>;
   approveUser(userId: string, approvedBy: string): Promise<User | undefined>;
+
+  // Hourly Employees
+  getHourlyEmployees(): Promise<HourlyEmployee[]>;
+  getHourlyEmployee(id: string): Promise<HourlyEmployee | undefined>;
+  createHourlyEmployee(employee: InsertHourlyEmployee): Promise<HourlyEmployee>;
+  updateHourlyEmployee(id: string, employee: Partial<InsertHourlyEmployee>): Promise<HourlyEmployee | undefined>;
+  deleteHourlyEmployee(id: string): Promise<boolean>;
+
+  // Time Entries
+  getTimeEntries(): Promise<TimeEntry[]>;
+  getTimeEntriesByEmployee(employeeId: string): Promise<TimeEntry[]>;
+  getUnpaidTimeEntries(): Promise<TimeEntry[]>;
+  getTimeEntry(id: string): Promise<TimeEntry | undefined>;
+  createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry>;
+  updateTimeEntry(id: string, timeEntry: Partial<InsertTimeEntry>): Promise<TimeEntry | undefined>;
+  deleteTimeEntry(id: string): Promise<boolean>;
+  markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -103,6 +122,8 @@ export class MemStorage implements IStorage {
   private businessSettings: BusinessSettings | null = null;
   private checkTrackingEntries: Map<string, CheckTracking> = new Map();
   private users: Map<string, User> = new Map();
+  private hourlyEmployees: Map<string, HourlyEmployee> = new Map();
+  private timeEntries: Map<string, TimeEntry> = new Map();
 
   constructor() {
     this.initializeData();
@@ -577,6 +598,23 @@ export class MemStorage implements IStorage {
     this.users.set(userId, updatedUser);
     return updatedUser;
   }
+
+  // Hourly Employees - stub implementations since we use DbStorage
+  async getHourlyEmployees(): Promise<HourlyEmployee[]> { return []; }
+  async getHourlyEmployee(id: string): Promise<HourlyEmployee | undefined> { return undefined; }
+  async createHourlyEmployee(employee: InsertHourlyEmployee): Promise<HourlyEmployee> { throw new Error("Not implemented"); }
+  async updateHourlyEmployee(id: string, employee: Partial<InsertHourlyEmployee>): Promise<HourlyEmployee | undefined> { return undefined; }
+  async deleteHourlyEmployee(id: string): Promise<boolean> { return false; }
+
+  // Time Entries - stub implementations since we use DbStorage
+  async getTimeEntries(): Promise<TimeEntry[]> { return []; }
+  async getTimeEntriesByEmployee(employeeId: string): Promise<TimeEntry[]> { return []; }
+  async getUnpaidTimeEntries(): Promise<TimeEntry[]> { return []; }
+  async getTimeEntry(id: string): Promise<TimeEntry | undefined> { return undefined; }
+  async createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry> { throw new Error("Not implemented"); }
+  async updateTimeEntry(id: string, timeEntry: Partial<InsertTimeEntry>): Promise<TimeEntry | undefined> { return undefined; }
+  async deleteTimeEntry(id: string): Promise<boolean> { return false; }
+  async markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean> { return false; }
 }
 
 // Database Storage Implementation
@@ -1002,6 +1040,76 @@ export class DbStorage implements IStorage {
       console.error("Error approving user:", error);
       return undefined;
     }
+  }
+
+  // Hourly Employees
+  async getHourlyEmployees(): Promise<HourlyEmployee[]> {
+    return await this.db.select().from(hourlyEmployees).where(eq(hourlyEmployees.isActive, true));
+  }
+
+  async getHourlyEmployee(id: string): Promise<HourlyEmployee | undefined> {
+    const result = await this.db.select().from(hourlyEmployees).where(eq(hourlyEmployees.id, id));
+    return result[0];
+  }
+
+  async createHourlyEmployee(employee: InsertHourlyEmployee): Promise<HourlyEmployee> {
+    const result = await this.db.insert(hourlyEmployees).values(employee).returning();
+    return result[0];
+  }
+
+  async updateHourlyEmployee(id: string, employee: Partial<InsertHourlyEmployee>): Promise<HourlyEmployee | undefined> {
+    const result = await this.db.update(hourlyEmployees).set(employee).where(eq(hourlyEmployees.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteHourlyEmployee(id: string): Promise<boolean> {
+    const result = await this.db.update(hourlyEmployees).set({ isActive: false }).where(eq(hourlyEmployees.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Time Entries
+  async getTimeEntries(): Promise<TimeEntry[]> {
+    return await this.db.select().from(timeEntries).orderBy(desc(timeEntries.date));
+  }
+
+  async getTimeEntriesByEmployee(employeeId: string): Promise<TimeEntry[]> {
+    return await this.db.select().from(timeEntries).where(eq(timeEntries.employeeId, employeeId)).orderBy(desc(timeEntries.date));
+  }
+
+  async getUnpaidTimeEntries(): Promise<TimeEntry[]> {
+    return await this.db.select().from(timeEntries).where(eq(timeEntries.isPaid, false)).orderBy(desc(timeEntries.date));
+  }
+
+  async getTimeEntry(id: string): Promise<TimeEntry | undefined> {
+    const result = await this.db.select().from(timeEntries).where(eq(timeEntries.id, id));
+    return result[0];
+  }
+
+  async createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry> {
+    const result = await this.db.insert(timeEntries).values(timeEntry).returning();
+    return result[0];
+  }
+
+  async updateTimeEntry(id: string, timeEntry: Partial<InsertTimeEntry>): Promise<TimeEntry | undefined> {
+    const result = await this.db.update(timeEntries).set(timeEntry).where(eq(timeEntries.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTimeEntry(id: string): Promise<boolean> {
+    const result = await this.db.delete(timeEntries).where(eq(timeEntries.id, id));
+    return result.rowCount > 0;
+  }
+
+  async markTimeEntriesAsPaid(timeEntryIds: string[], expenseId: string): Promise<boolean> {
+    const result = await this.db
+      .update(timeEntries)
+      .set({ 
+        isPaid: true, 
+        paidAt: new Date(),
+        expenseId: expenseId 
+      })
+      .where(and(...timeEntryIds.map(id => eq(timeEntries.id, id))));
+    return result.rowCount > 0;
   }
 }
 

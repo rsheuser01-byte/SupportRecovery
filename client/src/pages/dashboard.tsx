@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, Copy, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -36,6 +36,7 @@ import { CheckTrackingModal } from "@/components/check-tracking-modal";
 import { UserManagementModal } from "@/components/user-management-modal";
 import { OnboardingWalkthrough } from "@/components/onboarding-walkthrough";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { HourlyTimeTracker } from "@/components/hourly-time-tracker";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -1285,6 +1286,21 @@ export default function Dashboard() {
             >
               <Calendar className="mr-3 h-4 w-4" />
               Check Tracking
+            </Button>
+            <Button
+              variant={selectedTab === "hourly-tracking" ? "default" : "ghost"}
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "hourly-tracking" 
+                  ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "hourly-tracking" ? "active" : ""}`}
+              onClick={() => {
+                setSelectedTab("hourly-tracking");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
+            >
+              <Clock className="mr-3 h-4 w-4" />
+              Hourly Tracking
             </Button>
             <Button
               variant={selectedTab === "settings" ? "default" : "ghost"}
@@ -2901,6 +2917,26 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Hourly Tracking Tab */}
+          <TabsContent value="hourly-tracking" className="m-0">
+            <header className="bg-white border-b-4 border-green-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>Hourly Employee Tracking</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>
+                      Track time entries and manage hourly employee payments
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 opacity-50"></div>
+            </header>
+            <div className="p-6">
+              <HourlyTimeTracker />
             </div>
           </TabsContent>
         </Tabs>
