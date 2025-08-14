@@ -113,6 +113,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const adminUserId = (req as any).user.claims.sub;
+      const userToDelete = req.params.id;
+      
+      // Prevent admin from deleting themselves
+      if (adminUserId === userToDelete) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const success = await storage.deleteUser(userToDelete);
+      if (!success) {
+        return res.status(404).json({ message: "User not found or could not be deleted" });
+      }
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   // Houses - Protected with authentication and approval
   app.get("/api/houses", isAuthenticated, isApproved, async (req, res) => {
     try {

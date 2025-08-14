@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserCheck, UserX, Shield, Clock, CheckCircle, XCircle } from "lucide-react";
+import { UserCheck, UserX, Shield, Clock, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface UserManagementModalProps {
@@ -44,6 +44,21 @@ export function UserManagementModal({ open, onOpenChange }: UserManagementModalP
     },
     onError: () => {
       toast({ title: "Failed to update user role", variant: "destructive" });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => apiRequest("DELETE", `/api/users/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({ title: "User deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to delete user", 
+        description: error.message || "Unknown error occurred",
+        variant: "destructive" 
+      });
     },
   });
 
@@ -197,6 +212,20 @@ export function UserManagementModal({ open, onOpenChange }: UserManagementModalP
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete ${user.firstName ? `${user.firstName} ${user.lastName}`.trim() : user.email}? This action cannot be undone.`)) {
+                            deleteUserMutation.mutate(user.id);
+                          }
+                        }}
+                        disabled={deleteUserMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

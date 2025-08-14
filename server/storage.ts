@@ -91,6 +91,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserRole(userId: string, role: string, approvedBy?: string): Promise<User | undefined>;
   approveUser(userId: string, approvedBy: string): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
 
   // Hourly Employees
   getHourlyEmployees(): Promise<HourlyEmployee[]>;
@@ -599,6 +600,10 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
   // Hourly Employees - stub implementations since we use DbStorage
   async getHourlyEmployees(): Promise<HourlyEmployee[]> { return []; }
   async getHourlyEmployee(id: string): Promise<HourlyEmployee | undefined> { return undefined; }
@@ -1064,6 +1069,18 @@ export class DbStorage implements IStorage {
     } catch (error) {
       console.error("Error approving user:", error);
       return undefined;
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      // Note: In a production environment, you might want to soft delete
+      // or prevent deletion of users who have created data
+      const result = await this.db.delete(users).where(eq(users.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
     }
   }
 
