@@ -12,6 +12,15 @@ The application features a React frontend with shadcn/ui components, an Express.
 - Implemented safe date parsing to prevent JavaScript Date() timezone interpretation bugs
 - All filter systems now use consistent manual string parsing for reliable month boundary detection
 - **Fixed calendar date filtering bug (August 9, 2025):** Daily reports now correctly filter by processing date (checkDate) instead of service date, ensuring accurate calendar-based revenue tracking
+- **Hourly Employee Tracking System (August 14, 2025):**
+  - Completed full hourly employee tracking implementation with database tables, API endpoints, and UI components
+  - Fixed multiple API request errors by correcting fetch method calls from apiRequest to proper fetch syntax
+  - Resolved form validation issue allowing whole number hours input by adjusting step increment
+  - Fixed expense deletion for hourly payments to properly handle linked time entries (unmarks time entries as paid when expense is deleted)
+  - Fixed bulk time entry payment processing by correcting Drizzle ORM query to use inArray instead of incorrect and/eq combination
+  - Fixed timezone issues in time entry date handling with proper local timezone conversion
+  - **Critical Fix:** Resolved bulk payment processing to create separate expenses per employee instead of grouping all under one vendor name
+  - Added delete functionality for individual time entries with edit and delete buttons in Actions column
 - **UI/UX Improvements (August 5, 2025):**
   - Enhanced header visibility with high-contrast design for improved readability
   - Updated sidebar header with white background, blue gradient borders, and black text
