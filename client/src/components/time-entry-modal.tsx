@@ -160,7 +160,7 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
             <Input
               id="hours"
               type="number"
-              step="0.25"
+              step="0.01"
               min="0.01"
               max="24"
               value={hours}
