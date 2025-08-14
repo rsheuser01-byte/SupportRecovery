@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, Copy, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock, Filter
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -73,6 +73,9 @@ export default function Dashboard() {
   // Staff Payments state
   const [staffPaymentModalOpen, setStaffPaymentModalOpen] = useState(false);
   const [editingStaffPayment, setEditingStaffPayment] = useState<StaffPayment | undefined>(undefined);
+  const [staffPaymentStaffFilter, setStaffPaymentStaffFilter] = useState("all");
+  const [staffPaymentDateFilter, setStaffPaymentDateFilter] = useState("all");
+  const [staffPaymentCustomDate, setStaffPaymentCustomDate] = useState<string>('');
   
   // Revenue entry filters
   const [revenueFilters, setRevenueFilters] = useState({
@@ -304,6 +307,72 @@ export default function Dashboard() {
       deleteStaffPaymentMutation.mutate(id);
     }
   };
+
+  // Filter staff payments based on selected filters (memoized for performance)
+  const filteredStaffPayments = useMemo(() => {
+    let filtered = staffPaymentsData;
+
+    // Filter by staff member
+    if (staffPaymentStaffFilter !== 'all') {
+      filtered = filtered.filter(payment => payment.staffId === staffPaymentStaffFilter);
+    }
+
+    // Filter by payment date
+    if (staffPaymentDateFilter !== 'all') {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-indexed
+
+      filtered = filtered.filter(payment => {
+        try {
+          if (!payment.paymentDate || typeof payment.paymentDate !== 'string') {
+            return false;
+          }
+
+          // Parse date safely to avoid timezone issues
+          const dateParts = payment.paymentDate.split('-');
+          if (dateParts.length !== 3) {
+            return false;
+          }
+
+          const [year, month, day] = dateParts.map(Number);
+
+          // Validate date components
+          if (isNaN(year) || isNaN(month) || isNaN(day)) {
+            return false;
+          }
+          if (month < 1 || month > 12 || day < 1 || day > 31) {
+            return false;
+          }
+
+          const paymentYear = year;
+          const paymentMonth = month - 1; // Convert to 0-indexed
+
+          switch (staffPaymentDateFilter) {
+            case 'this-month':
+              return paymentMonth === currentMonth && paymentYear === currentYear;
+            case 'last-month':
+              let lastMonth = currentMonth - 1;
+              let lastMonthYear = currentYear;
+              if (lastMonth < 0) {
+                lastMonth = 11; // December
+                lastMonthYear = currentYear - 1;
+              }
+              return paymentMonth === lastMonth && paymentYear === lastMonthYear;
+            case 'custom-date':
+              return staffPaymentCustomDate && payment.paymentDate === staffPaymentCustomDate;
+            default:
+              return true;
+          }
+        } catch (error) {
+          console.warn('Staff payment filter error:', error, 'for payment:', payment);
+          return false;
+        }
+      });
+    }
+
+    return filtered;
+  }, [staffPaymentsData, staffPaymentStaffFilter, staffPaymentDateFilter, staffPaymentCustomDate]);
 
   // Get latest check date for "Last Check" filter option
   const getLatestCheckDate = () => {
@@ -2001,6 +2070,74 @@ export default function Dashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent>
+                  {/* Filter Controls */}
+                  <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Filter className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Filters:</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="staff-filter" className="text-sm">Staff Member</Label>
+                      <Select value={staffPaymentStaffFilter} onValueChange={setStaffPaymentStaffFilter}>
+                        <SelectTrigger id="staff-filter" className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Staff</SelectItem>
+                          {staff.map(member => (
+                            <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="date-filter" className="text-sm">Payment Date</Label>
+                      <Select value={staffPaymentDateFilter} onValueChange={setStaffPaymentDateFilter}>
+                        <SelectTrigger id="date-filter" className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Dates</SelectItem>
+                          <SelectItem value="this-month">This Month</SelectItem>
+                          <SelectItem value="last-month">Last Month</SelectItem>
+                          <SelectItem value="custom-date">Specific Date</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {staffPaymentDateFilter === 'custom-date' && (
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor="custom-date" className="text-sm">Select Date</Label>
+                        <input
+                          id="custom-date"
+                          type="date"
+                          value={staffPaymentCustomDate}
+                          onChange={(e) => setStaffPaymentCustomDate(e.target.value)}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+
+                    {(staffPaymentStaffFilter !== 'all' || staffPaymentDateFilter !== 'all') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setStaffPaymentStaffFilter('all');
+                          setStaffPaymentDateFilter('all');
+                          setStaffPaymentCustomDate('');
+                        }}
+                        className="text-xs"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Staff Payments Table */}
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -2010,33 +2147,44 @@ export default function Dashboard() {
                           <TableHead>Payment Date</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Notes</TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {staffPaymentsData.length === 0 ? (
+                        {filteredStaffPayments.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8">
-                              <p className="text-muted-foreground">No staff payments recorded yet.</p>
-                              <Button 
-                                className="mt-2" 
-                                variant="outline"
-                                onClick={() => setStaffPaymentModalOpen(true)}
-                              >
-                                Add First Payment
-                              </Button>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              <div className="flex flex-col items-center">
+                                <CreditCard className="h-12 w-12 mb-2 opacity-50" />
+                                <p>
+                                  {staffPaymentsData.length === 0 
+                                    ? "No staff payments recorded" 
+                                    : "No payments match the current filters"
+                                  }
+                                </p>
+                                <p className="text-sm">
+                                  {staffPaymentsData.length === 0 
+                                    ? "Add your first payment to start tracking"
+                                    : `Showing 0 of ${staffPaymentsData.length} payments`
+                                  }
+                                </p>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ) : (
-                          staffPaymentsData.map((payment) => {
-                            const staffMember = staff.find(s => s.id === payment.staffId);
-                            return (
-                              <TableRow key={payment.id}>
-                                <TableCell className="font-medium">
-                                  {staffMember?.name || 'Unknown Staff'}
-                                </TableCell>
-                                <TableCell>{formatCurrency(parseFloat(payment.amount))}</TableCell>
-                                <TableCell>{new Date(payment.paymentDate).toLocaleDateString()}</TableCell>
+                          filteredStaffPayments
+                            .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+                            .map(payment => {
+                              const staffMember = staff.find(s => s.id === payment.staffId);
+                              return (
+                                <TableRow key={payment.id}>
+                                  <TableCell className="font-medium">
+                                    {staffMember ? staffMember.name : 'Unknown Staff'}
+                                  </TableCell>
+                                  <TableCell className="font-medium text-green-600">
+                                    {formatCurrency(parseFloat(payment.amount))}
+                                  </TableCell>
+                                  <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                                 <TableCell>
                                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                     payment.isPaid 
@@ -2078,6 +2226,23 @@ export default function Dashboard() {
                       </TableBody>
                     </Table>
                   </div>
+
+                  {/* Filter Summary */}
+                  {filteredStaffPayments.length > 0 && staffPaymentsData.length > filteredStaffPayments.length && (
+                    <div className="mt-4 text-sm text-gray-600 text-center">
+                      Showing {filteredStaffPayments.length} of {staffPaymentsData.length} payments
+                      {staffPaymentStaffFilter !== 'all' && (
+                        <span> • Filtered by: {staff.find(s => s.id === staffPaymentStaffFilter)?.name}</span>
+                      )}
+                      {staffPaymentDateFilter !== 'all' && (
+                        <span> • Date: {
+                          staffPaymentDateFilter === 'this-month' ? 'This Month' :
+                          staffPaymentDateFilter === 'last-month' ? 'Last Month' :
+                          staffPaymentDateFilter === 'custom-date' ? staffPaymentCustomDate : staffPaymentDateFilter
+                        }</span>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
