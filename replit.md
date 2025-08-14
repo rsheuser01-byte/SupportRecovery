@@ -21,6 +21,9 @@ The application features a React frontend with shadcn/ui components, an Express.
   - Fixed timezone issues in time entry date handling with proper local timezone conversion
   - **Critical Fix:** Resolved bulk payment processing to create separate expenses per employee instead of grouping all under one vendor name
   - Added delete functionality for individual time entries with edit and delete buttons in Actions column
+  - **Mobile Authentication Fix:** Fixed iPhone internal server error by making session cookies environment-dependent (secure: false in development, secure: true in production) and added SameSite configuration for cross-origin compatibility
+  - **Enhanced Error Logging:** Added detailed error logging with user agent and request details for debugging mobile-specific issues
+  - **Dialog Accessibility:** Fixed missing DialogDescription warnings by adding proper accessibility descriptions to time entry and hourly employee modals
 - **UI/UX Improvements (August 5, 2025):**
   - Enhanced header visibility with high-contrast design for improved readability
   - Updated sidebar header with white background, blue gradient borders, and black text

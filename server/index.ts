@@ -40,9 +40,19 @@ app.use((req, res, next) => {
   try {
     const server = await registerRoutes(app);
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
+      
+      // Log detailed error info for debugging mobile issues
+      console.error(`Error ${status}:`, {
+        message,
+        url: req.url,
+        method: req.method,
+        userAgent: req.headers['user-agent'],
+        referer: req.headers.referer,
+        stack: err.stack
+      });
 
       res.status(status).json({ message });
       throw err;
