@@ -17,9 +17,16 @@ interface TimeEntryModalProps {
 
 export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalProps) {
   const [employeeId, setEmployeeId] = useState(timeEntry?.employeeId || "");
+  const formatDateForInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [date, setDate] = useState(
-    timeEntry?.date ? new Date(timeEntry.date).toISOString().split('T')[0] : 
-    new Date().toISOString().split('T')[0]
+    timeEntry?.date ? formatDateForInput(new Date(timeEntry.date)) : 
+    formatDateForInput(new Date())
   );
   const [hours, setHours] = useState(timeEntry?.hours?.toString() || "");
   const [description, setDescription] = useState(timeEntry?.description || "");
@@ -77,7 +84,7 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
 
   const resetForm = () => {
     setEmployeeId("");
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(formatDateForInput(new Date()));
     setHours("");
     setDescription("");
   };
@@ -104,9 +111,13 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
       return;
     }
 
+    // Create date at noon in local timezone to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day, 12, 0, 0);
+
     mutation.mutate({
       employeeId,
-      date: new Date(date),
+      date: dateObj,
       hours: hoursNum.toString(),
       description: description.trim() || undefined,
     });

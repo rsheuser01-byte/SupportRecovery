@@ -117,7 +117,14 @@ export function HourlyTimeTracker() {
   };
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    // Parse the date and create a new date at noon to avoid timezone issues
+    const dateObj = new Date(date);
+    const year = dateObj.getUTCFullYear();
+    const month = dateObj.getUTCMonth();
+    const day = dateObj.getUTCDate();
+    const localDate = new Date(year, month, day);
+    
+    return localDate.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
