@@ -30,16 +30,31 @@ export function HourlyTimeTracker() {
   // Fetch unpaid time entries
   const { data: unpaidTimeEntries = [] } = useQuery({
     queryKey: ["/api/time-entries", { unpaidOnly: true }],
-    queryFn: () => apiRequest("/api/time-entries?unpaidOnly=true"),
+    queryFn: async () => {
+      const response = await fetch("/api/time-entries?unpaidOnly=true");
+      if (!response.ok) {
+        throw new Error("Failed to fetch unpaid time entries");
+      }
+      return response.json();
+    },
   });
 
   // Pay time entries mutation
   const payTimeEntriesMutation = useMutation({
     mutationFn: async (paymentData: any) => {
-      return apiRequest("/api/time-entries/pay", {
+      const response = await fetch("/api/time-entries/pay", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(paymentData),
       });
+      
+      if (!response.ok) {
+        throw new Error("Failed to process payment");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
