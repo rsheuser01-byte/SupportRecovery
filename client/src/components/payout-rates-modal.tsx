@@ -105,14 +105,23 @@ export default function PayoutRatesModal({
   });
 
   const handlePercentageChange = (houseId: string, serviceCodeId: string, staffId: string, value: string) => {
-    // Validate percentage input
-    if (value === "" || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+    // Clean input - allow only numbers and decimal point
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    const formatted = parts.length > 2 
+      ? parts[0] + '.' + parts.slice(1).join('')
+      : cleaned;
+    
+    // Validate percentage range
+    if (formatted === "" || (parseFloat(formatted) >= 0 && parseFloat(formatted) <= 100)) {
       setEditableRates(prev => 
         prev.map(rate => 
           rate.houseId === houseId && 
           rate.serviceCodeId === serviceCodeId && 
           rate.staffId === staffId
-            ? { ...rate, percentage: value }
+            ? { ...rate, percentage: formatted }
             : rate
         )
       );

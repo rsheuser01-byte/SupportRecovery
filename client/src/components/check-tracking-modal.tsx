@@ -161,7 +161,12 @@ export function CheckTrackingModal({ open, onOpenChange, checkEntry }: CheckTrac
                       {...field}
                       onChange={(e) => {
                         const cleaned = e.target.value.replace(/[^0-9.]/g, '');
-                        field.onChange(cleaned);
+                        // Ensure only one decimal point
+                        const parts = cleaned.split('.');
+                        const formatted = parts.length > 2 
+                          ? parts[0] + '.' + parts.slice(1).join('')
+                          : cleaned;
+                        field.onChange(formatted);
                       }}
                     />
                   </FormControl>

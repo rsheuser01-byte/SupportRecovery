@@ -40,6 +40,10 @@ export function useInactivityTimer({
       countdownRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (!prev || prev <= 1000) {
+            // Clear the interval when countdown reaches zero
+            if (countdownRef.current) {
+              clearInterval(countdownRef.current);
+            }
             return 0;
           }
           return prev - 1000;

@@ -325,12 +325,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkDate: req.body.checkDate ? new Date(req.body.checkDate) : undefined
       };
       
-      // Validate dates are not invalid
-      if (processedData.date && isNaN(processedData.date.getTime())) {
-        return res.status(400).json({ message: "Invalid date format" });
+      // Validate dates are valid Date objects
+      if (processedData.date && (!(processedData.date instanceof Date) || isNaN(processedData.date.getTime()))) {
+        return res.status(400).json({ message: "Invalid date format - please use YYYY-MM-DD" });
       }
-      if (processedData.checkDate && isNaN(processedData.checkDate.getTime())) {
-        return res.status(400).json({ message: "Invalid check date format" });
+      if (processedData.checkDate && (!(processedData.checkDate instanceof Date) || isNaN(processedData.checkDate.getTime()))) {
+        return res.status(400).json({ message: "Invalid check date format - please use YYYY-MM-DD" });
       }
       const revenueEntryData = insertRevenueEntrySchema.parse(processedData);
       const revenueEntry = await storage.createRevenueEntry(revenueEntryData);
