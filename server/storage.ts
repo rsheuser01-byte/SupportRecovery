@@ -896,8 +896,33 @@ export class DbStorage implements IStorage {
   }
 
   async deleteExpense(id: string): Promise<boolean> {
-    const result = await this.db.delete(expenses).where(eq(expenses.id, id));
-    return result.rowCount > 0;
+    try {
+      // Check if this expense is linked to time entries
+      const linkedTimeEntries = await this.db
+        .select()
+        .from(timeEntries)
+        .where(eq(timeEntries.expenseId, id));
+      
+      if (linkedTimeEntries.length > 0) {
+        // If deleting an expense that was created from time entries,
+        // we need to unmark the time entries as paid
+        await this.db
+          .update(timeEntries)
+          .set({ 
+            isPaid: false, 
+            paidAt: null,
+            expenseId: null 
+          })
+          .where(eq(timeEntries.expenseId, id));
+      }
+      
+      // Now delete the expense
+      const result = await this.db.delete(expenses).where(eq(expenses.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      throw error;
+    }
   }
 
   // Payouts
