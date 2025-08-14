@@ -21,7 +21,7 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
     timeEntry?.date ? new Date(timeEntry.date).toISOString().split('T')[0] : 
     new Date().toISOString().split('T')[0]
   );
-  const [hours, setHours] = useState(timeEntry?.hours || "");
+  const [hours, setHours] = useState(timeEntry?.hours?.toString() || "");
   const [description, setDescription] = useState(timeEntry?.description || "");
   
   const { toast } = useToast();
@@ -106,8 +106,8 @@ export function TimeEntryModal({ isOpen, onClose, timeEntry }: TimeEntryModalPro
 
     mutation.mutate({
       employeeId,
-      date,
-      hours: hours.toString(),
+      date: new Date(date),
+      hours: hoursNum.toString(),
       description: description.trim() || undefined,
     });
   };
