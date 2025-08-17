@@ -2963,7 +2963,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-purple-600">
-                      {Array.from(new Set(filteredCheckTrackingEntries.map(entry => entry.serviceProvider))).length}
+                      {Array.from(new Set(checkTrackingEntries.map(entry => entry.serviceProvider))).length}
                     </div>
                     <p className="text-sm text-gray-600">Unique providers</p>
                   </CardContent>

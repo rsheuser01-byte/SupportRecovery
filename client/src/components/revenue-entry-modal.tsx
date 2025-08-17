@@ -17,8 +17,8 @@ import type { House, ServiceCode, Patient, RevenueEntry } from "@shared/schema";
 const revenueEntrySchema = z.object({
   date: z.string().min(1, "Date is required"),
   checkDate: z.string().min(1, "Check date is required"),
-  amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Amount must be a positive number",
+  amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)), {
+    message: "Amount must be a valid number",
   }),
   patientId: z.string().optional(),
   houseId: z.string().min(1, "House selection is required"),
