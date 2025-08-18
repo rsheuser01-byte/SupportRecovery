@@ -17,6 +17,7 @@ import type { House, ServiceCode, Patient, RevenueEntry } from "@shared/schema";
 const revenueEntrySchema = z.object({
   date: z.string().min(1, "Date is required"),
   checkDate: z.string().min(1, "Check date is required"),
+  checkNumber: z.string().optional(),
   amount: z.string().min(1, "Amount is required").refine((val) => !isNaN(parseFloat(val)), {
     message: "Amount must be a valid number",
   }),
@@ -65,11 +66,17 @@ export default function RevenueEntryModal({
     return lastDate || new Date().toISOString().split('T')[0];
   };
 
+  // Get last check number from localStorage
+  const getLastCheckNumber = () => {
+    return localStorage.getItem('lastCheckNumber') || '';
+  };
+
   const form = useForm<RevenueEntryForm>({
     resolver: zodResolver(revenueEntrySchema),
     defaultValues: {
       date: getLastPaymentDate(),
       checkDate: getLastCheckEntryDate(),
+      checkNumber: getLastCheckNumber(),
       amount: "",
       patientId: "",
       houseId: "",
@@ -83,6 +90,7 @@ export default function RevenueEntryModal({
       form.reset({
         date: isCopy ? getLastPaymentDate() : new Date(revenueEntry.date).toISOString().split('T')[0],
         checkDate: isCopy ? getLastCheckEntryDate() : (revenueEntry.checkDate ? new Date(revenueEntry.checkDate).toISOString().split('T')[0] : getLastCheckEntryDate()),
+        checkNumber: isCopy ? getLastCheckNumber() : (revenueEntry.checkNumber || ""),
         amount: revenueEntry.amount,
         patientId: revenueEntry.patientId || "",
         houseId: revenueEntry.houseId,
@@ -93,6 +101,7 @@ export default function RevenueEntryModal({
       form.reset({
         date: getLastPaymentDate(),
         checkDate: getLastCheckEntryDate(),
+        checkNumber: getLastCheckNumber(),
         amount: "",
         patientId: "",
         houseId: "",
@@ -110,15 +119,20 @@ export default function RevenueEntryModal({
       queryClient.invalidateQueries({ queryKey: ['/api/payouts'] });
       toast({ title: "Revenue entry created successfully" });
       
-      // Save the payment date and check entry date to localStorage for next time
+      // Save the payment date, check entry date, and check number to localStorage for next time
       const currentDate = form.getValues('date');
       const currentCheckDate = form.getValues('checkDate');
+      const currentCheckNumber = form.getValues('checkNumber');
       localStorage.setItem('lastPaymentDate', currentDate);
       localStorage.setItem('lastCheckEntryDate', currentCheckDate);
+      if (currentCheckNumber) {
+        localStorage.setItem('lastCheckNumber', currentCheckNumber);
+      }
       
       form.reset({
         date: getLastPaymentDate(),
         checkDate: getLastCheckEntryDate(),
+        checkNumber: getLastCheckNumber(),
         amount: "",
         patientId: "",
         houseId: "",
@@ -239,6 +253,20 @@ export default function RevenueEntryModal({
                 <p className="text-sm text-red-600 mt-1">{form.formState.errors.checkDate.message}</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="checkNumber">Check Number (Optional)</Label>
+            <Input 
+              id="checkNumber"
+              type="text" 
+              placeholder="Enter check number for auditing..."
+              {...form.register("checkNumber")}
+              className="mt-1"
+            />
+            {form.formState.errors.checkNumber && (
+              <p className="text-sm text-red-600 mt-1">{form.formState.errors.checkNumber.message}</p>
+            )}
           </div>
 
           <div>

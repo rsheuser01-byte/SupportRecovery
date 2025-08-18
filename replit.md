@@ -12,6 +12,13 @@ The application features a React frontend with shadcn/ui components, an Express.
 - Implemented safe date parsing to prevent JavaScript Date() timezone interpretation bugs
 - All filter systems now use consistent manual string parsing for reliable month boundary detection
 - **Fixed calendar date filtering bug (August 9, 2025):** Daily reports now correctly filter by processing date (checkDate) instead of service date, ensuring accurate calendar-based revenue tracking
+- **Check Number Integration & Audit System (August 18, 2025):**
+  - Added optional check number field to revenue entries with automatic population from last entry
+  - Implemented comprehensive check audit functionality with one-click comparison between check tracking and revenue entries
+  - Added eye icon "Audit" button in check tracking table for instant check-to-revenue verification
+  - Created detailed audit modal showing balance status, discrepancies, and matching revenue entry breakdown
+  - Database schema updated with check_number column for reliable audit tracking
+  - Enhanced revenue entry form with smart check number auto-fill functionality
 - **Hourly Employee Tracking System (August 14, 2025):**
   - Completed full hourly employee tracking implementation with database tables, API endpoints, and UI components
   - Fixed multiple API request errors by correcting fetch method calls from apiRequest to proper fetch syntax

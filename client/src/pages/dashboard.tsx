@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, Copy, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock, Filter, CreditCard
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock, Filter, CreditCard, Eye
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,6 +33,7 @@ import type {
   House, ServiceCode, Staff, Patient, RevenueEntry, Expense, PayoutRate, Payout, CheckTracking, StaffPayment
 } from "@shared/schema";
 import { CheckTrackingModal } from "@/components/check-tracking-modal";
+import { CheckAuditModal } from "@/components/check-audit-modal";
 import { StaffPaymentModal } from "@/components/staff-payment-modal";
 import { UserManagementModal } from "@/components/user-management-modal";
 import { OnboardingWalkthrough } from "@/components/onboarding-walkthrough";
@@ -73,6 +74,10 @@ export default function Dashboard() {
   // Staff Payments state
   const [staffPaymentModalOpen, setStaffPaymentModalOpen] = useState(false);
   const [editingStaffPayment, setEditingStaffPayment] = useState<StaffPayment | undefined>(undefined);
+  
+  // Check Audit state
+  const [checkAuditModalOpen, setCheckAuditModalOpen] = useState(false);
+  const [auditingCheckEntry, setAuditingCheckEntry] = useState<CheckTracking | undefined>(undefined);
   const [staffPaymentStaffFilter, setStaffPaymentStaffFilter] = useState("all");
   const [staffPaymentDateFilter, setStaffPaymentDateFilter] = useState("all");
   const [staffPaymentCustomDate, setStaffPaymentCustomDate] = useState<string>('');
@@ -3016,6 +3021,17 @@ export default function Dashboard() {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
+                                  onClick={() => { 
+                                    setAuditingCheckEntry(entry); 
+                                    setCheckAuditModalOpen(true); 
+                                  }}
+                                  title="Audit check against revenue entries"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
                                   onClick={() => { setEditingCheckEntry(entry); setCheckTrackingModalOpen(true); }}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -3372,6 +3388,19 @@ export default function Dashboard() {
         }}
         checkEntry={editingCheckEntry}
       />
+      
+      {/* Check Audit Modal */}
+      {auditingCheckEntry && (
+        <CheckAuditModal
+          open={checkAuditModalOpen}
+          onOpenChange={(open) => {
+            setCheckAuditModalOpen(open);
+            if (!open) setAuditingCheckEntry(undefined);
+          }}
+          checkTrackingEntry={auditingCheckEntry}
+        />
+      )}
+      
       <UserManagementModal
         open={userManagementModalOpen}
         onOpenChange={setUserManagementModalOpen}
