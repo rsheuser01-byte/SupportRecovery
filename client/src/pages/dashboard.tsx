@@ -1005,12 +1005,6 @@ export default function Dashboard() {
 
   // Report generation functions
   const generateRevenueReport = (period: 'monthly' | 'quarterly' | 'yearly', selectedDate?: string) => {
-    // Debug: Log all revenue entries for July 2025
-    if (selectedDate === '2025-07') {
-      console.log('All revenue entries:', revenueEntries);
-      const julyEntries = revenueEntries.filter(entry => entry.checkDate && entry.checkDate.startsWith('2025-07'));
-      console.log('July 2025 entries found:', julyEntries);
-    }
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
     const periodTitle = period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly';
@@ -1047,7 +1041,6 @@ export default function Dashboard() {
         const entryYear = parseInt(dateParts[0]);
         const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
         
-        console.log(`Filtering entry: ${entry.checkDate}, entryMonth: ${entryMonth}, entryYear: ${entryYear}, targetMonth: ${targetMonth}, targetYear: ${targetYear}`);
         
         return entryMonth === targetMonth && entryYear === targetYear;
       });
@@ -1073,15 +1066,27 @@ export default function Dashboard() {
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
-        const date = new Date(entry.checkDate);
-        const entryQuarter = Math.floor(date.getMonth() / 3);
-        return entryQuarter === targetQuarter && date.getFullYear() === targetYear;
+        
+        // Use safe date parsing to avoid timezone issues
+        const dateParts = entry.checkDate.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
+        const entryQuarter = Math.floor(entryMonth / 3);
+        
+        return entryQuarter === targetQuarter && entryYear === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
-        const date = new Date(expense.date);
-        const entryQuarter = Math.floor(date.getMonth() / 3);
-        return entryQuarter === targetQuarter && date.getFullYear() === targetYear;
+        const dateParts = expense.date.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
+        const entryQuarter = Math.floor(entryMonth / 3);
+        
+        return entryQuarter === targetQuarter && entryYear === targetYear;
       });
     } else if (period === 'yearly') {
       // Filter for selected year or current year
@@ -1091,13 +1096,21 @@ export default function Dashboard() {
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
-        const date = new Date(entry.checkDate);
-        return date.getFullYear() === targetYear;
+        
+        // Use safe date parsing to avoid timezone issues
+        const dateParts = entry.checkDate.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        return entryYear === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
-        const date = new Date(expense.date);
-        return date.getFullYear() === targetYear;
+        const dateParts = expense.date.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        return entryYear === targetYear;
       });
     }
     
@@ -1268,11 +1281,18 @@ export default function Dashboard() {
     const displayDate = new Date(targetYear, targetMonth, 1);
     const monthName = displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
     
-    // Filter revenue entries for current month
+    // Filter revenue entries for selected month
     const monthlyRevenueEntries = revenueEntries.filter(entry => {
       if (!entry.checkDate) return false;
-      const date = new Date(entry.checkDate);
-      return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
+      
+      // Use safe date parsing to avoid timezone issues
+      const dateParts = entry.checkDate.split('-');
+      if (dateParts.length !== 3) return false;
+      
+      const entryYear = parseInt(dateParts[0]);
+      const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
+      
+      return entryMonth === targetMonth && entryYear === targetYear;
     });
     
     // Filter payouts for current month based on revenue entries
