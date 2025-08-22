@@ -59,7 +59,13 @@ export function CheckAuditModal({ open, onOpenChange, checkTrackingEntry }: Chec
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString();
+    // Safe date parsing to prevent timezone issues
+    const dateParts = dateStr.split('T')[0].split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+    const day = parseInt(dateParts[2]);
+    const date = new Date(year, month, day);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -198,11 +204,11 @@ export function CheckAuditModal({ open, onOpenChange, checkTrackingEntry }: Chec
                           </div>
                           <div>
                             <p className="text-gray-600">Service Date</p>
-                            <p className="font-medium">{formatDate(entry.date.toString())}</p>
+                            <p className="font-medium">{formatDate(typeof entry.date === 'string' ? entry.date : entry.date.toISOString())}</p>
                           </div>
                           <div>
                             <p className="text-gray-600">Check Date</p>
-                            <p className="font-medium">{entry.checkDate ? formatDate(entry.checkDate.toString()) : 'N/A'}</p>
+                            <p className="font-medium">{entry.checkDate ? formatDate(typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString()) : 'N/A'}</p>
                           </div>
                         </div>
                         {entry.notes && (
