@@ -79,6 +79,12 @@ export default function Dashboard() {
   const [checkAuditModalOpen, setCheckAuditModalOpen] = useState(false);
   const [auditingCheckEntry, setAuditingCheckEntry] = useState<CheckTracking | undefined>(undefined);
   const [staffPaymentStaffFilter, setStaffPaymentStaffFilter] = useState("all");
+  
+  // Report date selection state
+  const currentDate = new Date();
+  const [selectedReportMonth, setSelectedReportMonth] = useState(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`);
+  const [selectedReportQuarter, setSelectedReportQuarter] = useState(`${currentDate.getFullYear()}-Q${Math.floor(currentDate.getMonth() / 3) + 1}`);
+  const [selectedReportYear, setSelectedReportYear] = useState(currentDate.getFullYear().toString());
   const [staffPaymentDateFilter, setStaffPaymentDateFilter] = useState("all");
   const [staffPaymentCustomDate, setStaffPaymentCustomDate] = useState<string>('');
   
@@ -998,7 +1004,7 @@ export default function Dashboard() {
   };
 
   // Report generation functions
-  const generateRevenueReport = (period: 'monthly' | 'quarterly' | 'yearly') => {
+  const generateRevenueReport = (period: 'monthly' | 'quarterly' | 'yearly', selectedDate?: string) => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
     const periodTitle = period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly';
@@ -1009,59 +1015,65 @@ export default function Dashboard() {
     let periodDescription = '';
     
     if (period === 'monthly') {
-      // Filter for current month
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
+      // Filter for selected month or current month
+      const targetDate = selectedDate ? new Date(selectedDate + '-01') : new Date();
+      const targetMonth = targetDate.getMonth();
+      const targetYear = targetDate.getFullYear();
       
-      periodDescription = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      periodDescription = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
         const date = new Date(entry.checkDate);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
         const date = new Date(expense.date);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
       });
     } else if (period === 'quarterly') {
-      // Filter for current quarter
-      const now = new Date();
-      const currentQuarter = Math.floor(now.getMonth() / 3);
-      const currentYear = now.getFullYear();
+      // Filter for selected quarter or current quarter
+      let targetYear: number, targetQuarter: number;
+      if (selectedDate && selectedDate.includes('-Q')) {
+        const [yearStr, quarterStr] = selectedDate.split('-Q');
+        targetYear = parseInt(yearStr);
+        targetQuarter = parseInt(quarterStr) - 1; // Convert to 0-based
+      } else {
+        const now = new Date();
+        targetYear = now.getFullYear();
+        targetQuarter = Math.floor(now.getMonth() / 3);
+      }
       
-      periodDescription = `Q${currentQuarter + 1} ${currentYear}`;
+      periodDescription = `Q${targetQuarter + 1} ${targetYear}`;
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
         const date = new Date(entry.checkDate);
         const entryQuarter = Math.floor(date.getMonth() / 3);
-        return entryQuarter === currentQuarter && date.getFullYear() === currentYear;
+        return entryQuarter === targetQuarter && date.getFullYear() === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
         const date = new Date(expense.date);
         const entryQuarter = Math.floor(date.getMonth() / 3);
-        return entryQuarter === currentQuarter && date.getFullYear() === currentYear;
+        return entryQuarter === targetQuarter && date.getFullYear() === targetYear;
       });
     } else if (period === 'yearly') {
-      // Filter for current year (year-to-date)
-      const now = new Date();
-      const currentYear = now.getFullYear();
+      // Filter for selected year or current year
+      const targetYear = selectedDate ? parseInt(selectedDate) : new Date().getFullYear();
       
-      periodDescription = `${currentYear} (Year-to-Date)`;
+      periodDescription = `${targetYear} (Year-to-Date)`;
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
         const date = new Date(entry.checkDate);
-        return date.getFullYear() === currentYear;
+        return date.getFullYear() === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
         const date = new Date(expense.date);
-        return date.getFullYear() === currentYear;
+        return date.getFullYear() === targetYear;
       });
     }
     
@@ -1214,19 +1226,19 @@ export default function Dashboard() {
   };
 
   // Monthly Staff Payout Report
-  const generateMonthlyStaffPayoutReport = () => {
+  const generateMonthlyStaffPayoutReport = (selectedMonth?: string) => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const monthName = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    const targetDate = selectedMonth ? new Date(selectedMonth + '-01') : new Date();
+    const targetMonth = targetDate.getMonth();
+    const targetYear = targetDate.getFullYear();
+    const monthName = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
     
     // Filter revenue entries for current month
     const monthlyRevenueEntries = revenueEntries.filter(entry => {
       if (!entry.checkDate) return false;
       const date = new Date(entry.checkDate);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
     });
     
     // Filter payouts for current month based on revenue entries
@@ -2900,8 +2912,9 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Standard Report Options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Enhanced Report Options */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Revenue Reports */}
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center mb-4">
@@ -2909,18 +2922,92 @@ export default function Dashboard() {
                         <BarChart3 className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Revenue Report</h3>
-                        <p className="text-sm text-gray-600">Monthly revenue breakdown</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Revenue Reports</h3>
+                        <p className="text-sm text-gray-600">Generate revenue reports for specific periods</p>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('monthly')}>Generate Monthly</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('quarterly')}>Generate Quarterly</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('yearly')}>Generate Yearly</Button>
+                    <div className="space-y-4">
+                      {/* Monthly Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium">Monthly Report</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generateRevenueReport('monthly', selectedReportMonth)}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <Input
+                          type="month"
+                          value={selectedReportMonth}
+                          onChange={(e) => setSelectedReportMonth(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      {/* Quarterly Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium">Quarterly Report</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generateRevenueReport('quarterly', selectedReportQuarter)}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <select
+                          value={selectedReportQuarter}
+                          onChange={(e) => setSelectedReportQuarter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                        >
+                          {Array.from({ length: 8 }, (_, i) => {
+                            const year = currentDate.getFullYear() - Math.floor(i / 4);
+                            const quarter = 4 - (i % 4);
+                            return (
+                              <option key={`${year}-Q${quarter}`} value={`${year}-Q${quarter}`}>
+                                Q{quarter} {year}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                      
+                      {/* Yearly Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium">Yearly Report</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generateRevenueReport('yearly', selectedReportYear)}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <select
+                          value={selectedReportYear}
+                          onChange={(e) => setSelectedReportYear(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-md"
+                        >
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const year = currentDate.getFullYear() - i;
+                            return (
+                              <option key={year} value={year.toString()}>
+                                {year}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
+                {/* Staff Payout Reports */}
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center mb-4">
@@ -2928,36 +3015,89 @@ export default function Dashboard() {
                         <Users className="h-6 w-6 text-green-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Staff Payout Report</h3>
-                        <p className="text-sm text-gray-600">Detailed payout calculations</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Staff Payout Reports</h3>
+                        <p className="text-sm text-gray-600">Generate payout reports and summaries</p>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('current')}>Generate Current</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('historical')}>Historical View</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateMonthlyStaffPayoutReport()}>Monthly Payout Report</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-purple-100 rounded-lg mr-4">
-                        <PieChart className="h-6 w-6 text-purple-600" />
+                    <div className="space-y-4">
+                      {/* Current Payout Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">Current Payout Report</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generatePayoutReport('current')}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-600">Latest check date payouts</p>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Program Analytics</h3>
-                        <p className="text-sm text-gray-600">Program performance metrics</p>
+                      
+                      {/* Monthly Staff Payout Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium">Monthly Payout Report</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generateMonthlyStaffPayoutReport(selectedReportMonth)}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <Input
+                          type="month"
+                          value={selectedReportMonth}
+                          onChange={(e) => setSelectedReportMonth(e.target.value)}
+                          className="w-full"
+                        />
                       </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('performance')}>Generate Report</Button>
-                      <Button variant="outline" className="w-full" onClick={() => generateProgramAnalytics('comparison')}>Compare Programs</Button>
+                      
+                      {/* Historical Report */}
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">Historical View</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => generatePayoutReport('historical')}
+                          >
+                            Generate
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-600">All-time payout history</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Program Analytics */}
+              <Card className="mb-8">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-purple-100 rounded-lg mr-4">
+                      <PieChart className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Program Analytics</h3>
+                      <p className="text-sm text-gray-600">Program performance metrics and comparisons</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button variant="outline" onClick={() => generateProgramAnalytics('performance')}>
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Generate Performance Report
+                    </Button>
+                    <Button variant="outline" onClick={() => generateProgramAnalytics('comparison')}>
+                      <PieChart className="mr-2 h-4 w-4" />
+                      Compare Programs
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card>
                 <CardHeader>
