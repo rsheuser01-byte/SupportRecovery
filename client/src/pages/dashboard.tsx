@@ -2709,6 +2709,35 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
 
+                      {/* Staff Payouts for the Revenue Entries */}
+                      {dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Staff Payouts for Date</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Staff Member</TableHead>
+                                  <TableHead>Revenue Entries</TableHead>
+                                  <TableHead>Total Payout</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {dailyReport.payoutsByStaff.map((staffPayout: any) => (
+                                  <TableRow key={staffPayout.staffId}>
+                                    <TableCell>{staffPayout.staffName}</TableCell>
+                                    <TableCell>{staffPayout.entries}</TableCell>
+                                    <TableCell>{formatCurrency(staffPayout.totalPayout)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )}
+
                       {/* Revenue Entries */}
                       {dailyReport.revenueEntries.length > 0 ? (
                         <Card>
@@ -2746,35 +2775,6 @@ export default function Dashboard() {
                             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No revenue entries for {formatDate(selectedReportDate)}</h3>
                             <p className="text-gray-600">No revenue entries were recorded for this date.</p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Staff Payouts for the Revenue Entries */}
-                      {dailyReport.payoutsByStaff && dailyReport.payoutsByStaff.length > 0 && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Staff Payouts for Date</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Staff Member</TableHead>
-                                  <TableHead>Revenue Entries</TableHead>
-                                  <TableHead>Total Payout</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {dailyReport.payoutsByStaff.map((staffPayout: any) => (
-                                  <TableRow key={staffPayout.staffId}>
-                                    <TableCell>{staffPayout.staffName}</TableCell>
-                                    <TableCell>{staffPayout.entries}</TableCell>
-                                    <TableCell>{formatCurrency(staffPayout.totalPayout)}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
                           </CardContent>
                         </Card>
                       )}
