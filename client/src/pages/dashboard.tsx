@@ -1005,6 +1005,12 @@ export default function Dashboard() {
 
   // Report generation functions
   const generateRevenueReport = (period: 'monthly' | 'quarterly' | 'yearly', selectedDate?: string) => {
+    // Debug: Log all revenue entries for July 2025
+    if (selectedDate === '2025-07') {
+      console.log('All revenue entries:', revenueEntries);
+      const julyEntries = revenueEntries.filter(entry => entry.checkDate && entry.checkDate.startsWith('2025-07'));
+      console.log('July 2025 entries found:', julyEntries);
+    }
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
     const periodTitle = period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly';
@@ -1033,8 +1039,17 @@ export default function Dashboard() {
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
-        const date = new Date(entry.checkDate);
-        return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
+        
+        // Use safe date parsing to avoid timezone issues
+        const dateParts = entry.checkDate.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
+        
+        console.log(`Filtering entry: ${entry.checkDate}, entryMonth: ${entryMonth}, entryYear: ${entryYear}, targetMonth: ${targetMonth}, targetYear: ${targetYear}`);
+        
+        return entryMonth === targetMonth && entryYear === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
