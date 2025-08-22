@@ -998,10 +998,10 @@ export default function Dashboard() {
   };
 
   // Report generation functions
-  const generateRevenueReport = (period: 'monthly' | 'quarterly') => {
+  const generateRevenueReport = (period: 'monthly' | 'quarterly' | 'yearly') => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
-    const periodTitle = period === 'monthly' ? 'Monthly' : 'Quarterly';
+    const periodTitle = period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly';
     
     // Calculate period-specific data
     let dataToUse = revenueEntries;
@@ -1045,6 +1045,23 @@ export default function Dashboard() {
         const date = new Date(expense.date);
         const entryQuarter = Math.floor(date.getMonth() / 3);
         return entryQuarter === currentQuarter && date.getFullYear() === currentYear;
+      });
+    } else if (period === 'yearly') {
+      // Filter for current year (year-to-date)
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      
+      periodDescription = `${currentYear} (Year-to-Date)`;
+      
+      dataToUse = revenueEntries.filter(entry => {
+        if (!entry.checkDate) return false;
+        const date = new Date(entry.checkDate);
+        return date.getFullYear() === currentYear;
+      });
+      
+      expensesToUse = expenses.filter(expense => {
+        const date = new Date(expense.date);
+        return date.getFullYear() === currentYear;
       });
     }
     
@@ -1194,6 +1211,106 @@ export default function Dashboard() {
       `${type} payout report downloaded successfully`;
     
     toast({ title: message });
+  };
+
+  // Monthly Staff Payout Report
+  const generateMonthlyStaffPayoutReport = () => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const monthName = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    
+    // Filter revenue entries for current month
+    const monthlyRevenueEntries = revenueEntries.filter(entry => {
+      if (!entry.checkDate) return false;
+      const date = new Date(entry.checkDate);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    // Filter payouts for current month based on revenue entries
+    const monthlyPayouts = payouts.filter(payout => {
+      const revenueEntry = revenueEntries.find(entry => entry.id === payout.revenueEntryId);
+      return revenueEntry && monthlyRevenueEntries.some(entry => entry.id === revenueEntry.id);
+    });
+    
+    // Calculate staff payouts for current month
+    const monthlyStaffPayouts = staff.map(staffMember => {
+      const staffPayoutEntries = monthlyPayouts.filter(p => p.staffId === staffMember.id);
+      const totalPayout = staffPayoutEntries.reduce((sum, payout) => sum + parseFloat(payout.amount), 0);
+      const revenueCount = staffPayoutEntries.length;
+      
+      return {
+        staff: staffMember,
+        totalPayout,
+        revenueCount,
+        payouts: staffPayoutEntries
+      };
+    }).filter(sp => sp.totalPayout > 0).sort((a, b) => b.totalPayout - a.totalPayout);
+    
+    const totalMonthlyPayouts = monthlyStaffPayouts.reduce((sum, sp) => sum + sp.totalPayout, 0);
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text('Monthly Staff Payout Report', 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 40);
+    doc.text(`Report Period: ${monthName}`, 20, 50);
+    doc.text(`Total Payouts: ${formatCurrency(totalMonthlyPayouts)}`, 20, 60);
+    
+    // Staff summary table
+    doc.setFontSize(14);
+    doc.text('Staff Payout Summary', 20, 80);
+    
+    const staffSummaryData = monthlyStaffPayouts.map(({ staff: staffMember, totalPayout, revenueCount }) => [
+      staffMember.name,
+      staffMember.role || 'Staff Member',
+      revenueCount.toString(),
+      formatCurrency(totalPayout)
+    ]);
+    
+    autoTable(doc, {
+      head: [['Staff Member', 'Role', 'Revenue Entries', 'Total Payout']],
+      body: staffSummaryData,
+      startY: 90,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0, 123, 191] }
+    });
+    
+    // Detailed breakdown if there's space
+    const finalY = (doc as any).lastAutoTable?.finalY || 150;
+    if (finalY < 220) {
+      doc.setFontSize(14);
+      doc.text('Detailed Payout Breakdown', 20, finalY + 20);
+      
+      const detailedData = monthlyPayouts.map(payout => {
+        const staffMember = staff.find(s => s.id === payout.staffId);
+        const revenueEntry = revenueEntries.find(re => re.id === payout.revenueEntryId);
+        const house = houses.find(h => h.id === revenueEntry?.houseId);
+        const service = serviceCodes.find(sc => sc.id === revenueEntry?.serviceCodeId);
+        
+        return [
+          staffMember?.name || 'Unknown',
+          house?.name || 'N/A',
+          service?.code || 'N/A',
+          revenueEntry ? formatDate(revenueEntry.date) : 'N/A',
+          formatCurrency(parseFloat(payout.amount)),
+          revenueEntry?.checkDate ? formatDate(revenueEntry.checkDate) : 'N/A'
+        ];
+      });
+      
+      autoTable(doc, {
+        head: [['Staff', 'House', 'Service', 'Service Date', 'Payout', 'Check Date']],
+        body: detailedData,
+        startY: finalY + 30,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [40, 167, 69] }
+      });
+    }
+    
+    doc.save(`monthly-staff-payout-report-${monthName.replace(' ', '-').toLowerCase()}.pdf`);
+    toast({ title: `Monthly staff payout report for ${monthName} downloaded successfully` });
   };
 
   const generateProgramAnalytics = (type: 'performance' | 'comparison') => {
@@ -2799,6 +2916,7 @@ export default function Dashboard() {
                     <div className="space-y-3">
                       <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('monthly')}>Generate Monthly</Button>
                       <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('quarterly')}>Generate Quarterly</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateRevenueReport('yearly')}>Generate Yearly</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -2817,6 +2935,7 @@ export default function Dashboard() {
                     <div className="space-y-3">
                       <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('current')}>Generate Current</Button>
                       <Button variant="outline" className="w-full" onClick={() => generatePayoutReport('historical')}>Historical View</Button>
+                      <Button variant="outline" className="w-full" onClick={() => generateMonthlyStaffPayoutReport()}>Monthly Payout Report</Button>
                     </div>
                   </CardContent>
                 </Card>
