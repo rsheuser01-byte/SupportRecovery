@@ -1035,19 +1035,26 @@ export default function Dashboard() {
         if (!entry.checkDate) return false;
         
         // Use safe date parsing to avoid timezone issues
-        const dateParts = entry.checkDate.split('-');
+        const dateString = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString();
+        const dateParts = dateString.split('-');
         if (dateParts.length !== 3) return false;
         
         const entryYear = parseInt(dateParts[0]);
         const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
         
-        
         return entryMonth === targetMonth && entryYear === targetYear;
       });
       
       expensesToUse = expenses.filter(expense => {
-        const date = new Date(expense.date);
-        return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
+        // Use safe date parsing to avoid timezone issues
+        const dateString = typeof expense.date === 'string' ? expense.date : expense.date.toISOString();
+        const dateParts = dateString.split('-');
+        if (dateParts.length !== 3) return false;
+        
+        const entryYear = parseInt(dateParts[0]);
+        const entryMonth = parseInt(dateParts[1]) - 1; // Convert to 0-indexed month
+        
+        return entryMonth === targetMonth && entryYear === targetYear;
       });
     } else if (period === 'quarterly') {
       // Filter for selected quarter or current quarter
@@ -1068,7 +1075,8 @@ export default function Dashboard() {
         if (!entry.checkDate) return false;
         
         // Use safe date parsing to avoid timezone issues
-        const dateParts = entry.checkDate.split('-');
+        const dateString = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString();
+        const dateParts = dateString.split('-');
         if (dateParts.length !== 3) return false;
         
         const entryYear = parseInt(dateParts[0]);
@@ -1079,7 +1087,8 @@ export default function Dashboard() {
       });
       
       expensesToUse = expenses.filter(expense => {
-        const dateParts = expense.date.split('-');
+        const dateString = typeof expense.date === 'string' ? expense.date : expense.date.toISOString();
+        const dateParts = dateString.split('-');
         if (dateParts.length !== 3) return false;
         
         const entryYear = parseInt(dateParts[0]);
@@ -1098,7 +1107,8 @@ export default function Dashboard() {
         if (!entry.checkDate) return false;
         
         // Use safe date parsing to avoid timezone issues
-        const dateParts = entry.checkDate.split('-');
+        const dateString = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString();
+        const dateParts = dateString.split('-');
         if (dateParts.length !== 3) return false;
         
         const entryYear = parseInt(dateParts[0]);
@@ -1106,7 +1116,8 @@ export default function Dashboard() {
       });
       
       expensesToUse = expenses.filter(expense => {
-        const dateParts = expense.date.split('-');
+        const dateString = typeof expense.date === 'string' ? expense.date : expense.date.toISOString();
+        const dateParts = dateString.split('-');
         if (dateParts.length !== 3) return false;
         
         const entryYear = parseInt(dateParts[0]);
@@ -1286,7 +1297,8 @@ export default function Dashboard() {
       if (!entry.checkDate) return false;
       
       // Use safe date parsing to avoid timezone issues
-      const dateParts = entry.checkDate.split('-');
+      const dateString = typeof entry.checkDate === 'string' ? entry.checkDate : entry.checkDate.toISOString();
+      const dateParts = dateString.split('-');
       if (dateParts.length !== 3) return false;
       
       const entryYear = parseInt(dateParts[0]);
