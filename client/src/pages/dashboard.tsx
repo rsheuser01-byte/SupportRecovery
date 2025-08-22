@@ -3153,30 +3153,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Reports</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-blue-100 rounded mr-3">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Revenue Report - Current Month</p>
-                          <p className="text-sm text-gray-500">Generated today</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="outline">PDF</Badge>
-                        <Button variant="ghost" size="sm" onClick={() => generateRevenueReport('monthly')}>Download</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
             </div>
           </TabsContent>
 
