@@ -1016,11 +1016,20 @@ export default function Dashboard() {
     
     if (period === 'monthly') {
       // Filter for selected month or current month
-      const targetDate = selectedDate ? new Date(selectedDate + '-01') : new Date();
-      const targetMonth = targetDate.getMonth();
-      const targetYear = targetDate.getFullYear();
+      let targetMonth: number, targetYear: number;
+      if (selectedDate) {
+        const [yearStr, monthStr] = selectedDate.split('-');
+        targetYear = parseInt(yearStr);
+        targetMonth = parseInt(monthStr) - 1; // Convert to 0-indexed month for JavaScript Date
+      } else {
+        const now = new Date();
+        targetMonth = now.getMonth();
+        targetYear = now.getFullYear();
+      }
       
-      periodDescription = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      // Create date for display purposes using the 0-indexed month
+      const displayDate = new Date(targetYear, targetMonth, 1);
+      periodDescription = displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
       
       dataToUse = revenueEntries.filter(entry => {
         if (!entry.checkDate) return false;
@@ -1229,10 +1238,20 @@ export default function Dashboard() {
   const generateMonthlyStaffPayoutReport = (selectedMonth?: string) => {
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
-    const targetDate = selectedMonth ? new Date(selectedMonth + '-01') : new Date();
-    const targetMonth = targetDate.getMonth();
-    const targetYear = targetDate.getFullYear();
-    const monthName = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    let targetMonth: number, targetYear: number;
+    if (selectedMonth) {
+      const [yearStr, monthStr] = selectedMonth.split('-');
+      targetYear = parseInt(yearStr);
+      targetMonth = parseInt(monthStr) - 1; // Convert to 0-indexed month for JavaScript Date
+    } else {
+      const now = new Date();
+      targetMonth = now.getMonth();
+      targetYear = now.getFullYear();
+    }
+    
+    // Create date for display purposes using the 0-indexed month
+    const displayDate = new Date(targetYear, targetMonth, 1);
+    const monthName = displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
     
     // Filter revenue entries for current month
     const monthlyRevenueEntries = revenueEntries.filter(entry => {
