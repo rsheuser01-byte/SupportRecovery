@@ -409,6 +409,7 @@ export class MemStorage implements IStorage {
       patientId: revenueEntry.patientId || null,
       notes: revenueEntry.notes || null,
       status: revenueEntry.status || "paid",
+      checkNumber: revenueEntry.checkNumber || null,
       createdAt: new Date()
     };
     this.revenueEntries.set(id, newRevenueEntry);
