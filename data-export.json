@@ -1,0 +1,1308 @@
+{
+  "houses": [
+    {
+      "id": "house-1",
+      "name": "Greater Faith",
+      "address": "Brook St.\nDixie Hwy",
+      "is_active": true
+    },
+    {
+      "id": "c781b0de-b40a-49d2-908d-ef0c506a4084",
+      "name": "Jackz House",
+      "address": "10404 Fox Ave",
+      "is_active": true
+    },
+    {
+      "id": "house-4",
+      "name": "Outpatient",
+      "address": "",
+      "is_active": true
+    },
+    {
+      "id": "house-2",
+      "name": "Story's Lighthouse",
+      "address": "468 N. 29th St.",
+      "is_active": true
+    },
+    {
+      "id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "name": "Story's Lighthouse - Evening",
+      "address": "468 N. 29th St",
+      "is_active": true
+    },
+    {
+      "id": "house-3",
+      "name": "Youth Program",
+      "address": "",
+      "is_active": true
+    }
+  ],
+  "service_codes": [
+    {
+      "id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "code": "90791",
+      "description": "Psychiatric Diagnostic Evaluation without Medical Services ",
+      "is_active": true
+    },
+    {
+      "id": "service-1",
+      "code": "H0038",
+      "description": "self-help/peer services, per 15 minutes",
+      "is_active": true
+    },
+    {
+      "id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "code": "H2015",
+      "description": "Comprehensive community support services, per 15 minutes",
+      "is_active": true
+    },
+    {
+      "id": "service-2",
+      "code": "H2020",
+      "description": "Therapeutic behavioral services, per diem",
+      "is_active": true
+    },
+    {
+      "id": "service-3",
+      "code": "T2023",
+      "description": "Targeted case management; per month",
+      "is_active": true
+    },
+    {
+      "id": "service-4",
+      "code": "evening group",
+      "description": "Evening Group Sessions",
+      "is_active": false
+    },
+    {
+      "id": "service-5",
+      "code": "morning group",
+      "description": "Morning Group Sessions",
+      "is_active": false
+    }
+  ],
+  "staff": [
+    {
+      "id": "staff-2",
+      "name": "Bardstown Billing",
+      "role": "Service Biller",
+      "is_active": true
+    },
+    {
+      "id": "staff-1",
+      "name": "Dr. Kelsey",
+      "role": "Clinical Supervisor",
+      "is_active": true
+    },
+    {
+      "id": "staff-3",
+      "name": "George",
+      "role": "Owner",
+      "is_active": true
+    },
+    {
+      "id": "staff-4",
+      "name": "Maria",
+      "role": "Greater Faith House Manager",
+      "is_active": true
+    },
+    {
+      "id": "staff-5",
+      "name": "Shelton",
+      "role": "Therapist",
+      "is_active": true
+    }
+  ],
+  "patients": [
+    {
+      "id": "c4f6d1e9-792f-4fb7-8de0-43ce40c65dd3",
+      "name": "Darryl Barber",
+      "phone": "",
+      "house_id": "house-1",
+      "program": "Addiction Recovery",
+      "start_date": "2025-08-02T00:00:00.000Z",
+      "status": "active"
+    },
+    {
+      "id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "name": "Justin Mirick",
+      "phone": "",
+      "house_id": "house-2",
+      "program": "Addiction Recovery",
+      "start_date": "2025-08-02T00:00:00.000Z",
+      "status": "active"
+    }
+  ],
+  "payout_rates": [
+    {
+      "id": "2d3ec285-fd1a-45ea-878b-0fce90d3a153",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-2",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "55877a83-0b45-457f-82f2-16394feaeb64",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-3",
+      "staff_id": "staff-5",
+      "percentage": "47.40"
+    },
+    {
+      "id": "0f7ae565-2c96-48a9-aca1-149b1bfbab1b",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "d3528a84-00c5-42de-b47c-7bbd8ae0b64c",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-1",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "78d29b87-93f3-452a-80f1-aab9861097ce",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-1",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "277b9785-0be8-46ac-8b7c-aff92a6cf5f0",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-3",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "07137e06-6d3a-4219-893a-359a397dae5f",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "b1df8bdf-99fd-461b-9b35-07d9900449ea",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-3",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "26b233a2-d5ed-4da2-8ad2-383c79ae46b5",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-1",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "6523a3d7-81d2-4b80-81a8-56d8af2e4f72",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "7e9c6a59-5d1c-42e9-aa24-b902b5b18251",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "4ebd2b39-26fb-484a-9fc9-eb15748aaf43",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-2",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "5d023b26-0cc2-44b8-b8a6-79a3a60a608b",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-3",
+      "staff_id": "staff-3",
+      "percentage": "31.60"
+    },
+    {
+      "id": "ba170fbe-fe46-433b-8c00-79af6eddf9c4",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-1",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "44cfe6e5-e2d9-4078-90aa-1f464c46b8d8",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "143c8e30-6d5f-41ed-b1fc-14ed7023050e",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-2",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "2fe667fa-f713-424c-aea8-77dbf808aed0",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "service-2",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "962c9801-97d2-4b98-ac89-bd3c212c749d",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "7426c65a-b960-4798-b8e3-cd441f978628",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "b5df8ac0-23a5-46cb-b153-10b4e3e6bf09",
+      "house_id": "c5450948-1edf-4ee6-a8c3-4868fbbd61ba",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "8adcc938-200b-41b6-8c8d-147435fb9e07",
+      "house_id": "house-1",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "981a1032-37dc-42fc-a5e3-01579b26042c",
+      "house_id": "house-1",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-4",
+      "percentage": "39.50"
+    },
+    {
+      "id": "ba305472-04fe-4759-a5bd-0f4f46f1f9a3",
+      "house_id": "house-1",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-3",
+      "percentage": "39.50"
+    },
+    {
+      "id": "2cde1a5a-feca-4a74-a62a-1d84854eb5d3",
+      "house_id": "house-1",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-9",
+      "house_id": "house-1",
+      "service_code_id": "service-2",
+      "staff_id": "staff-4",
+      "percentage": "39.50"
+    },
+    {
+      "id": "0de05252-8b5e-4ce2-baa1-169c911b6ab8",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-7",
+      "house_id": "house-1",
+      "service_code_id": "service-2",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-10",
+      "house_id": "house-1",
+      "service_code_id": "service-2",
+      "staff_id": "staff-5",
+      "percentage": "0.00"
+    },
+    {
+      "id": "79553032-c41e-478c-abe2-a93d069d47f2",
+      "house_id": "house-1",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "c978c54a-7199-49a5-af51-026a52889c8b",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "staff_id": "staff-5",
+      "percentage": "47.40"
+    },
+    {
+      "id": "rate-1",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-2",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-8",
+      "house_id": "house-1",
+      "service_code_id": "service-2",
+      "staff_id": "staff-3",
+      "percentage": "39.50"
+    },
+    {
+      "id": "rate-5",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "staff_id": "staff-5",
+      "percentage": "0.00"
+    },
+    {
+      "id": "63fb78ca-5b74-4bed-96ab-9f0ee9b76f06",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "77cc8267-0c3b-4155-8b02-a6991fac2270",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-4",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "staff_id": "staff-4",
+      "percentage": "39.50"
+    },
+    {
+      "id": "rate-3",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "staff_id": "staff-3",
+      "percentage": "39.50"
+    },
+    {
+      "id": "ff1f88b5-8750-4844-890c-6c433b099262",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "staff_id": "staff-3",
+      "percentage": "31.60"
+    },
+    {
+      "id": "rate-6",
+      "house_id": "house-1",
+      "service_code_id": "service-2",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "513a675c-646f-4e31-92d4-7ea8299312ae",
+      "house_id": "house-1",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "ffa34a76-16ba-4ff3-989e-82a87b4cf0da",
+      "house_id": "house-1",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-4",
+      "percentage": "39.50"
+    },
+    {
+      "id": "4d417fce-c48e-463e-bcc0-072125a3390f",
+      "house_id": "house-1",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-3",
+      "percentage": "39.50"
+    },
+    {
+      "id": "maria-house2-service2-rate",
+      "house_id": "house-2",
+      "service_code_id": "service-2",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-11",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-16",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-13",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "rate-14",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-17",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-20",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "staff_id": "staff-5",
+      "percentage": "79.00"
+    },
+    {
+      "id": "3ba65b39-8b74-4144-b0e9-b7b1be7ef9cd",
+      "house_id": "house-2",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-18",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "staff_id": "staff-3",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-19",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-12",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "12499a33-87ed-4873-ba0b-c7a5d5bbeaf9",
+      "house_id": "house-2",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "273a62c0-6fa4-45f4-b0b8-361b4bc7d872",
+      "house_id": "house-2",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "d1a8c6ed-7624-45b6-9c0f-40de386a157b",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "24900ad1-edf3-498c-a32c-963ce637ce70",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "70872f5c-237b-4a75-88bf-afecbd0ecff3",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "7db09577-2e09-4835-918d-dc426e84456d",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "d0650d80-4dbc-4473-90f9-bb33cf34cf70",
+      "house_id": "house-2",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "9a5c7445-dbff-435f-953b-4968153a9d6a",
+      "house_id": "house-2",
+      "service_code_id": "service-2",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "2b4e2293-6693-48b8-a624-f0c6e1ec729d",
+      "house_id": "house-2",
+      "service_code_id": "service-2",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "9d71d318-9814-4414-9d8c-ee0ce3f89e2a",
+      "house_id": "house-2",
+      "service_code_id": "service-2",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "1e671d70-70eb-4cf3-b933-38f23847996f",
+      "house_id": "house-2",
+      "service_code_id": "service-2",
+      "staff_id": "staff-3",
+      "percentage": "44.00"
+    },
+    {
+      "id": "rate-15",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "staff_id": "staff-5",
+      "percentage": "35.00"
+    },
+    {
+      "id": "rate-21",
+      "house_id": "house-3",
+      "service_code_id": "service-1",
+      "staff_id": "staff-1",
+      "percentage": "34.00"
+    },
+    {
+      "id": "rate-25",
+      "house_id": "house-3",
+      "service_code_id": "service-1",
+      "staff_id": "staff-5",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-22",
+      "house_id": "house-3",
+      "service_code_id": "service-1",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "4296968e-d49e-4081-b1c3-ad7aa9452f68",
+      "house_id": "house-3",
+      "service_code_id": "service-3",
+      "staff_id": "staff-1",
+      "percentage": "84.00"
+    },
+    {
+      "id": "431c0f6e-f4cc-4a22-8f6d-a5d23f5db881",
+      "house_id": "house-3",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "rate-24",
+      "house_id": "house-3",
+      "service_code_id": "service-1",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-23",
+      "house_id": "house-3",
+      "service_code_id": "service-1",
+      "staff_id": "staff-3",
+      "percentage": "60.00"
+    },
+    {
+      "id": "0ad7b758-745e-4aab-92aa-37d855b48338",
+      "house_id": "house-3",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-3",
+      "percentage": "10.00"
+    },
+    {
+      "id": "b0b49d8e-3aae-4ef5-97ce-1ac8c5ecbfef",
+      "house_id": "house-3",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "ea4ee832-5fe6-47fb-ba72-fb70805ee4c8",
+      "house_id": "house-3",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-1",
+      "percentage": "84.00"
+    },
+    {
+      "id": "7fb85448-0906-4ce1-ab8f-cffcd0792b96",
+      "house_id": "house-3",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-3",
+      "percentage": "60.00"
+    },
+    {
+      "id": "0ad4b464-bcd7-4a12-b29f-455067731e38",
+      "house_id": "house-3",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-1",
+      "percentage": "34.00"
+    },
+    {
+      "id": "afb70292-3122-4483-b355-6bbdfdc9a318",
+      "house_id": "house-3",
+      "service_code_id": "service-2",
+      "staff_id": "staff-3",
+      "percentage": "10.00"
+    },
+    {
+      "id": "ef8eca9b-f6e6-4df5-908d-0b609359cb51",
+      "house_id": "house-3",
+      "service_code_id": "service-2",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "2b80cab0-9056-487b-a842-7ba60d01ca5f",
+      "house_id": "house-3",
+      "service_code_id": "service-2",
+      "staff_id": "staff-1",
+      "percentage": "84.00"
+    },
+    {
+      "id": "345cc2ea-591b-4c8c-bd5b-09c6e78bd615",
+      "house_id": "house-3",
+      "service_code_id": "service-3",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "60ad1507-cd47-418d-b205-3ec6852f624e",
+      "house_id": "house-3",
+      "service_code_id": "service-3",
+      "staff_id": "staff-3",
+      "percentage": "10.00"
+    },
+    {
+      "id": "804afba0-c01f-47c6-ab18-8e25e3f8762d",
+      "house_id": "house-4",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "13a47297-6cf0-4d78-ae7a-24fbd9bd9a6a",
+      "house_id": "house-4",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-29",
+      "house_id": "house-4",
+      "service_code_id": "service-1",
+      "staff_id": "staff-4",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-28",
+      "house_id": "house-4",
+      "service_code_id": "service-1",
+      "staff_id": "staff-3",
+      "percentage": "79.00"
+    },
+    {
+      "id": "01dce700-0beb-4bb7-851a-b1d44e0f4a54",
+      "house_id": "house-4",
+      "service_code_id": "service-3",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "rate-30",
+      "house_id": "house-4",
+      "service_code_id": "service-1",
+      "staff_id": "staff-5",
+      "percentage": "0.00"
+    },
+    {
+      "id": "rate-27",
+      "house_id": "house-4",
+      "service_code_id": "service-1",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "81ac3cd9-69f0-4414-8997-0e48e892e84d",
+      "house_id": "house-4",
+      "service_code_id": "service-2",
+      "staff_id": "staff-3",
+      "percentage": "79.00"
+    },
+    {
+      "id": "f0dae5aa-d0b6-4399-845d-51b477169d22",
+      "house_id": "house-4",
+      "service_code_id": "service-3",
+      "staff_id": "staff-3",
+      "percentage": "31.60"
+    },
+    {
+      "id": "022de219-a6da-4e12-a91c-fe8a457ef7d4",
+      "house_id": "house-4",
+      "service_code_id": "service-2",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "5ed0c357-2d29-4c33-a0d9-77ce5e80480b",
+      "house_id": "house-4",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "b0e87366-d4cf-4225-b37d-19b3b33c079a",
+      "house_id": "house-4",
+      "service_code_id": "28c7bddf-d96c-4a83-ac22-8ef179116f03",
+      "staff_id": "staff-3",
+      "percentage": "79.00"
+    },
+    {
+      "id": "d4019c47-dd29-4939-8660-03172e3f31de",
+      "house_id": "house-4",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "bf0aed9e-6ad7-4e65-b098-72c87c9e999d",
+      "house_id": "house-4",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "staff_id": "staff-3",
+      "percentage": "79.00"
+    },
+    {
+      "id": "ca332690-9423-409c-8571-369a17eed00a",
+      "house_id": "house-4",
+      "service_code_id": "service-3",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    },
+    {
+      "id": "175775da-ca0b-4975-baa7-f504654a2538",
+      "house_id": "house-4",
+      "service_code_id": "service-3",
+      "staff_id": "staff-5",
+      "percentage": "47.40"
+    },
+    {
+      "id": "rate-26",
+      "house_id": "house-4",
+      "service_code_id": "service-1",
+      "staff_id": "staff-1",
+      "percentage": "15.00"
+    },
+    {
+      "id": "0a249417-69d1-4ef5-a736-4ef5f2563d68",
+      "house_id": "house-4",
+      "service_code_id": "service-2",
+      "staff_id": "staff-2",
+      "percentage": "6.00"
+    }
+  ],
+  "revenue_entries": [
+    {
+      "id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "date": "2025-08-18T00:00:00.000Z",
+      "check_date": "2025-08-18T00:00:00.000Z",
+      "amount": "3.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-18T22:50:22.054Z",
+      "check_number": "1111"
+    },
+    {
+      "id": "c03ac985-39ec-4abe-957b-632fbe62b11c",
+      "date": "2025-08-15T00:00:00.000Z",
+      "check_date": "2025-08-09T00:00:00.000Z",
+      "amount": "100.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T21:11:43.137Z",
+      "check_number": null
+    },
+    {
+      "id": "7ee04bc9-5a52-42e8-b244-8adcce54cafe",
+      "date": "2025-08-15T00:00:00.000Z",
+      "check_date": "2025-08-09T00:00:00.000Z",
+      "amount": "100.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "612c2c50-b9ab-4c40-8bb5-c644b321a875",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T21:15:12.978Z",
+      "check_number": null
+    },
+    {
+      "id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "date": "2025-08-09T00:00:00.000Z",
+      "check_date": "2025-08-09T00:00:00.000Z",
+      "amount": "1.00",
+      "patient_id": "c4f6d1e9-792f-4fb7-8de0-43ce40c65dd3",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T21:19:13.632Z",
+      "check_number": null
+    },
+    {
+      "id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "date": "2025-08-09T00:00:00.000Z",
+      "check_date": "2025-08-09T00:00:00.000Z",
+      "amount": "200.00",
+      "patient_id": "c4f6d1e9-792f-4fb7-8de0-43ce40c65dd3",
+      "house_id": "house-1",
+      "service_code_id": "service-1",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T18:51:54.789Z",
+      "check_number": "1111"
+    },
+    {
+      "id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "date": "2025-08-09T00:00:00.000Z",
+      "check_date": "2025-08-09T00:00:00.000Z",
+      "amount": "1.00",
+      "patient_id": "c4f6d1e9-792f-4fb7-8de0-43ce40c65dd3",
+      "house_id": "house-1",
+      "service_code_id": "service-3",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T21:24:52.081Z",
+      "check_number": "2222"
+    },
+    {
+      "id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "date": "2025-08-01T00:00:00.000Z",
+      "check_date": "2025-08-07T00:00:00.000Z",
+      "amount": "2.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "service-3",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-14T22:22:27.316Z",
+      "check_number": "1111"
+    },
+    {
+      "id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "date": "2025-07-01T00:00:00.000Z",
+      "check_date": "2025-07-31T00:00:00.000Z",
+      "amount": "100.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-09T18:53:15.645Z",
+      "check_number": null
+    },
+    {
+      "id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "date": "2025-07-02T00:00:00.000Z",
+      "check_date": "2025-07-01T00:00:00.000Z",
+      "amount": "3.00",
+      "patient_id": "13639527-5669-485b-bc81-a47a31f96baf",
+      "house_id": "house-2",
+      "service_code_id": "service-1",
+      "notes": "",
+      "status": "paid",
+      "created_at": "2025-08-14T22:25:47.262Z",
+      "check_number": "2222"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "d66b7a27-a1e2-4604-a2db-b0b84640bf32",
+      "date": "2025-08-09T16:00:00.000Z",
+      "amount": "10.00",
+      "vendor": "Joe",
+      "category": "Supplies",
+      "description": null,
+      "status": "paid",
+      "created_at": "2025-08-09T18:52:15.705Z"
+    },
+    {
+      "id": "1afba3f7-d34a-4b96-9ac0-a209dd6fe257",
+      "date": "2025-07-09T16:00:00.000Z",
+      "amount": "20.00",
+      "vendor": "Robert",
+      "category": "Technology",
+      "description": null,
+      "status": "paid",
+      "created_at": "2025-08-09T18:53:34.783Z"
+    }
+  ],
+  "payouts": [
+    {
+      "id": "c87700ad-1996-467f-bfb7-f1a2953b4f73",
+      "revenue_entry_id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "staff_id": "staff-1",
+      "amount": "15.00"
+    },
+    {
+      "id": "72a36351-ac80-4923-bf48-f95f9a3b81f9",
+      "revenue_entry_id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "staff_id": "staff-3",
+      "amount": "44.00"
+    },
+    {
+      "id": "2755c1bd-d1d4-42e4-9123-d4cd5be9208e",
+      "revenue_entry_id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "293266ab-eccd-442c-b64c-d1065d77eeb8",
+      "revenue_entry_id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "staff_id": "staff-5",
+      "amount": "35.00"
+    },
+    {
+      "id": "f1689159-4103-4a29-843b-eb2bcc5f938e",
+      "revenue_entry_id": "00c48ca3-3f5d-439e-8ec8-4938cbdcf1e5",
+      "staff_id": "staff-2",
+      "amount": "6.00"
+    },
+    {
+      "id": "30441168-dc72-4272-9a1c-c95ad1f8ae36",
+      "revenue_entry_id": "7ee04bc9-5a52-42e8-b244-8adcce54cafe",
+      "staff_id": "staff-5",
+      "amount": "35.00"
+    },
+    {
+      "id": "38aed3a7-87ef-47cd-876c-348377354eca",
+      "revenue_entry_id": "7ee04bc9-5a52-42e8-b244-8adcce54cafe",
+      "staff_id": "staff-1",
+      "amount": "15.00"
+    },
+    {
+      "id": "68ed8f83-d828-4dfa-9e59-4f6f969e03f0",
+      "revenue_entry_id": "7ee04bc9-5a52-42e8-b244-8adcce54cafe",
+      "staff_id": "staff-2",
+      "amount": "6.00"
+    },
+    {
+      "id": "288d73c0-cff6-486c-b6c4-bfa04ea94e34",
+      "revenue_entry_id": "7ee04bc9-5a52-42e8-b244-8adcce54cafe",
+      "staff_id": "staff-3",
+      "amount": "44.00"
+    },
+    {
+      "id": "29e7c058-832d-4a4a-975f-c9d9bc20d1c2",
+      "revenue_entry_id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "staff_id": "staff-1",
+      "amount": "0.45"
+    },
+    {
+      "id": "ea534842-788f-4736-9eab-52af830f3143",
+      "revenue_entry_id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "staff_id": "staff-2",
+      "amount": "0.18"
+    },
+    {
+      "id": "9ca554db-2ffb-4a0c-b060-d30799810f4e",
+      "revenue_entry_id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "staff_id": "staff-3",
+      "amount": "1.32"
+    },
+    {
+      "id": "9a9972b3-b90d-4eb9-bb72-ba8e7e480ffe",
+      "revenue_entry_id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "992b907f-545e-434e-a43a-ca29b007e136",
+      "revenue_entry_id": "827aedf8-70fe-457a-ae33-a01cf5bf7f12",
+      "staff_id": "staff-5",
+      "amount": "1.05"
+    },
+    {
+      "id": "04844a1c-1516-48a4-bdc0-dc7723601892",
+      "revenue_entry_id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "staff_id": "staff-2",
+      "amount": "12.00"
+    },
+    {
+      "id": "fbbe64b2-fae4-4be7-a043-b927ea5a3653",
+      "revenue_entry_id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "staff_id": "staff-5",
+      "amount": "0.00"
+    },
+    {
+      "id": "c9365326-aef9-4ec0-aac8-7d0cbad51e39",
+      "revenue_entry_id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "staff_id": "staff-3",
+      "amount": "79.00"
+    },
+    {
+      "id": "b6377ccb-f841-4e25-8c0a-fb7b75abf27a",
+      "revenue_entry_id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "staff_id": "staff-4",
+      "amount": "79.00"
+    },
+    {
+      "id": "fbf841d3-e26a-4e88-8cfc-e287f045708c",
+      "revenue_entry_id": "990ad957-3b1d-403c-902e-5afddb341d64",
+      "staff_id": "staff-1",
+      "amount": "30.00"
+    },
+    {
+      "id": "e1be9078-6f0b-47c7-8721-450806b3a703",
+      "revenue_entry_id": "c03ac985-39ec-4abe-957b-632fbe62b11c",
+      "staff_id": "staff-1",
+      "amount": "15.00"
+    },
+    {
+      "id": "aceadc22-2948-467e-a321-9cab6b30a37a",
+      "revenue_entry_id": "c03ac985-39ec-4abe-957b-632fbe62b11c",
+      "staff_id": "staff-2",
+      "amount": "6.00"
+    },
+    {
+      "id": "8162ac0e-b99c-4b00-a71e-31439c6fecda",
+      "revenue_entry_id": "c03ac985-39ec-4abe-957b-632fbe62b11c",
+      "staff_id": "staff-5",
+      "amount": "35.00"
+    },
+    {
+      "id": "36da2e07-468e-4f2d-b296-dfd6cdf4763b",
+      "revenue_entry_id": "c03ac985-39ec-4abe-957b-632fbe62b11c",
+      "staff_id": "staff-3",
+      "amount": "44.00"
+    },
+    {
+      "id": "721f93e1-2d84-46fd-a032-ffb6c52c2d75",
+      "revenue_entry_id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "05f7e095-2dab-4e29-949b-66dc188f85a7",
+      "revenue_entry_id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "staff_id": "staff-5",
+      "amount": "1.05"
+    },
+    {
+      "id": "58c3e5b3-3749-4511-b8c2-5395f42b467d",
+      "revenue_entry_id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "staff_id": "staff-1",
+      "amount": "0.45"
+    },
+    {
+      "id": "01c57587-7b50-45a0-9a59-399c668a4147",
+      "revenue_entry_id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "staff_id": "staff-3",
+      "amount": "1.32"
+    },
+    {
+      "id": "22843872-20ae-4b77-bbf9-5d63a8661c4a",
+      "revenue_entry_id": "e29af803-ccb8-44da-aa0c-17f216b807d1",
+      "staff_id": "staff-2",
+      "amount": "0.18"
+    },
+    {
+      "id": "60c8ca25-0fae-4d32-8cc2-6b03c0429529",
+      "revenue_entry_id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "91146390-63b7-463a-9db1-53f133318526",
+      "revenue_entry_id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "staff_id": "staff-5",
+      "amount": "0.47"
+    },
+    {
+      "id": "357d5c52-731f-49bd-8317-6850dbb2aa04",
+      "revenue_entry_id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "staff_id": "staff-1",
+      "amount": "0.15"
+    },
+    {
+      "id": "c77a023a-164d-413e-8e73-37beac3386a2",
+      "revenue_entry_id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "staff_id": "staff-3",
+      "amount": "0.32"
+    },
+    {
+      "id": "9ff8b6a0-4a58-4b7e-ac55-635712221eaa",
+      "revenue_entry_id": "e3925631-5dbe-49e6-8044-0bc4c3d524d6",
+      "staff_id": "staff-2",
+      "amount": "0.06"
+    },
+    {
+      "id": "97921fed-18ec-41bf-90c3-b86547970e51",
+      "revenue_entry_id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "5931d584-e531-4b64-9cec-4fa71c106a7c",
+      "revenue_entry_id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "staff_id": "staff-5",
+      "amount": "0.47"
+    },
+    {
+      "id": "5a320c42-a6ce-4e2e-b162-5ae4877b9424",
+      "revenue_entry_id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "staff_id": "staff-1",
+      "amount": "0.15"
+    },
+    {
+      "id": "b09c6e2f-2f14-408c-bb3c-0d7c001bd4c8",
+      "revenue_entry_id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "staff_id": "staff-3",
+      "amount": "0.32"
+    },
+    {
+      "id": "7fa5deab-6ba1-4726-afcb-26e9221a2ddc",
+      "revenue_entry_id": "f72cefd5-e946-4285-a88b-374654b106d9",
+      "staff_id": "staff-2",
+      "amount": "0.06"
+    },
+    {
+      "id": "2e10fddc-1843-4dc7-b00c-62a167b60266",
+      "revenue_entry_id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "staff_id": "staff-1",
+      "amount": "0.30"
+    },
+    {
+      "id": "b78a491a-d472-4a15-9424-d2ffe9611dec",
+      "revenue_entry_id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "staff_id": "staff-4",
+      "amount": "0.00"
+    },
+    {
+      "id": "e0c0aa7e-bc37-4317-a2f8-8afe7ebace31",
+      "revenue_entry_id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "staff_id": "staff-3",
+      "amount": "0.00"
+    },
+    {
+      "id": "d84dbfa8-1c93-4ea8-907f-d0d98352f08a",
+      "revenue_entry_id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "staff_id": "staff-5",
+      "amount": "1.58"
+    },
+    {
+      "id": "7c332f28-865e-4b1f-88d8-f890068a65cd",
+      "revenue_entry_id": "feaefe8b-48da-4034-9772-4dc8daa09f12",
+      "staff_id": "staff-2",
+      "amount": "0.12"
+    }
+  ],
+  "check_tracking": [],
+  "business_settings": [
+    {
+      "id": "business-1",
+      "name": "Support Recovery LLC",
+      "address": "Chestnut St",
+      "phone": "(502) 345-0442",
+      "email": "gclemons22@gmail.com"
+    }
+  ],
+  "users": [
+    {
+      "id": "gclemons22-preapproved",
+      "email": "gclemons22@gmail.com",
+      "first_name": null,
+      "last_name": null,
+      "role": "user",
+      "is_approved": true,
+      "approved_by": "45846882",
+      "approved_at": "2025-08-05T14:52:25.113Z",
+      "created_at": "2025-08-05T14:52:25.113Z"
+    },
+    {
+      "id": "45846882",
+      "email": "rsheuser01@gmail.com",
+      "first_name": "Robert",
+      "last_name": "Heuser",
+      "role": "admin",
+      "is_approved": true,
+      "approved_by": "45846882",
+      "approved_at": "2025-08-05T13:53:00.632Z",
+      "created_at": "2025-08-05T13:27:35.422Z"
+    }
+  ],
+  "hourly_employees": [
+    {
+      "id": "8e41a9cb-bb72-4b0b-9adc-45bfeadc149d",
+      "name": "Jimmy",
+      "hourly_rate": "18.00",
+      "is_active": true
+    },
+    {
+      "id": "50becda8-bfe2-4ec5-92a5-5f59c6a83872",
+      "name": "Joe",
+      "hourly_rate": "18.00",
+      "is_active": true
+    },
+    {
+      "id": "20db443b-a145-4188-9328-98ab8956b496",
+      "name": "Josh",
+      "hourly_rate": "18.00",
+      "is_active": true
+    },
+    {
+      "id": "d508b66d-e2b6-4dd0-8d6b-4d4d6007726b",
+      "name": "Schnetta",
+      "hourly_rate": "20.00",
+      "is_active": true
+    }
+  ],
+  "time_entries": [],
+  "staff_payments": []
+}
