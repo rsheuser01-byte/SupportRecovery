@@ -10,12 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { isUnauthorizedError, getLoginUrl, getLogoutUrl } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign, Users, TrendingUp, Receipt, Download, Plus, 
   Search, Edit, Trash2, Copy, FileText, BarChart3, PieChart, 
-  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock, Filter, CreditCard, Eye
+  Settings, Home, UserCheck, Calculator, Calendar, LogOut, Shield, HelpCircle, Menu, X, Clock, Filter, CreditCard, Eye, Bot
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -39,6 +39,7 @@ import { UserManagementModal } from "@/components/user-management-modal";
 import { OnboardingWalkthrough } from "@/components/onboarding-walkthrough";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { HourlyTimeTracker } from "@/components/hourly-time-tracker";
+import { GPTAssistant } from "@/components/gpt-assistant";
 
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -138,7 +139,7 @@ export default function Dashboard() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = getLoginUrl();
       }, 500);
       return;
     }
@@ -146,7 +147,7 @@ export default function Dashboard() {
 
   // Handle logout
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    window.location.href = getLogoutUrl();
   };
 
   // Delete mutations
@@ -1632,6 +1633,21 @@ export default function Dashboard() {
             >
               <Clock className="mr-3 h-4 w-4" />
               Hourly Tracking
+            </Button>
+            <Button
+              variant={selectedTab === "ai-assistant" ? "default" : "ghost"}
+              className={`w-full justify-start nav-item hover-lift transition-all duration-300 ${
+                selectedTab === "ai-assistant" 
+                  ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg hover:shadow-xl" 
+                  : "hover:bg-white/20 hover:text-gray-800"
+              } ${selectedTab === "ai-assistant" ? "active" : ""}`}
+              onClick={() => {
+                setSelectedTab("ai-assistant");
+                if (isMobile) setSidebarCollapsed(true);
+              }}
+            >
+              <Bot className="mr-3 h-4 w-4" />
+              AI Assistant
             </Button>
             <Button
               variant={selectedTab === "settings" ? "default" : "ghost"}
@@ -3608,6 +3624,26 @@ export default function Dashboard() {
             </header>
             <div className="p-6">
               <HourlyTimeTracker />
+            </div>
+          </TabsContent>
+
+          {/* AI Assistant Tab */}
+          <TabsContent value="ai-assistant" className="m-0">
+            <header className="bg-white border-b-4 border-purple-500 relative overflow-hidden shadow-lg">
+              <div className="relative z-10 px-6 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="animate-slide-up">
+                    <h2 className="text-3xl font-bold" style={{color: '#000000'}}>AI Business Assistant</h2>
+                    <p className="text-lg" style={{color: '#333333'}}>
+                      Get intelligent insights and analysis for your business
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 opacity-50"></div>
+            </header>
+            <div className="p-6">
+              <GPTAssistant />
             </div>
           </TabsContent>
         </Tabs>

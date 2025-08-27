@@ -1,7 +1,16 @@
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isApproved, isAdmin } from "./replitAuth";
+import { gptService } from "./gptService";
 import { 
   insertHouseSchema, insertServiceCodeSchema, insertStaffSchema, 
   insertPayoutRateSchema, insertPatientSchema, insertRevenueEntrySchema, 
@@ -1001,6 +1010,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete check tracking entry" });
+    }
+  });
+
+  // GPT AI Assistant Routes
+  app.post("/api/gpt/chat", isAuthenticated, async (req, res) => {
+    try {
+      const { message, conversationHistory = [] } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required and must be a string" });
+      }
+
+      const response = await gptService.chat(message, conversationHistory);
+      res.json({ response, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('GPT chat error:', error);
+      res.status(500).json({ message: "Failed to process GPT request" });
+    }
+  });
+
+  app.get("/api/gpt/revenue-trends", isAuthenticated, async (req, res) => {
+    try {
+      const analysis = await gptService.analyzeRevenueTrends();
+      res.json({ analysis, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Revenue trends error:', error);
+      res.status(500).json({ message: "Failed to analyze revenue trends" });
+    }
+  });
+
+  app.get("/api/gpt/business-report", isAuthenticated, async (req, res) => {
+    try {
+      const report = await gptService.generateBusinessReport();
+      res.json({ report, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Business report error:', error);
+      res.status(500).json({ message: "Failed to generate business report" });
+    }
+  });
+
+  app.get("/api/gpt/staff-insights", isAuthenticated, async (req, res) => {
+    try {
+      const insights = await gptService.getStaffInsights();
+      res.json({ insights, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Staff insights error:', error);
+      res.status(500).json({ message: "Failed to generate staff insights" });
     }
   });
 

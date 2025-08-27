@@ -1,3 +1,17 @@
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+console.log('Environment variables loaded:', {
+  NODE_ENV: process.env.NODE_ENV,
+  DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+  LOCAL_AUTH_BYPASS: process.env.LOCAL_AUTH_BYPASS
+});
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -76,12 +90,12 @@ app.use((req, res, next) => {
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
     const port = parseInt(process.env.PORT || '5000', 10);
+    const host = process.env.NODE_ENV === 'development' ? '127.0.0.1' : '0.0.0.0';
     server.listen({
       port,
-      host: "0.0.0.0",
-      reusePort: true,
+      host,
     }, () => {
-      log(`serving on port ${port}`);
+      log(`serving on port ${port} on ${host}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

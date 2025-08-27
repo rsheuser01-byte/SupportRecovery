@@ -82,6 +82,127 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Local development authentication bypass
+  if (process.env.NODE_ENV === 'development' && process.env.LOCAL_AUTH_BYPASS === 'true') {
+    console.log('🔓 Local development mode: Authentication bypass enabled');
+    
+                 // Add a local development login route
+     app.get('/api/local-login', async (req, res) => {
+       try {
+         // Create a mock user session for local development
+         const mockUser = {
+           id: 'local-dev-user',
+           email: 'dev@localhost',
+           firstName: 'Local',
+           lastName: 'Developer',
+           profileImageUrl: 'https://via.placeholder.com/150'
+         };
+         
+                   // Check if this is the first user and auto-approve them as admin
+          const allUsers = await storage.getAllUsers();
+          const isFirstUser = allUsers.length === 0;
+          console.log('🔍 Total users in database:', allUsers.length, 'Is first user:', isFirstUser);
+          
+          if (isFirstUser) {
+            // Create the first user as an approved admin
+            console.log('🔓 Creating first local user as admin...');
+            const createdUser = await storage.upsertUser({
+              ...mockUser,
+              role: 'admin',
+              isApproved: true,
+              approvedBy: 'system',
+              approvedAt: new Date(),
+            });
+            console.log('🔓 First local user created as admin:', createdUser);
+          } else {
+            // Check if user already exists and update if needed
+            const existingUser = await storage.getUser(mockUser.id);
+            console.log('🔍 Existing user found:', existingUser ? 'YES' : 'NO');
+            if (!existingUser) {
+              console.log('🔓 Creating new local user as admin...');
+              const createdUser = await storage.upsertUser({
+                ...mockUser,
+                role: 'admin',
+                isApproved: true,
+                approvedBy: 'system',
+                approvedAt: new Date(),
+              });
+              console.log('🔓 New local user created as admin:', createdUser);
+            } else {
+              console.log('🔍 User already exists, checking if needs update...');
+              // Update existing user to ensure they're approved and admin
+              if (!existingUser.isApproved || existingUser.role !== 'admin') {
+                console.log('🔓 Updating existing user to approved admin...');
+                const updatedUser = await storage.upsertUser({
+                  ...existingUser,
+                  role: 'admin',
+                  isApproved: true,
+                  approvedBy: 'system',
+                  approvedAt: new Date(),
+                });
+                console.log('🔓 User updated to approved admin:', updatedUser);
+              }
+            }
+          }
+         
+         req.session.user = mockUser;
+         req.session.save((err) => {
+           if (err) {
+             console.error('Session save error:', err);
+             return res.status(500).json({ error: 'Failed to create session' });
+           }
+           // Redirect to the dashboard after successful login
+           res.redirect('/');
+         });
+       } catch (error) {
+         console.error('Local login error:', error);
+         res.status(500).json({ error: 'Failed to create local user' });
+       }
+     });
+
+    // Add a local development logout route
+    app.get('/api/local-logout', (req, res) => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ error: 'Failed to destroy session' });
+        }
+        res.json({ message: 'Local logout successful' });
+      });
+    });
+
+         // Note: Authentication checks are handled per-route in the routes.ts file
+     // This allows the frontend to load properly while still protecting API endpoints
+
+         // Add local development user endpoint - no authentication required
+     app.get('/api/auth/user', async (req, res) => {
+       if (req.session.user) {
+         try {
+           console.log('🔍 Fetching user from database for ID:', req.session.user.id);
+           // Get the actual user from the database to check approval status
+           const dbUser = await storage.getUser(req.session.user.id);
+           console.log('🔍 Database user found:', dbUser ? 'YES' : 'NO');
+           if (dbUser) {
+             console.log('🔍 Returning database user with approval status:', dbUser.isApproved, 'role:', dbUser.role);
+             res.json(dbUser);
+           } else {
+             console.log('🔍 No database user found, falling back to session user');
+             // Fallback to session user if database user not found
+             res.json(req.session.user);
+           }
+         } catch (error) {
+           console.error('Error fetching user from database:', error);
+           // Fallback to session user if database error
+           res.json(req.session.user);
+         }
+       } else {
+         res.status(401).json({ message: 'Not authenticated' });
+       }
+     });
+
+    return; // Skip OAuth setup for local development
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -277,6 +398,14 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Local development bypass for authentication
+  if (process.env.NODE_ENV === 'development' && process.env.LOCAL_AUTH_BYPASS === 'true') {
+    if (req.session.user) {
+      return next();
+    }
+    return res.status(401).json({ message: "Local development: Please visit /api/local-login first" });
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
@@ -323,6 +452,14 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 // Middleware to check if user is approved
 export const isApproved: RequestHandler = async (req, res, next) => {
   try {
+    // Local development bypass for approval check
+    if (process.env.NODE_ENV === 'development' && process.env.LOCAL_AUTH_BYPASS === 'true') {
+      if (req.session.user) {
+        return next();
+      }
+      return res.status(401).json({ message: "Local development: Please visit /api/local-login first" });
+    }
+
     const userId = (req.user as any).claims.sub;
     const user = await storage.getUser(userId);
     
@@ -342,6 +479,14 @@ export const isApproved: RequestHandler = async (req, res, next) => {
 // Middleware to check if user is admin
 export const isAdmin: RequestHandler = async (req, res, next) => {
   try {
+    // Local development bypass for admin check
+    if (process.env.NODE_ENV === 'development' && process.env.LOCAL_AUTH_BYPASS === 'true') {
+      if (req.session.user) {
+        return next();
+      }
+      return res.status(401).json({ message: "Local development: Please visit /api/local-login first" });
+    }
+
     const userId = (req.user as any).claims.sub;
     const user = await storage.getUser(userId);
     

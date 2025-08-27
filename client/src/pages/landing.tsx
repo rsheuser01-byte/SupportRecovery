@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Users, BarChart3 } from "lucide-react";
+import { getLoginUrl } from "@/lib/authUtils";
 
 export default function Landing() {
   return (
@@ -76,7 +77,7 @@ export default function Landing() {
               Please log in with your authorized account to access the healthcare management system.
             </p>
             <Button 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = getLoginUrl()}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
               <Shield className="h-5 w-5 mr-2" />
