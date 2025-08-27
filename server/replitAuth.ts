@@ -42,11 +42,11 @@ export function getSession() {
     rolling: true, // Reset expiry on each request (for inactivity tracking)
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: inactivityTimeout, // Cookie expires after inactivity period
-      // iPhone-specific cookie settings
-      domain: undefined, // Let browser determine domain automatically for mobile compatibility
+      // Vercel deployment configuration
+      domain: process.env.VERCEL_URL ? undefined : undefined, // Let browser determine domain automatically
     },
     // Enhanced session handling for mobile devices
     name: "healthcare.session", // Explicit session name for better mobile handling
