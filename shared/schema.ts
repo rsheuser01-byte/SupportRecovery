@@ -70,10 +70,13 @@ export const expenses = pgTable("expenses", {
 // Hourly employees table
 export const hourlyEmployees = pgTable("hourly_employees", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  hourlyRate: numeric("hourly_rate", { precision: 8, scale: 2 }).notNull(),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  fullName: text("full_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  // Note: isActive and hourlyRate columns don't exist in the actual database
+  // isActive: boolean("is_active").default(true),
+  // hourlyRate: numeric("hourly_rate", { precision: 8, scale: 2 }),
+  // createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Time entries for hourly employees

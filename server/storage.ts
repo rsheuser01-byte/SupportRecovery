@@ -1104,7 +1104,8 @@ export class DbStorage implements IStorage {
 
   // Hourly Employees
   async getHourlyEmployees(): Promise<HourlyEmployee[]> {
-    return await this.db.select().from(hourlyEmployees).where(eq(hourlyEmployees.isActive, true));
+    // Note: isActive column doesn't exist in the actual database
+    return await this.db.select().from(hourlyEmployees);
   }
 
   async getHourlyEmployee(id: string): Promise<HourlyEmployee | undefined> {
@@ -1123,7 +1124,8 @@ export class DbStorage implements IStorage {
   }
 
   async deleteHourlyEmployee(id: string): Promise<boolean> {
-    const result = await this.db.update(hourlyEmployees).set({ isActive: false }).where(eq(hourlyEmployees.id, id));
+    // Note: isActive column doesn't exist, so we'll delete the record instead
+    const result = await this.db.delete(hourlyEmployees).where(eq(hourlyEmployees.id, id));
     return result.rowCount > 0;
   }
 
@@ -1208,4 +1210,22 @@ export class DbStorage implements IStorage {
 }
 
 // Use database storage instead of memory storage
-export const storage = new DbStorage();
+let _storage: DbStorage | null = null;
+
+export function getStorage(): DbStorage {
+  if (!_storage) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+    _storage = new DbStorage();
+  }
+  return _storage;
+}
+
+// For backward compatibility, export a getter that calls getStorage
+export const storage = new Proxy({} as DbStorage, {
+  get(target, prop) {
+    const storageInstance = getStorage();
+    return (storageInstance as any)[prop];
+  }
+});

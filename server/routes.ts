@@ -1022,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message is required and must be a string" });
       }
 
-      const response = await gptService.chat(message, conversationHistory);
+      const response = await gptService.enhancedChat(message, conversationHistory);
       res.json({ response, timestamp: new Date().toISOString() });
     } catch (error) {
       console.error('GPT chat error:', error);
@@ -1057,6 +1057,236 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Staff insights error:', error);
       res.status(500).json({ message: "Failed to generate staff insights" });
+    }
+  });
+
+  // AI Action Endpoints - Allow AI to perform business operations
+  app.post("/api/gpt/actions/create-revenue", isAuthenticated, async (req, res) => {
+    try {
+      const { date, checkDate, checkNumber, amount, patientId, houseId, serviceCodeId, notes } = req.body;
+      
+      if (!date || !checkDate || !amount || !houseId || !serviceCodeId) {
+        return res.status(400).json({ message: "Missing required fields: date, checkDate, amount, houseId, serviceCodeId" });
+      }
+
+      const revenueEntry = await storage.createRevenueEntry({
+        date: new Date(date),
+        checkDate: new Date(checkDate),
+        checkNumber: checkNumber || null,
+        amount: amount.toString(),
+        patientId: patientId || null,
+        houseId,
+        serviceCodeId,
+        notes: notes || null,
+        status: 'paid'
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Revenue entry created successfully",
+        revenueEntry,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create revenue error:', error);
+      res.status(500).json({ message: "Failed to create revenue entry" });
+    }
+  });
+
+  app.post("/api/gpt/actions/create-expense", isAuthenticated, async (req, res) => {
+    try {
+      const { date, amount, vendor, category, description } = req.body;
+      
+      if (!date || !amount || !vendor || !category) {
+        return res.status(400).json({ message: "Missing required fields: date, amount, vendor, category" });
+      }
+
+      const expense = await storage.createExpense({
+        date: new Date(date),
+        amount: amount.toString(),
+        vendor,
+        category,
+        description: description || null,
+        status: 'paid'
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Expense created successfully",
+        expense,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create expense error:', error);
+      res.status(500).json({ message: "Failed to create expense" });
+    }
+  });
+
+  app.post("/api/gpt/actions/create-patient", isAuthenticated, async (req, res) => {
+    try {
+      const { name, phone, houseId, program, startDate, status } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Patient name is required" });
+      }
+
+      const patient = await storage.createPatient({
+        name,
+        phone: phone || null,
+        houseId: houseId || null,
+        program: program || null,
+        startDate: startDate ? new Date(startDate) : null,
+        status: status || 'active'
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Patient created successfully",
+        patient,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create patient error:', error);
+      res.status(500).json({ message: "Failed to create patient" });
+    }
+  });
+
+  app.post("/api/gpt/actions/create-staff", isAuthenticated, async (req, res) => {
+    try {
+      const { name, role } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Staff name is required" });
+      }
+
+      const staff = await storage.createStaff({
+        name,
+        role: role || null,
+        isActive: true
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Staff member created successfully",
+        staff,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create staff error:', error);
+      res.status(500).json({ message: "Failed to create staff member" });
+    }
+  });
+
+  app.post("/api/gpt/actions/create-house", isAuthenticated, async (req, res) => {
+    try {
+      const { name, address } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "House name is required" });
+      }
+
+      const house = await storage.createHouse({
+        name,
+        address: address || null,
+        isActive: true
+      });
+
+      res.json({ 
+        success: true, 
+        message: "House created successfully",
+        house,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create house error:', error);
+      res.status(500).json({ message: "Failed to create house" });
+    }
+  });
+
+  app.post("/api/gpt/actions/create-service-code", isAuthenticated, async (req, res) => {
+    try {
+      const { code, description } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Service code is required" });
+      }
+
+      const serviceCode = await storage.createServiceCode({
+        code,
+        description: description || null,
+        isActive: true
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Service code created successfully",
+        serviceCode,
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error('Create service code error:', error);
+      res.status(500).json({ message: "Failed to create service code" });
+    }
+  });
+
+  // AI Data Query Endpoints - Enhanced data access
+  app.get("/api/gpt/data/houses", isAuthenticated, async (req, res) => {
+    try {
+      const houses = await storage.getHouses();
+      res.json({ houses, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get houses error:', error);
+      res.status(500).json({ message: "Failed to fetch houses" });
+    }
+  });
+
+  app.get("/api/gpt/data/service-codes", isAuthenticated, async (req, res) => {
+    try {
+      const serviceCodes = await storage.getServiceCodes();
+      res.json({ serviceCodes, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get service codes error:', error);
+      res.status(500).json({ message: "Failed to fetch service codes" });
+    }
+  });
+
+  app.get("/api/gpt/data/staff", isAuthenticated, async (req, res) => {
+    try {
+      const staff = await storage.getStaff();
+      res.json({ staff, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get staff error:', error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/gpt/data/patients", isAuthenticated, async (req, res) => {
+    try {
+      const patients = await storage.getPatients();
+      res.json({ patients, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get patients error:', error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/gpt/data/revenue", isAuthenticated, async (req, res) => {
+    try {
+      const revenueEntries = await storage.getRevenueEntries();
+      res.json({ revenueEntries, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get revenue error:', error);
+      res.status(500).json({ message: "Failed to fetch revenue entries" });
+    }
+  });
+
+  app.get("/api/gpt/data/expenses", isAuthenticated, async (req, res) => {
+    try {
+      const expenses = await storage.getExpenses();
+      res.json({ expenses, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Get expenses error:', error);
+      res.status(500).json({ message: "Failed to fetch expenses" });
     }
   });
 

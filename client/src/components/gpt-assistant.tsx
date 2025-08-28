@@ -4,13 +4,21 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Send, Bot, TrendingUp, FileText, Users, MessageSquare, Sparkles } from 'lucide-react';
+import { 
+  Loader2, Send, Bot, TrendingUp, FileText, Users, MessageSquare, 
+  Sparkles, Plus, DollarSign, UserPlus, Building, Code, Search,
+  Calendar, Calculator, BarChart3, Target, Zap, Clock
+} from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: string;
+  timestamp: Date;
+  isAction?: boolean;
+  actionType?: string;
 }
 
 interface QuickAction {
@@ -18,7 +26,8 @@ interface QuickAction {
   title: string;
   description: string;
   icon: React.ReactNode;
-  action: () => void;
+  action: () => Promise<string>;
+  category: 'analysis' | 'actions' | 'data';
 }
 
 export function GPTAssistant() {
@@ -26,79 +35,154 @@ export function GPTAssistant() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Initialize with welcome message
+  useEffect(() => {
+    setMessages([{
+      id: 'welcome',
+      role: 'assistant',
+      content: `Hello! I'm your AI Business Assistant. I can help you with:
+
+🔍 **Data Analysis**
+• Revenue trends and financial reports
+• Staff performance insights
+• Business summaries and recommendations
+
+⚡ **Quick Actions**
+• Generate business reports
+• Analyze revenue trends
+• Get staff insights
+
+💼 **Business Operations**
+• Add revenue entries
+• Create expenses
+• Manage patients and staff
+• Track time entries
+
+What would you like me to help you with today?`,
+      timestamp: new Date()
+    }]);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const addMessage = (role: 'user' | 'assistant', content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role,
-      content,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, newMessage]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    const userMessage = content.trim();
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setInputValue('');
-    addMessage('user', userMessage);
     setIsLoading(true);
     setIsTyping(true);
 
     try {
       const response = await fetch('/api/gpt/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage,
-          conversationHistory: messages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-        }),
+          message: content.trim(),
+          conversationHistory: messages.slice(-10).map(m => ({
+            role: m.role,
+            content: m.content
+          }))
+        })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error('Failed to get response');
 
       const data = await response.json();
-      addMessage('assistant', data.response);
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Check if the AI created an expense and invalidate the cache
+      if (data.response && typeof data.response === 'string') {
+        if (data.response.includes('Successfully created expense') || 
+            data.response.includes('expense created successfully') ||
+            data.response.includes('Expense created successfully')) {
+          // Invalidate the expenses query cache to refresh the UI
+          queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+          toast({ title: "Expense created! Refreshing expenses list..." });
+        }
+        
+        // Check for other entities and invalidate their caches too
+        if (data.response.includes('Successfully created revenue') || 
+            data.response.includes('revenue entry created successfully')) {
+          queryClient.invalidateQueries({ queryKey: ['/api/revenue-entries'] });
+          toast({ title: "Revenue entry created! Refreshing revenue list..." });
+        }
+        
+        if (data.response.includes('Successfully created patient') || 
+            data.response.includes('patient created successfully')) {
+          queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
+          toast({ title: "Patient created! Refreshing patients list..." });
+        }
+        
+        if (data.response.includes('Successfully created staff') || 
+            data.response.includes('staff member created successfully')) {
+          queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+          toast({ title: "Staff member created! Refreshing staff list..." });
+        }
+      }
     } catch (error) {
       console.error('Error sending message:', error);
-      addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
       setIsTyping(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(inputValue);
-  };
-
   const handleQuickAction = async (action: () => Promise<string>) => {
     setIsLoading(true);
     try {
       const result = await action();
-      addMessage('assistant', result);
+      const actionMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: result,
+        timestamp: new Date(),
+        isAction: true
+      };
+      setMessages(prev => [...prev, actionMessage]);
     } catch (error) {
       console.error('Quick action error:', error);
-      addMessage('assistant', 'Sorry, I encountered an error processing your request.');
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Failed to execute action. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -110,173 +194,240 @@ export function GPTAssistant() {
       title: 'Business Report',
       description: 'Generate comprehensive business overview',
       icon: <FileText className="h-5 w-5" />,
+      category: 'analysis',
       action: async () => {
         const response = await fetch('/api/gpt/business-report');
         const data = await response.json();
         return data.report;
-      },
+      }
     },
     {
       id: 'revenue-trends',
       title: 'Revenue Trends',
-      description: 'Analyze revenue patterns and growth',
+      description: 'Analyze revenue patterns and performance',
       icon: <TrendingUp className="h-5 w-5" />,
+      category: 'analysis',
       action: async () => {
         const response = await fetch('/api/gpt/revenue-trends');
         const data = await response.json();
         return data.analysis;
-      },
+      }
     },
     {
       id: 'staff-insights',
       title: 'Staff Insights',
-      description: 'Get staff performance analysis',
+      description: 'Get staff performance and insights',
       icon: <Users className="h-5 w-5" />,
+      category: 'analysis',
       action: async () => {
         const response = await fetch('/api/gpt/staff-insights');
         const data = await response.json();
         return data.insights;
-      },
+      }
     },
+    {
+      id: 'add-revenue',
+      title: 'Add Revenue',
+      description: 'Create new revenue entry',
+      icon: <DollarSign className="h-5 w-5" />,
+      category: 'actions',
+      action: async () => {
+        return `To add a new revenue entry, I'll need:
+• Date of service
+• Check date
+• Amount
+• House/facility
+• Service code
+• Patient (optional)
+• Notes (optional)
+
+Would you like me to help you create one?`;
+      }
+    },
+    {
+      id: 'add-expense',
+      title: 'Add Expense',
+      description: 'Create new expense record',
+      icon: <Calculator className="h-5 w-5" />,
+      category: 'actions',
+      action: async () => {
+        return `To add a new expense, I'll need:
+• Date
+• Amount
+• Vendor
+• Category
+• Description (optional)
+
+Would you like me to help you create one?`;
+      }
+    },
+    {
+      id: 'add-patient',
+      title: 'Add Patient',
+      description: 'Create new patient record',
+      icon: <UserPlus className="h-5 w-5" />,
+      category: 'actions',
+      action: async () => {
+        return `To add a new patient, I'll need:
+• Patient name
+• Phone (optional)
+• House/facility (optional)
+• Program (optional)
+• Start date (optional)
+
+Would you like me to help you create one?`;
+      }
+    }
   ];
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(inputValue);
+  };
+
+  const formatMessage = (content: string) => {
+    // Convert markdown-like formatting to HTML
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br />')
+      .replace(/•/g, '• ');
+  };
+
+  const getActionIcon = (category: string) => {
+    switch (category) {
+      case 'analysis': return <BarChart3 className="h-4 w-4" />;
+      case 'actions': return <Zap className="h-4 w-4" />;
+      case 'data': return <Search className="h-4 w-4" />;
+      default: return <Target className="h-4 w-4" />;
+    }
   };
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
+    <div className="flex flex-col h-full max-w-6xl mx-auto">
       {/* Header */}
-      <Card className="mb-4 border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardHeader className="pb-3">
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-lg">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Bot className="h-6 w-6 text-blue-600" />
-            </div>
+            <Bot className="h-8 w-8" />
             <div>
-              <CardTitle className="text-xl text-gray-800">AI Business Assistant</CardTitle>
-              <CardDescription className="text-gray-600">
-                Your intelligent business partner for insights and analysis
-              </CardDescription>
+              <h1 className="text-2xl font-bold">AI Business Assistant</h1>
+              <p className="text-purple-100">Your intelligent business partner</p>
             </div>
           </div>
-        </CardHeader>
-      </Card>
-
-      {/* Quick Actions */}
-      <div className="mb-4">
-        <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-          <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {quickActions.map((action) => (
-            <Button
-              key={action.id}
-              variant="outline"
-              className="h-auto p-3 flex flex-col items-start space-y-2 hover:bg-blue-50 hover:border-blue-200 transition-colors"
-              onClick={() => handleQuickAction(action.action)}
-              disabled={isLoading}
-            >
-              <div className="flex items-center space-x-2">
-                <div className="text-blue-600">{action.icon}</div>
-                <span className="font-medium text-sm">{action.title}</span>
-              </div>
-              <span className="text-xs text-gray-600 text-left">{action.description}</span>
-            </Button>
-          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowActions(!showActions)}
+            className="bg-white/20 hover:bg-white/30 border-white/30 text-white"
+          >
+            {showActions ? 'Hide Actions' : 'Show Actions'}
+            <Sparkles className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Chat Messages */}
-      <Card className="flex-1 flex flex-col min-h-0 border-0 shadow-sm">
-        <CardHeader className="pb-3 border-b bg-gray-50">
-          <div className="flex items-center space-x-2">
-            <MessageSquare className="h-4 w-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Chat</span>
-            {isTyping && (
-              <Badge variant="secondary" className="ml-2">
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                AI is typing...
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        
-        <CardContent className="flex-1 p-0 flex flex-col">
-          <ScrollArea className="flex-1 p-4">
-            {messages.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Bot className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm">Start a conversation with your AI business assistant</p>
-                <p className="text-xs mt-1">Ask about revenue, expenses, staff performance, or any business insights</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                        message.role === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap text-sm">{message.content}</div>
-                      <div
-                        className={`text-xs mt-1 ${
-                          message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}
-                      >
-                        {formatTime(message.timestamp)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </ScrollArea>
-
-          {/* Input Form */}
-          <div className="border-t p-4 bg-white">
-            <form onSubmit={handleSubmit} className="flex space-x-2">
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me anything about your business..."
-                className="flex-1"
-                disabled={isLoading}
-              />
+      {/* Quick Actions */}
+      {showActions && (
+        <div className="bg-white p-4 border-b">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {quickActions.map((action) => (
               <Button
-                type="submit"
-                size="sm"
-                disabled={!inputValue.trim() || isLoading}
-                className="px-4"
+                key={action.id}
+                variant="outline"
+                className="h-auto p-3 justify-start hover:shadow-md transition-all"
+                onClick={() => handleQuickAction(action.action)}
+                disabled={isLoading}
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <div className="flex items-center space-x-3">
+                  {action.icon}
+                  <div className="text-left">
+                    <div className="font-medium">{action.title}</div>
+                    <div className="text-xs text-gray-500">{action.description}</div>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {getActionIcon(action.category)}
+                </Badge>
               </Button>
-            </form>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* Chat Messages */}
+      <div className="flex-1 bg-gray-50 p-4">
+        <ScrollArea className="h-[500px] w-full">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-4 ${
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border shadow-sm'
+                  }`}
+                >
+                  <div
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: formatMessage(message.content)
+                    }}
+                  />
+                  <div className={`text-xs mt-2 ${
+                    message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                  }`}>
+                    {message.timestamp.toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white border shadow-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-gray-500">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Input Form */}
+      <div className="bg-white p-4 border-t">
+        <form onSubmit={handleSubmit} className="flex space-x-3">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Ask me anything about your business, or request an action..."
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button type="submit" disabled={isLoading || !inputValue.trim()}>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+      </div>
 
       {/* Tips */}
-      <div className="mt-4 text-center">
-        <p className="text-xs text-gray-500">
-          💡 Try asking: "How is my business performing this month?" or "What are my top revenue sources?"
-        </p>
+      <div className="bg-blue-50 p-4 rounded-b-lg border-t">
+        <div className="text-sm text-blue-700">
+          <strong>💡 Tips:</strong> Try asking me to "add a revenue entry for $500 from ABC House" or 
+          "show me staff performance" or "generate a business report". I can access all your business data 
+          and help you manage operations!
+        </div>
       </div>
     </div>
   );
